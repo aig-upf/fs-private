@@ -33,7 +33,7 @@ public:
 	ActionEffect* clone() const { return new ActionEffect(*this); }
 
 	//! Checks that the effect is well formed
-	bool isWellFormed() const;
+	static bool is_acceptable_lhs(const Term* lhs);
 
 	//! Binds an effect schema with a particular binding.
 	//! Might return null if the binding results in a non-applicable (conditional) effect

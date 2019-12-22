@@ -157,13 +157,11 @@ Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
 	// First load the extensions of the static symbols
 	for (const auto& name:info.getSymbolNames()) {
 		unsigned id = info.getSymbolId(name);
-		if (info.getSymbolData(id).isStatic()) {
-			info.set_extension(id, StaticExtension::load_static_extension(name, info));
-		}
+		info.set_extension(id, StaticExtension::load_static_extension(name, info));
 	}
 
 	// Load the function objects for externally-defined symbols
-	for (auto elem:factory.instantiateFunctions(info)) {
+	for (const auto& elem:factory.instantiateFunctions(info)) {
 		info.setFunction(info.getSymbolId(elem.first), elem.second);
 	}
 }

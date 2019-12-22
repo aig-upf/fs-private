@@ -19,20 +19,19 @@ StaticExtension::load_static_extension(const std::string& name, const ProblemInf
 	SymbolData::Type type = data.getType();
 	assert(type == SymbolData::Type::PREDICATE || type == SymbolData::Type::FUNCTION);
 	std::vector<type_id> sym_signature_types = info.get_type_ids(data.getSignature());
-	//! We add the codomain here, if it is a function
-	if (data.getType() == SymbolData::Type::FUNCTION )
-		sym_signature_types.push_back(info.get_type_id(data.getCodomainType()));
+
+	if (data.getType() == SymbolData::Type::FUNCTION) { // We add the codomain here, if it is a function
+        sym_signature_types.push_back(info.get_type_id(data.getCodomainType()));
+	}
 	std::string filename = info.getDataDir() + "/" + name + ".data";
 	StaticExtension* extension = nullptr;
 
 	if (arity == 0) {
 		if ( type == SymbolData::Type::PREDICATE ) {
 			std::ifstream is(filename);
-			if (is.fail()) { // If file does not exist, we assume the atom is a false nullary atom
-                extension = new ZeroaryFunction(make_object(false));
-            } else {
-                extension = new ZeroaryFunction( make_object(true) );
-			}
+            // If the extension file does not exist, we assume the atom is a false nullary atom
+            bool ext_file_exists = !is.fail();
+            extension = new ZeroaryFunction(make_object(ext_file_exists));
 		}
 		else {
 			extension = new ZeroaryFunction(Serializer::deserialize0AryElement(filename, sym_signature_types));

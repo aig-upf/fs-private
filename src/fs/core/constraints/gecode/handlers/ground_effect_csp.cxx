@@ -112,62 +112,6 @@ bool GroundEffectCSP::solve(AtomIdx tuple, gecode::GecodeCSP* csp, RPGIndex& gra
 
 
 
-/*
-void GroundEffectCSP::solve_approximately(const Atom& atom, gecode::GecodeCSP* csp, RPGData& rpg, const State& seed) const {
-	// We have already propagated constraints with the call to status(), so we simply arbitrarily pick one consistent value per variable.
-	
-	std::shared_ptr<std::vector<Atom>> support = std::make_shared<std::vector<Atom>>();
-
-	// First process the direct state variables
-	for (const auto& element:_translator.getAllInputVariables()) {
-		VariableIdx variable = element.first;
-		const Gecode::IntVar& csp_var = _translator.resolveVariableFromIndex(element.second, *csp);
-		Gecode::IntVarValues values(csp_var);  // This returns a set with all consistent values for the given variable
-		assert(values()); // Otherwise the CSP would be inconsistent!
-		
-		// If the original value makes the situation a goal, then we don't need to add anything for this variable.
-		int seed_value = seed.getValue(variable);
-		int selected = Helper::selectValueIfExists(values, seed_value);
-		if (selected == seed_value) continue;
-		support->push_back(Atom(variable, selected)); // It not, we simply pick the first consistent value
-	}
-	
-	// Now the support of atoms such as 'clear(b)' that might appear in formulas in non-negated form.
-	support->insert(support->end(), _atom_state_variables.begin(), _atom_state_variables.end());
-	
-	// TODO - This needs further thinking - ATM we simply ignore nested fluents, which will make the approximation approach work quite bad when the problem has them.
-	const auto& nested_terms = effect_nested_fluents[0];
-	if (0 && !nested_terms.empty()) {
-
-		// And now of the derived state variables. Note that we keep track dynamically (with the 'insert' set) of the actual variables into which
-		// the CSP solution resolves to prevent repetitions
-		std::set<VariableIdx> inserted;
-
-		
-		const ProblemInfo& info = ProblemInfo::getInstance();
-		
-		for (const fs::FluentHeadedNestedTerm* fluent:nested_terms) {
-			VariableIdx variable = info.resolveStateVariable(fluent->getSymbolId(), _translator.resolveValues(fluent->getSubterms(), *csp));
-	//		VariableIdx variable = fluent->interpretVariable(assignment, binding);
-			if (inserted.find(variable) == inserted.end()) { // Don't push twice the support the same atom
-				// object_id value = fluent->interpret(assignment, binding);
-				
-				object_id value = 1; // i.e. assuming that there are no negated atoms on conditions.
-				if (!info.isPredicate(fluent->getSymbolId())) {
-					value = _translator.resolveValue(fluent, *csp);
-				}
-				
-				support->push_back(Atom(variable, value));
-				inserted.insert(variable);
-			}
-		}
-	}
-	
-	rpg.add(atom, get_action_id(csp), support);
-}
-*/
-
-
 void GroundEffectCSP::post(GecodeCSP& csp, const Atom& atom) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	assert(_effects.size() == 1);

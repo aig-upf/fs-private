@@ -221,22 +221,27 @@ Visit(const NestedTerm& lhs) {
 
 
 	// We process the 4 different possible cases separately:
-	if (function.isStatic() && constant_values.size() == subterms.size()) { // If all subterms are constants, we can resolve the value of the term schema statically
-		for (const auto ptr:st) delete ptr;
-		auto value = function.getFunction()(constant_values);
-		_result = Constant::create(value, function.getCodomainType(), _info);
-	}
-	else if (function.isStatic() && constant_values.size() != subterms.size() ) { // We have a statically-headed nested term
-		_result = new UserDefinedStaticTerm(symbol_id, st);
-	}
-	else if (!function.isStatic() && constant_values.size() == subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
-		VariableIdx id = _info.resolveStateVariable(symbol_id, constant_values);
-// 		for (const auto ptr:st) delete ptr;
-		_result =  new StateVariable(id, new FluentHeadedNestedTerm(symbol_id, st));
-	}
-	else {
-		_result =  new FluentHeadedNestedTerm(symbol_id, st);
-	}
+	bool all_constants = (constant_values.size() == subterms.size());
+	bool is_fluent_atom = all_constants && _info.is_fluent(symbol_id, constant_values);
+
+    if (!is_fluent_atom) {
+        // If all subterms are constants, we can resolve the value of the term schema statically:
+        if (all_constants) {
+            for (const auto ptr:st) delete ptr;
+            auto value = function.getFunction()(constant_values);
+            _result = Constant::create(value, function.getCodomainType(), _info);
+
+        } else { // We have a statically-headed nested term
+            _result = new UserDefinedStaticTerm(symbol_id, st);
+        }
+    } else {
+        if (all_constants) {
+            VariableIdx id = _info.resolveStateVariable(symbol_id, constant_values);
+            _result =  new StateVariable(id, new FluentHeadedNestedTerm(symbol_id, st));
+        } else {
+            _result =  new FluentHeadedNestedTerm(symbol_id, st);
+        }
+    }
 }
 
 
@@ -316,10 +321,21 @@ Visit(const FluentHeadedNestedTerm& lhs) {
 	std::vector<object_id> constant_values;
 	std::vector<const Term*> processed = bind_subterms(subterms, _binding, _info, constant_values);
 
-    LPT_DEBUG( "binding", "Binding (FluentHeadedNestedTerm): " << lhs );
-	if (constant_values.size() == subterms.size()) { // If all subterms were constant, and the symbol is fluent, we have a state variable
-		VariableIdx id = _info.resolveStateVariable(symbol_id, constant_values);
-		_result =  new StateVariable(id, new FluentHeadedNestedTerm(symbol_id, processed));
+    bool all_constants = (constant_values.size() == subterms.size());
+    bool is_fluent_atom = all_constants && _info.is_fluent(symbol_id, constant_values);
+
+	LPT_DEBUG( "binding", "Binding (FluentHeadedNestedTerm): " << lhs );
+	if (all_constants) { // If all subterms were constant, and the symbol is fluent, we have a state variable
+
+        if (is_fluent_atom) {
+            VariableIdx id = _info.resolveStateVariable(symbol_id, constant_values);
+            _result =  new StateVariable(id, new FluentHeadedNestedTerm(symbol_id, processed));
+
+        } else {  // If it is not a fluent atom, we can resolve its value
+            const auto& function = _info.getSymbolData(symbol_id);
+            auto value = function.getFunction()(constant_values);
+            _result = Constant::create(value, function.getCodomainType(), _info);
+        }
 
 	} else {
 		_result = new FluentHeadedNestedTerm(symbol_id, processed);

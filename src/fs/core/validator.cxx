@@ -1,6 +1,6 @@
+
 #include <functional>
 #include <iostream>
-#include <sstream>
 
 #include <fs/core/validator.hxx>
 #include <fs/core/problem.hxx>
@@ -15,7 +15,7 @@ namespace fs0 {
 
 class InvalidProblemSpecification : public std::runtime_error {
 public:
-	InvalidProblemSpecification(const std::string& msg) : std::runtime_error(msg) {}
+	explicit InvalidProblemSpecification(const std::string& msg) : std::runtime_error(msg) {}
 };
 
 bool
@@ -35,31 +35,9 @@ Validator::validate_state(const State& state, const ProblemInfo& info) {
 		}
 	}
 
-	// Check that the extension of each fluent symbol has been fully specified
-	// TODO - THIS CHECK IS NOT CORRECT. There might be domain points for certain logical symbols
-	// TODO - that are not modeled as state variables, as the preprocessing reachability analysis
-	// TODO - might have shown that they might never be true
-	/*
-	for (unsigned symbol = 0; symbol < info.getNumLogicalSymbols(); ++symbol) {
-		const SymbolData& data = info.getSymbolData(symbol);
-
-		if (data.isStatic()) continue;
-		// We have a fluent symbol
-
-		for (utils::binding_iterator it(data.getSignature(), info); !it.ended(); ++it) {
-			auto binding = *it;
-			const ValueTuple& point = binding.get_full_binding();
-			VariableIdx variable = info.resolveStateVariable(symbol, point);
-
-			if (variable > num_atoms) {
-				std::cerr << "Variable with index "<< variable
-					<< ", corresponding to (fluent) symbol \"" << info.getSymbolName(symbol) << "\", not included in dynamic part of the state."
-					<< " There must be some error." << std::endl;
-				error = true;
-			}
-		}
-	}
-	*/
+	// Note: it would be tempting to also check here that the extension of all fluent symbols has been fully specified,
+	// but not all points of a fluent symbol need be (fluent) part of the state, as some might have been proved
+	// unreachable
 	return error;
 }
 

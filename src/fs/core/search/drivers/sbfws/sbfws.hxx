@@ -7,6 +7,7 @@
 #include <fs/core/search/drivers/sbfws/base.hxx>
 #include <fs/core/heuristics/unsat_goal_atoms.hxx>
 #include <fs/core/heuristics/l0.hxx>
+#include <lapkt/tools/resources_control.hxx>
 #include <lapkt/search/components/open_lists.hxx>
 #include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 
@@ -400,7 +401,10 @@ public:
 	bool solve_model(PlanT& solution) { return search(_model.init(), solution); }
 
 	bool search(const StateT& s, PlanT& plan) {
-		NodePT root = std::make_shared<NodeT>(s, ++_generated);
+
+        LPT_INFO("cout", "Mem. usage on start of SBFWS search: " << get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+
+        NodePT root = std::make_shared<NodeT>(s, ++_generated);
 
         if (_monotonicity_csp_manager) {
             root->_domains = _monotonicity_csp_manager->create_root(s);
@@ -478,7 +482,7 @@ protected:
 
         _open.insert(node);
 
-		_stats.generation();
+
 		if (node->decreases_unachieved_subgoals()) _stats.generation_g_decrease();
 
 		return false;
@@ -490,6 +494,10 @@ protected:
 		expand_node(node);
 	}
 
+    float node_generation_rate() {
+        return _stats.generated() * 1.0 / (aptk::time_used() - _stats.initial_search_time());
+    }
+
 	// Return true iff at least one node was created
 	void expand_node(const NodePT& node) {
 		LPT_DEBUG("cout", *node);
@@ -500,6 +508,14 @@ protected:
 			// std::cout << *(Problem::getInstance().getGroundActions()[action]) << std::endl;
 			StateT s_a = _model.next(node->state, action);
 			NodePT successor = std::make_shared<NodeT>(std::move(s_a), action, node, ++_generated);
+
+			_stats.generation();
+            auto generated = _stats.generated();
+            if (generated % 50000 == 0) {
+
+                LPT_INFO("cout", "Node generation rate after " << generated / 1000 << "K generations (nodes/sec.): " << node_generation_rate()
+                        << ". Memory consumption: "<< get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
+            }
 
             if (_closed.check(successor)) continue; // The node has already been closed
             if (is_open(successor)) continue; // The node is currently on (some) open list, so we ignore it

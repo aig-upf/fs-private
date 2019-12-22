@@ -64,6 +64,11 @@ ALL_ATTRIBUTES = {
     'asp_prep_mem': 'asp_prep_mem',
     'mem_before_mt': 'mem_before_mt',
     'mem_before_search': 'mem_before_search',
+    'last_recorded_time': 'last_recorded_time',
+    'last_recorded_generations': Attribute('last_recorded_generations', min_wins=True),
+    'num_state_vars': 'num_state_vars',
+    'iw1_run': 'iw1_run',
+    'iw2_run': 'iw2_run',
 }
 
 DEFAULT_ATTRIBUTES = [
@@ -76,7 +81,7 @@ DEFAULT_ATTRIBUTES = [
 ]
 
 
-def add_standard_experiment_steps(exp, attributes=None):
+def add_standard_experiment_steps(exp, attributes=None, add_parse_step=False):
 
     attributes = attributes or DEFAULT_ATTRIBUTES
     attributes = [ALL_ATTRIBUTES[x] for x in attributes]
@@ -91,6 +96,9 @@ def add_standard_experiment_steps(exp, attributes=None):
     # Add step that executes all runs.
     exp.add_step('start', exp.start_runs)
 
+    if add_parse_step:
+        exp.add_parse_again_step()
+
     # Add step that collects properties from run directories and
     # writes them to *-eval/properties.
     exp.add_fetcher(name='fetch')
@@ -101,8 +109,8 @@ def add_standard_experiment_steps(exp, attributes=None):
         outfile='report.html')
 
 
-def add_all_runs(experiment, suites, algorithms, time_limit, memory_limit, attributes=None):
-    add_standard_experiment_steps(experiment, attributes)
+def add_all_runs(experiment, suites, algorithms, time_limit, memory_limit, attributes=None, add_parse_step=False):
+    add_standard_experiment_steps(experiment, attributes, add_parse_step)
 
     for task, algo in itertools.product(suites, algorithms.keys()):
         add_experiment_run(algorithm=algo, exp=experiment,
@@ -119,7 +127,9 @@ def add_experiment_run(algorithm, exp, invocator, task, time_limit, memory_limit
     run.add_command('run-planner',
                     invocator(),
                     time_limit=time_limit,
-                    memory_limit=memory_limit)
+                    memory_limit=memory_limit,
+                    soft_stdout_limit=None, hard_stdout_limit=None,
+                    soft_stderr_limit=None, hard_stderr_limit=None,)
 
     # AbsoluteReport needs the following properties: 'domain', 'problem', 'algorithm', 'coverage'.
     run.set_property('domain', task.domain)

@@ -43,7 +43,7 @@ class ProblemRepresentation(object):
         # Optionally, we'll want to print out the precomputed action groundings
         self.print_groundings_if_available(data['action_schemata'], self.index.groundings, self.index.objects)
         self.print_debug_data(data)
-        self.serialize_static_extensions()
+        self.serialize_initial_atoms()
 
         if self.requires_compilation():
             self.generate_components_code()
@@ -54,8 +54,8 @@ class ProblemRepresentation(object):
             method_factories=self.get_method_factories(),
         ))
 
-    def serialize_static_extensions(self):
-        for elem in self.index.initial_static_data.values():
+    def serialize_initial_atoms(self):
+        for elem in self.index.initial_data.values():
             assert isinstance(elem, DataElement)
             if isinstance(elem, ZeroarySet):
                 if not elem.elems:
