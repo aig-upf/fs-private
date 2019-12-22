@@ -198,7 +198,8 @@ def serialize_tarski_model(init_model, variables, obj_idx, fluents, statics):
 
     # First process the data in the model and create the old "FS" data structures
     # that will take care of the serialization.
-    for symbol in itertools.chain(statics, fluents):
+    relevant = [s for s in itertools.chain(statics, fluents) if s.name != 'total-cost']
+    for symbol in relevant:
         sname = symbol.name
         if isinstance(symbol, Predicate):
             d = static.instantiate_predicate(sname, symbol.arity)
@@ -207,7 +208,8 @@ def serialize_tarski_model(init_model, variables, obj_idx, fluents, statics):
             d = static.instantiate_function(sname, symbol.arity)
             _ = [d.add(tuple(x.symbol for x in point[:-1]), point[-1].symbol) for point in extensions[symbol.signature]]
 
-        init_data[symbol] = d.serialize_data(obj_idx)
+        if d.needs_serialization():
+            init_data[symbol] = d.serialize_data(obj_idx)
 
     # Now compute the initial assignment of values to state variables
     for sv in variables:
@@ -218,20 +220,6 @@ def serialize_tarski_model(init_model, variables, obj_idx, fluents, statics):
             value = object_id(value.name, obj_idx)
         varidx = variables.get_index(sv)
         init_sv_values.append([varidx, value])
-
-    # TODO Clean this up when no longer necessary:
-    # for symbol in fluents:
-    #     for point in extensions[symbol.signature]:
-    #         if isinstance(symbol, Predicate):
-    #             sv = StateVariableLite(symbol, point)
-    #             value = 1
-    #         else:  # A function
-    #             p, val = point[:-1], point[-1]
-    #             sv = StateVariableLite(symbol, p)
-    #             value = object_id(val.name, obj_idx)
-    #         if sv in variables:
-    #             varidx = variables.get_index(sv)
-    #             init_sv_values.append([varidx, value])
 
     # For some reason it seems the backend expects the atoms to be sorted
     svars = dict(variables=len(variables), atoms=sorted(init_sv_values))

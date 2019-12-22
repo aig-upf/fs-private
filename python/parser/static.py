@@ -4,7 +4,6 @@
 """
 import python.utils
 from . import fstrips
-from . import util
 
 
 def instantiate_extension(symbol):
@@ -53,6 +52,12 @@ class DataElement:
     def serialize_data(self, symbols):
         raise RuntimeError("Method must be subclassed")
 
+    def needs_serialization(self):
+        """ Whether the given data element needs serialization.
+        All data elements need serialization except for those corresponding to nullary atoms that are false in the
+        initial state. """
+        return True
+
 
 class StaticProcedure(object):
     def __init__(self, name):
@@ -65,8 +70,8 @@ class Arity0Element(DataElement):
         self.elems = {}
 
     def add(self, elem, value):
-        if len(elem) > 0 :
-            raise RuntimeError("Error: Arity 0 element '{}' has {} arguments: {}".format(self.name, len(elem), elem ))
+        if len(elem) > 0:
+            raise RuntimeError("Error: Arity 0 element '{}' has {} arguments: {}".format(self.name, len(elem), elem))
         assert len(elem) == 0
         self.elems[elem] = value
 
@@ -139,7 +144,14 @@ class ZeroarySet(UnarySet):
         self.elems[args] = value
 
     def serialize_data(self, symbols):
+        assert () in self.elems
         return [serialize_symbol(self.elems[()], symbols)]  # We simply print the only element
+
+    def needs_serialization(self):
+        """ Whether the given data element needs serialization.
+        All data elements need serialization except for those corresponding to nullary atoms that are false in the
+        initial state. """
+        return () in self.elems
 
 
 class BinarySet(UnarySet):
