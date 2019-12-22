@@ -405,9 +405,14 @@ def print_groundings(schemas, groundings, obj_idx, serializer: Serializer):
     data = []
 
     # Order matters! The groundings of each action schema are provided in consecutive blocks, one grounding per line
-    for i, action in enumerate(schemas, 0):
+    id_ = 0
+    for action in schemas:
         action_name = action['name']
-        data.append("# {} # {}".format(i, action_name))  # A comment line
+        schema_groundings = groundings[action_name]
+        if not schema_groundings:
+            continue
+        data.append("# {} # {}".format(id_, action_name))  # A comment line
+        id_ += 1
 
         action_groundings = []  # A list with the (integer index of) each grounding
         for grounding in groundings[action_name]:
