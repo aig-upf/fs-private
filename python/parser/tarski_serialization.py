@@ -1,8 +1,8 @@
+import itertools
 import os
 from collections import defaultdict
 
 from tarski.fstrips import AddEffect, DelEffect, FunctionalEffect, LiteralEffect, UniversalEffect
-from tarski.grounding.common import StateVariableLite
 from tarski.syntax import Interval, Sort, util, Atom, Contradiction, Tautology, CompoundFormula, QuantifiedFormula, \
     Connective, CompoundTerm, Predicate, Constant, Variable, BuiltinPredicateSymbol
 from tarski.syntax.sorts import inclusion_closure
@@ -103,10 +103,9 @@ def serialize_object_info(language):
 
 
 def serialize_symbol_info(language, obj_idx, variables, statics):
-
-    # We do two passes over the set of state variables, one to collect to  which symbol belongs each,
-    # and later another one to compile the relevant data for the backend
-    symbol_variables = defaultdict(list)
+    # We do two passes over the set of state variables, first to collect to which each symbol belongs,
+    # and second to compile the relevant data for the backend
+    symbol_variables = defaultdict(list)  # state variables derived from each symbol
     for varid, v in variables.enumerate():
         symbol_variables[v.symbol.name].append(varid)
 
@@ -133,15 +132,14 @@ def serialize_symbol_info(language, obj_idx, variables, statics):
         # <ID, name, type, <function_domain>, function_codomain, state_variables, static?, unbounded_arity?>
         symdata.append([sid, sym.symbol, type_, domain, codomain, symbol_variables[sym.symbol], is_static, unbounded])
 
-    vardata, var_idx = [], {}
+    vardata = []
     for varid, v in variables.enumerate():
         sym = v.symbol
         fstype = 'bool' if isinstance(sym, Predicate) else sym.codomain.name
         point = [object_id(c.symbol, obj_idx) for c in v.binding]
         vardata.append(dict(id=varid, name=str(v), fstype=fstype, symbol_id=smb_idx[sym.symbol], point=point))
-        var_idx[v] = varid
 
-    return symdata, vardata, smb_idx, var_idx
+    return symdata, vardata, smb_idx
 
 
 def serialize_tarski_formula(exp, obj_idx, binding, negated=False):
@@ -192,15 +190,15 @@ def serialize_tarski_term(exp, obj_idx, binding):
     raise RuntimeError(f'Unknown Tarski expression type {type(exp)} for expression {exp}')
 
 
-def serialize_tarski_model(init_model, var_idx, obj_idx, fluents, statics):
-    init_atoms = []
-    static_data = dict()
+def serialize_tarski_model(init_model, variables, obj_idx, fluents, statics):
+    init_sv_values = []
+    init_data = dict()
 
     extensions = init_model.list_all_extensions()
 
-    # First process the data that is static in the model, and create the old "FS" data structures
+    # First process the data in the model and create the old "FS" data structures
     # that will take care of the serialization.
-    for symbol in statics:
+    for symbol in itertools.chain(statics, fluents):
         sname = symbol.name
         if isinstance(symbol, Predicate):
             d = static.instantiate_predicate(sname, symbol.arity)
@@ -209,22 +207,35 @@ def serialize_tarski_model(init_model, var_idx, obj_idx, fluents, statics):
             d = static.instantiate_function(sname, symbol.arity)
             _ = [d.add(tuple(x.symbol for x in point[:-1]), point[-1].symbol) for point in extensions[symbol.signature]]
 
-        static_data[symbol] = d.serialize_data(obj_idx)
+        init_data[symbol] = d.serialize_data(obj_idx)
 
-    # And now process the fluent data in the model.
-    for symbol in fluents:
-        for point in extensions[symbol.signature]:
-            if isinstance(symbol, Predicate):
-                varidx = var_idx[StateVariableLite(symbol, point)]
-                value = 1
-            else:  # A function
-                varidx = var_idx[StateVariableLite(symbol, point[:-1])]
-                value = object_id(point[-1].name, obj_idx)
-            init_atoms.append([varidx, value])
+    # Now compute the initial assignment of values to state variables
+    for sv in variables:
+        if isinstance(sv.symbol, Predicate):
+            value = int(init_model.holds(sv.symbol, sv.binding))
+        else:  # A function
+            value = init_model.value(sv.symbol, sv.binding)
+            value = object_id(value.name, obj_idx)
+        varidx = variables.get_index(sv)
+        init_sv_values.append([varidx, value])
+
+    # TODO Clean this up when no longer necessary:
+    # for symbol in fluents:
+    #     for point in extensions[symbol.signature]:
+    #         if isinstance(symbol, Predicate):
+    #             sv = StateVariableLite(symbol, point)
+    #             value = 1
+    #         else:  # A function
+    #             p, val = point[:-1], point[-1]
+    #             sv = StateVariableLite(symbol, p)
+    #             value = object_id(val.name, obj_idx)
+    #         if sv in variables:
+    #             varidx = variables.get_index(sv)
+    #             init_sv_values.append([varidx, value])
 
     # For some reason it seems the backend expects the atoms to be sorted
-    init_data = dict(variables=len(var_idx), atoms=sorted(init_atoms))
-    return init_data, static_data
+    svars = dict(variables=len(variables), atoms=sorted(init_sv_values))
+    return svars, init_data
 
 
 def serialize_tarski_effect(effect, obj_idx, binding):
@@ -276,12 +287,11 @@ def generate_tarski_problem(problem, fluents, statics, variables):
 
     obj_idx, data['objects'], type_objects = serialize_object_info(problem.language)
 
-    data['symbols'], data['variables'], smb_idx, var_idx = serialize_symbol_info(
-        problem.language, obj_idx, variables, statics)
+    data['symbols'], data['variables'], smb_idx = serialize_symbol_info(problem.language, obj_idx, variables, statics)
 
     type_idx, data['types'] = serialize_type_info(problem.language, type_objects)
 
-    data['init'], init_atoms = serialize_tarski_model(problem.init, var_idx, obj_idx, fluents, statics)
+    data['init'], init_atoms = serialize_tarski_model(problem.init, variables, obj_idx, fluents, statics)
 
     # No binding unit for the goal, which must be a sentence
     data['goal'] = dict(conditions=serialize_tarski_formula(problem.goal, obj_idx, {}, negated=False), unit=[])

@@ -31,9 +31,11 @@ def instantiate_predicate(name, arity):
 def serialize_symbol(symbol, table):
     if python.utils.is_int(symbol) or python.utils.is_float(symbol):
         return str(symbol)
-    try :
+    if symbol is None:
+        return ""
+    try:
         serialized = table[symbol.name]
-    except AttributeError :
+    except AttributeError:
         serialized = table[symbol]
     return str(serialized)
 
@@ -133,7 +135,7 @@ class ZeroarySet(UnarySet):
         self.elems = {}
 
     def add(self, args, value):
-        assert args is ()
+        assert args == ()
         self.elems[args] = value
 
     def serialize_data(self, symbols):

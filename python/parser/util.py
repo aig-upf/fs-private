@@ -104,7 +104,7 @@ class IndexDictionary(object):
     __repr__ = __str__
 
     def __iter__(self):
-        return self.data.__iter__()
+        yield from self.data
 
     def __contains__(self, k):
         return k in self.data
