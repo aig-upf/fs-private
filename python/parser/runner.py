@@ -280,6 +280,8 @@ def run(args):
     print(f'Problem instance: "{instance_name}" ({os.path.realpath(args.instance)})')
     print(f'Working directory: {os.path.realpath(workdir)}')
 
+    t0 = resources.Timer()
+
     with resources.timing(f"Parsing problem", newline=True):
         problem = parse_problem_with_tarski(args.domain, args.instance)
 
@@ -308,8 +310,7 @@ def run(args):
                         var_ordering=args.var_ordering, reachable_vars=ground_variables,
                         sdd_incr_minimization_time=args.sdd_incr_minimization_time)
 
-    # return True  # Just to debug the preprocessing
-
+    print(f"Python parser and preprocessing: {t0}")
     data, init_atoms, obj_idx = generate_tarski_problem(problem, fluents, statics, variables=ground_variables)
     serializer = Serializer(os.path.join(workdir, 'data'))
     serialize_representation(data, init_atoms, serializer, debug=args.edebug or args.debug)
