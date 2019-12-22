@@ -282,6 +282,8 @@ def run(args):
     print(f'Problem instance: "{instance_name}" ({os.path.realpath(args.instance)})')
     print(f'Workspace: {os.path.realpath(out_dir)}')
 
+    t0 = resources.Timer()
+
     # Parse the task with FD's parser and transform it to our format
     if not args.asp:
         if args.hybrid:
@@ -333,8 +335,7 @@ def run(args):
                         var_ordering=args.var_ordering, reachable_vars=reachable_vars,
                         sdd_incr_minimization_time=args.sdd_incr_minimization_time)
 
-    # return True  # Just to debug the preprocessing
-
+    print(f"Python parser and preprocessing: {t0}")
     translation_dir = run_solver(out_dir, args, args.parse_only)
 
     return validate(args.domain, args.instance, os.path.join(translation_dir, 'first.plan'))
