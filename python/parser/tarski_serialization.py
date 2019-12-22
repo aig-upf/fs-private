@@ -111,6 +111,8 @@ def serialize_symbol_info(language, obj_idx, variables, statics):
 
     symdata, smb_idx = [], {}
     for sym in util.get_symbols(language, include_builtin=False):
+        if sym.name == "total-cost":
+            continue
         sid = len(smb_idx)
         smb_idx[sym.symbol] = sid
         if isinstance(sym, Predicate):
@@ -226,6 +228,12 @@ def serialize_tarski_model(init_model, variables, obj_idx, fluents, statics):
     return svars, init_data
 
 
+def is_cost_effect(effect):
+    """ Whether the given effect is a special total-cost effect. """
+    return isinstance(effect, FunctionalEffect) and isinstance(effect.lhs, CompoundTerm) \
+        and effect.lhs.symbol.name == "total-cost"
+
+
 def serialize_tarski_effect(effect, obj_idx, binding):
     cond = serialize_tarski_formula(effect.condition, obj_idx, binding)
 
@@ -246,6 +254,8 @@ def serialize_tarski_effect(effect, obj_idx, binding):
     elif isinstance(effect, LiteralEffect):
         pass
     elif isinstance(effect, FunctionalEffect):
+        if is_cost_effect(effect):  # At the moment we simply ignore cost effects
+            return None
         lhs = serialize_tarski_term(effect.lhs, obj_idx, binding)
         rhs = serialize_tarski_term(effect.rhs, obj_idx, binding)
         return dict(type='functional', condition=cond, lhs=lhs, rhs=rhs)
@@ -261,10 +271,15 @@ def serialize_tarski_action_schema(action, type_idx, obj_idx):
     # TODO This binding unit information is not complete, and will not work for problems with conditional effects,
     #      quantified vars, etc. Check classes BindingUnit and FSActionSchema for the previous working implementation
     unit = [[i, p.symbol, tarski_sort_to_typename(p.sort)] for i, p in enumerate(action.parameters)]
+    effects = []
+    for eff in action.effects:
+        serialized = serialize_tarski_effect(eff, obj_idx, binding)
+        if serialized is not None:
+            effects.append(serialized)
     return dict(name=action.name, signature=signature, type='control',
                 parameters=paramnames,
                 conditions=serialize_tarski_formula(action.precondition, obj_idx, binding, False),
-                effects=[serialize_tarski_effect(eff, obj_idx, binding) for eff in action.effects],
+                effects=effects,
                 unit=unit)
 
 
