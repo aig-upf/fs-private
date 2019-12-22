@@ -295,7 +295,7 @@ def run(args):
             action_groundings = grounding.ground_actions()
     else:
         with resources.timing(f"Computing naive groundings", newline=True):
-            grounding = NaiveGroundingStrategy(problem)
+            grounding = NaiveGroundingStrategy(problem, ignore_symbols={'total-cost'})
             ground_variables = grounding.ground_state_variables()
             action_groundings = None  # Schemas will be ground in the backend
 
