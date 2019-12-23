@@ -30,17 +30,21 @@ obtain_goal_atoms(const fs::Formula* goal) {
 //! A helper to derive the distinct goal atoms
 std::vector<const fs::Formula*>
 obtain_goal_atoms(const Problem& problem, const fs::Formula* goal) {
+    const auto* atom = dynamic_cast<const fs::EQAtomicFormula*>(goal);
 	const auto* conjunction = dynamic_cast<const fs::Conjunction*>(goal);
 	const auto* ex_q = dynamic_cast<const fs::ExistentiallyQuantifiedFormula*>(goal);
-	if (!conjunction && !ex_q) {
+	if (!atom && !conjunction && !ex_q) {
+		LPT_INFO("cout", "Cannot handle formula " << *goal);
 		throw std::runtime_error("This search mode can only be applied to problems featuring goal conjunctions of existentially-quantified formulas");
 	}
 
 	std::vector<const fs::Formula*> goal_atoms;
 
 	if (ex_q) {
-		// TODO This might be a memory leak
+		// TODO This will be a memory leak, but let's live with it
 		goal_atoms.push_back(new fs::ComplexExistentialFormula(ex_q, problem.get_tuple_index()));
+	} else if (atom) {
+		goal_atoms.push_back(atom);
 	} else {
 		assert(conjunction);
 		for (const fs::Formula* atom:conjunction->getSubformulae()) {
