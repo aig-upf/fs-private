@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include <stdio.h>
 #include <unordered_set>
 
 #include <lapkt/tools/resources_control.hxx>
@@ -20,7 +19,7 @@
 #include <fs/core/utils/config.hxx>
 
 
-namespace fs0 { namespace bfws {
+namespace fs0::bfws {
 
 template <typename StateT, typename ActionType>
 class IWRunNode {
@@ -406,7 +405,7 @@ public:
 		assert(_config._max_width == 2);
 
 		_config._complete = false;
-		float simt0 = aptk::time_used();
+		auto simt0 = aptk::time_used();
   		run(seed, _config._max_width);
 		report_simulation_stats(simt0);
 
@@ -419,7 +418,7 @@ public:
 		assert(_config._max_width == 1);
 		_config._complete = false;
 
-		float simt0 = aptk::time_used();
+		auto simt0 = aptk::time_used();
   		run(seed, _config._max_width);
 		report_simulation_stats(simt0);
 
@@ -686,7 +685,7 @@ public:
 					// LPT_INFO("cout", "Simulation - Node generated: " << *successor);
 
 					if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
-						report("All subgoals reached");
+						report("All subgoals reached", max_width);
 						return true;
 					}
 
@@ -702,7 +701,7 @@ public:
 			if (open_w1.empty() && open_w2.empty()) break;
 		}
 
-		report("State space exhausted");
+		report("State space exhausted", max_width);
 		return false;
 	}
 
@@ -717,10 +716,11 @@ public:
 		else ++_w_gt2_nodes_generated;
 	}
 
-	void report(const std::string& result) const {
+	void report(const std::string& result, unsigned max_width) const {
 		if (!_verbose) return;
-		LPT_INFO("cout", "Simulation - Result: " << result);
-		LPT_INFO("cout", "Simulation - Num reached subgoals: " << (_model.num_subgoals() - _unreached.size()) << " / " << _model.num_subgoals());
+		float perc_reached_subgoals = float(_model.num_subgoals() - _unreached.size()) / _model.num_subgoals();
+		LPT_INFO("cout", "Simulation - Finished IW(" << max_width << ") Simulation. Fraction reached subgoals: " << std::fixed << std::setprecision(2) << perc_reached_subgoals);
+		LPT_INFO("cout", "Simulation - Reached " << (_model.num_subgoals() - _unreached.size()) << " / " << _model.num_subgoals() << " subgoals");
 		LPT_INFO("cout", "Simulation - Expanded nodes with w=1 " << _w1_nodes_expanded);
 		LPT_INFO("cout", "Simulation - Expanded nodes with w=2 " << _w2_nodes_expanded);
 		LPT_INFO("cout", "Simulation - Generated nodes with w=1 " << _w1_nodes_generated);
@@ -786,4 +786,4 @@ protected:
 // 	const std::unordered_set<NodePT>& get_relevant_nodes() const { return _visited; }
 };
 
-} } // namespaces
+} // namespaces
