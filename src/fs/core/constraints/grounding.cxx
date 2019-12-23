@@ -54,6 +54,7 @@ namespace fs0 {
         unsigned id = 0;
         for (const fs::Axiom* data : schemata) {
             unsigned grounded_0 = grounded.size();
+            _unused(grounded_0);
             const Signature& signature = data->getSignature();
 
             // In case the action schema is directly not-lifted, we simply bind it with an empty binding and continue.
