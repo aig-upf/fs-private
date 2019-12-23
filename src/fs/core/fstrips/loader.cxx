@@ -61,7 +61,6 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const Language
 	} else if (formula_type == "atom") {
 		std::string symbol = tree["symbol"].GetString();
 		unsigned symbol_id = lang.get_symbol_id(symbol);
-		bool negated = tree["negated"].GetBool(); // TODO NEGATED SHOULDN'T BE HERE, BUT RATHER A NEGATION.
 		std::vector<const Term*> subterms = _parseTermList(tree["children"], lang);
 
 		return new AtomicFormula(symbol_id, subterms);
