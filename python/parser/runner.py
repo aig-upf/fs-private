@@ -264,6 +264,10 @@ def create_output_dir(args, domain_name, instance_name):
             args.tag = time.strftime("%y%m%d")
         workspace = FS_WORKSPACE if args.workspace is None else args.workspace
         translation_dir = os.path.abspath(os.path.join(*[workspace, args.tag, domain_name, instance_name]))
+    try:
+        shutil.rmtree(translation_dir)
+    except FileNotFoundError:
+        pass
     utils.mkdirp(translation_dir)
     return translation_dir
 
