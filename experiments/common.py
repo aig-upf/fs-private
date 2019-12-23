@@ -60,8 +60,6 @@ ALL_ATTRIBUTES = {
     'sdd_theory_constraints': Attribute('sdd_theory_constraints', min_wins=True),
     'successor_generator': 'successor_generator',
     'num_reach_actions': 'num_reach_actions',
-    'asp_prep_time': 'asp_prep_time',
-    'asp_prep_mem': 'asp_prep_mem',
     'mem_before_mt': 'mem_before_mt',
     'mem_before_search': 'mem_before_search',
     'last_recorded_time': 'last_recorded_time',
@@ -69,6 +67,10 @@ ALL_ATTRIBUTES = {
     'num_state_vars': 'num_state_vars',
     'iw1_run': 'iw1_run',
     'iw2_run': 'iw2_run',
+    'time_reachability': 'time_reachability',
+    'mem_reachability': 'mem_reachability',
+    'time_backend': 'time_backend',
+    'time_frontend': 'time_frontend',
 }
 
 DEFAULT_ATTRIBUTES = [

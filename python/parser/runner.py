@@ -265,7 +265,7 @@ def create_working_dir(args, domain_name, instance_name):
 
     # Remove previous directory, if existed *and* is below the planner directory tree
     wd = Path(translation_dir).resolve()
-    if wd.exists() and Path(FS_PATH) in wd.parents:
+    if wd.exists() and Path(FS_PATH) == wd:
         shutil.rmtree(translation_dir)
 
     wd.mkdir(parents=True, exist_ok=True)
@@ -282,6 +282,7 @@ def sort_state_variables(ground_variables):
 
 
 def run(args):
+    t0 = resources.Timer()
     is_debug_run = args.edebug or args.debug
     # Determine the proper domain and instance filenames
     if args.domain is None:
@@ -297,8 +298,6 @@ def run(args):
     print(f'Problem domain: "{domain_name}" ({os.path.realpath(args.domain)})')
     print(f'Problem instance: "{instance_name}" ({os.path.realpath(args.instance)})')
     print(f'Workspace: {os.path.realpath(workdir)}')
-
-    t0 = resources.Timer()
 
     with resources.timing(f"Parsing problem", newline=True):
         problem = parse_problem_with_tarski(args.domain, args.instance)

@@ -17,7 +17,7 @@
 #include <fs/core/utils/printers/printers.hxx>
 #include <fs/core/utils/system.hxx>
 
-namespace fs0 { namespace drivers {
+namespace fs0::drivers {
 
 class Utils {
 public:
@@ -27,7 +27,7 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 	for (const auto& point:stats.dump()) {
 		std::string val = std::get<2>(point);
 
-		try { double _ = boost::lexical_cast<double>(val); _unused(_); }
+		try { auto _ = boost::lexical_cast<double>(val); _unused(_); }
 		catch(boost::bad_lexical_cast& e) {
 			// Not a number, we print a string
 			val = "\"" + val + "\"";
@@ -46,7 +46,7 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 		//! The type of any plan
 		using PlanT = std::vector<typename StateModelT::ActionType::IdType>;
 
-		SearchExecution(const StateModelT& model) :
+		explicit SearchExecution(const StateModelT& model) :
 				_model(model),
 				_problem(model.getTask())
 		{}
@@ -56,7 +56,7 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
             const std::string& out_dir = options.getOutputDir();
 			LPT_INFO("cout", "Starting search. Results written to " << out_dir);
 			std::string plan_filename = options.getPlanfile();
-			if (plan_filename == "") {
+			if (plan_filename.empty()) {
                 plan_filename = out_dir + "/first.plan";
 			}
 			LPT_INFO("cout", "Plan will be output to " << plan_filename);
@@ -95,7 +95,6 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 			double total_planning_time = aptk::time_used() - start_time;
 
 
-
 			if (solved) {
 				std::ofstream plan_out(plan_filename);
 				PlanPrinter::print(plan, plan_out);
@@ -111,7 +110,7 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 
 			json_out << "{" << std::endl;
 			dump_stats(json_out, stats);
-			json_out << "\t\"total_time\": " << total_planning_time << "," << std::endl;
+			json_out << "\t\"time_backend\": " << total_planning_time << "," << std::endl;
 			json_out << "\t\"search_time\": " << search_time << "," << std::endl;
 			// json_out << "\t\"search_time_alt\": " << _search_time << "," << std::endl;
 			json_out << "\t\"memory\": " << get_peak_memory_in_kb() << "," << std::endl;
@@ -131,8 +130,8 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 				LPT_INFO("cout", std::get<1>(point) << ": " << std::get<2>(point));
 			}
             LPT_INFO("cout", "Generation rate (nodes/sec): " << std::fixed << std::setprecision(2) << genrate);
-            LPT_INFO("cout", "Total Planning Time: " << total_planning_time << " s.");
-			LPT_INFO("cout", "Actual Search Time: " << search_time << " s.");
+            LPT_INFO("cout", "Total Backend Time: " << total_planning_time << " s.");
+			LPT_INFO("cout", "Search Time: " << search_time << " s.");
 			LPT_INFO("cout", "Peak mem. usage: " << get_peak_memory_in_kb() << " kB.");
 
 			ExitCode result;
@@ -178,4 +177,4 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 
 };
 
-} } // namespaces
+} // namespaces
