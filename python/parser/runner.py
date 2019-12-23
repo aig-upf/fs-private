@@ -275,6 +275,8 @@ def create_output_dir(args, domain_name, instance_name):
 
 
 def run(args):
+    t0 = resources.Timer()
+
     # Determine the proper domain and instance filenames
     if args.domain is None:
         args.domain = pddl_file.extract_domain_name(args.instance)
@@ -287,8 +289,6 @@ def run(args):
     print(f'Problem domain: "{domain_name}" ({os.path.realpath(args.domain)})')
     print(f'Problem instance: "{instance_name}" ({os.path.realpath(args.instance)})')
     print(f'Workspace: {out_dir}')
-
-    t0 = resources.Timer()
 
     # Parse the task with FD's parser and transform it to our format
     if not args.asp:
