@@ -118,12 +118,14 @@ deserialize_typed_objects(const ProblemInfo& info, const std::string& line, cons
 }
 
 void report_num_ground_actions(std::size_t total, std::vector<std::pair<std::string, unsigned>>& action_counts) {
+    LPT_INFO("cout", "Loaded a total of " << total << " reachable ground actions");
+#ifdef DEBUG
     std::vector<std::string> elems;
     for (const auto& elem:action_counts) {
         elems.emplace_back(elem.first + ": " + std::to_string(elem.second));
     }
-
-    LPT_INFO("cout", "Loaded a total of " << total << " reachable ground actions, of which: " << boost::algorithm::join(elems, ", "));
+    LPT_DEBUG("cout", "Action breakdown: " << boost::algorithm::join(elems, ", "));
+#endif
 }
 
 //! Loads a set of ground action from the given data directory, if they exist, or else returns an empty vector
