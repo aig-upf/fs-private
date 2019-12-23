@@ -255,19 +255,21 @@ def solver_name(args):
 
 def create_working_dir(args, domain_name, instance_name):
     """ Determine what the output dir should be and create it. Return the output dir path. """
-    working_dir = args.output
-    if not working_dir:
+    translation_dir = args.output
+    if not translation_dir:
         if args.tag is None:
             import time
             args.tag = time.strftime("%y%m%d")
         workspace = FS_WORKSPACE if args.workspace is None else args.workspace
-        working_dir = os.path.abspath(os.path.join(*[workspace, args.tag, domain_name, instance_name]))
-    try:
-        shutil.rmtree(working_dir)
-    except FileNotFoundError:
-        pass
-    utils.mkdirp(working_dir)
-    return working_dir
+        translation_dir = os.path.abspath(os.path.join(workspace, args.tag, domain_name, instance_name))
+
+    # Remove previous directory, if existed *and* is below the planner directory tree
+    wd = Path(translation_dir).resolve()
+    if wd.exists() and Path(FS_PATH) in wd.parents:
+        shutil.rmtree(translation_dir)
+
+    wd.mkdir(parents=True, exist_ok=True)
+    return str(wd)
 
 
 def sort_state_variables(ground_variables):
@@ -294,7 +296,7 @@ def run(args):
 
     print(f'Problem domain: "{domain_name}" ({os.path.realpath(args.domain)})')
     print(f'Problem instance: "{instance_name}" ({os.path.realpath(args.instance)})')
-    print(f'Working directory: {os.path.realpath(workdir)}')
+    print(f'Workspace: {os.path.realpath(workdir)}')
 
     t0 = resources.Timer()
 
