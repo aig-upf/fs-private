@@ -263,13 +263,15 @@ def create_output_dir(args, domain_name, instance_name):
             import time
             args.tag = time.strftime("%y%m%d")
         workspace = FS_WORKSPACE if args.workspace is None else args.workspace
-        translation_dir = os.path.abspath(os.path.join(*[workspace, args.tag, domain_name, instance_name]))
-    try:
+        translation_dir = os.path.abspath(os.path.join(workspace, args.tag, domain_name, instance_name))
+
+    # Remove previous directory, if existed *and* is below the planner directory tree
+    wd = Path(translation_dir).resolve()
+    if wd.exists() and Path(FS_PATH) in wd.parents:
         shutil.rmtree(translation_dir)
-    except FileNotFoundError:
-        pass
-    utils.mkdirp(translation_dir)
-    return translation_dir
+
+    wd.mkdir(parents=True, exist_ok=True)
+    return str(wd)
 
 
 def run(args):
@@ -284,7 +286,7 @@ def run(args):
 
     print(f'Problem domain: "{domain_name}" ({os.path.realpath(args.domain)})')
     print(f'Problem instance: "{instance_name}" ({os.path.realpath(args.instance)})')
-    print(f'Workspace: {os.path.realpath(out_dir)}')
+    print(f'Workspace: {out_dir}')
 
     t0 = resources.Timer()
 
