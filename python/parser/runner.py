@@ -16,7 +16,7 @@ from pathlib import Path
 from .. import utils, FS_PATH, FS_WORKSPACE, FS_BUILD
 from .templates import tplManager
 from .tarski_serialization import generate_tarski_problem, serialize_representation, Serializer, print_groundings
-
+from tarski.syntax.transform import compile_universal_effects_away
 from tarski.io import FstripsReader, find_domain_filename
 from tarski.utils import resources
 from tarski.grounding import LPGroundingStrategy, NaiveGroundingStrategy
@@ -301,6 +301,10 @@ def run(args):
 
     with resources.timing(f"Parsing problem", newline=True):
         problem = parse_problem_with_tarski(args.domain, args.instance)
+
+    with resources.timing(f"Preprocessing problem", newline=True):
+        # Both the LP reachability analysis and the backend expect a problem without universally-quantified effects
+        problem = compile_universal_effects_away(problem)
 
     if args.asp and args.sdd:
         raise RuntimeError("SDD and ASP preprocessing are not compatible")
