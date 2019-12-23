@@ -22,7 +22,6 @@ from tarski.utils import resources
 from tarski.grounding import LPGroundingStrategy, NaiveGroundingStrategy
 
 
-
 def parse_arguments(args):
     parser = argparse.ArgumentParser(description='Bootstrap and run the FS planner on a given instance.'
                                                  'The process might involve generating, compiling and linking'
@@ -267,7 +266,17 @@ def create_working_dir(args, domain_name, instance_name):
     return working_dir
 
 
+def sort_state_variables(ground_variables):
+    from tarski.util import IndexDictionary
+    varnames = sorted(ground_variables, key=str)
+    variables = IndexDictionary()
+    for v in varnames:
+        variables.add(v)
+    return variables
+
+
 def run(args):
+    is_debug_run = args.edebug or args.debug
     # Determine the proper domain and instance filenames
     if args.domain is None:
         args.domain = find_domain_filename(args.instance)
@@ -319,9 +328,12 @@ def run(args):
                 reachable_schemas[name] = act
         problem.actions = reachable_schemas
 
+    if is_debug_run:
+        ground_variables = sort_state_variables(ground_variables)
+
     data, init_atoms, obj_idx = generate_tarski_problem(problem, fluents, statics, variables=ground_variables)
     serializer = Serializer(os.path.join(workdir, 'data'))
-    serialize_representation(data, init_atoms, serializer, debug=args.edebug or args.debug)
+    serialize_representation(data, init_atoms, serializer, debug=is_debug_run)
     # Print the reachable action groundings if available;
     # if not, erase grounding files that might exist from previous runs.
     print_groundings(data['action_schemata'], action_groundings, obj_idx, serializer)
@@ -346,7 +358,7 @@ def run(args):
     if not args.parse_only:
         compile_translation(workdir, use_vanilla, args)
 
-    if args.debug:  # If debugging, we perform a dry-run to get the call arguments and generate debugging scripts
+    if is_debug_run:  # If debugging, we perform a dry-run to get the call arguments and generate debugging scripts
         planner_arguments = run_solver(workdir, args, True)
         generate_debug_scripts(workdir, planner_arguments)
 
