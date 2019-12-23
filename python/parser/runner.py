@@ -267,7 +267,7 @@ def create_output_dir(args, domain_name, instance_name):
 
     # Remove previous directory, if existed *and* is below the planner directory tree
     wd = Path(translation_dir).resolve()
-    if wd.exists() and Path(FS_PATH) in wd.parents:
+    if wd.exists() and Path(FS_PATH) == wd:
         shutil.rmtree(translation_dir)
 
     wd.mkdir(parents=True, exist_ok=True)
