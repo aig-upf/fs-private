@@ -284,6 +284,8 @@ def run(args):
     # Determine the proper domain and instance filenames
     if args.domain is None:
         args.domain = find_domain_filename(args.instance)
+        if args.domain is None:
+            raise RuntimeError(f'Could not find domain filename that matches instance file "{args.instance}"')
 
     domain_name, instance_name = extract_names(args.domain, args.instance)
 
