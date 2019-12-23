@@ -10,6 +10,7 @@ import argparse
 import glob
 import shutil
 import subprocess
+from collections import OrderedDict
 from pathlib import Path
 
 from .. import utils, FS_PATH, FS_WORKSPACE, FS_BUILD
@@ -310,7 +311,14 @@ def run(args):
                         var_ordering=args.var_ordering, reachable_vars=ground_variables,
                         sdd_incr_minimization_time=args.sdd_incr_minimization_time)
 
-    print(f"Python parser and preprocessing: {t0}")
+    if action_groundings:
+        # Prune those action schemas that have no grounding at all
+        reachable_schemas = OrderedDict()
+        for name, act in problem.actions.items():
+            if action_groundings[name]:
+                reachable_schemas[name] = act
+        problem.actions = reachable_schemas
+
     data, init_atoms, obj_idx = generate_tarski_problem(problem, fluents, statics, variables=ground_variables)
     serializer = Serializer(os.path.join(workdir, 'data'))
     serialize_representation(data, init_atoms, serializer, debug=args.edebug or args.debug)
@@ -342,6 +350,7 @@ def run(args):
         planner_arguments = run_solver(workdir, args, True)
         generate_debug_scripts(workdir, planner_arguments)
 
+    print(f"Python parser and preprocessing: {t0}")
     # Invoke the planner:
     translation_dir = run_solver(workdir, args, args.parse_only)
 
