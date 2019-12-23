@@ -262,6 +262,10 @@ def create_working_dir(args, domain_name, instance_name):
             args.tag = time.strftime("%y%m%d")
         workspace = FS_WORKSPACE if args.workspace is None else args.workspace
         working_dir = os.path.abspath(os.path.join(*[workspace, args.tag, domain_name, instance_name]))
+    try:
+        shutil.rmtree(working_dir)
+    except FileNotFoundError:
+        pass
     utils.mkdirp(working_dir)
     return working_dir
 
