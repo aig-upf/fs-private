@@ -301,7 +301,7 @@ def run(args):
             fs_task = create_fs_task(fd_task, domain_name, instance_name)
     else:
         from .asp import processor
-        with resources.timing(f"Parsing and simplifying the problem with the ASP-based parser", newline=True):
+        with resources.timing(f"Computing reachable groundings", newline=True):
             adl_task = processor.parse_and_ground(args.domain, args.instance, out_dir, not args.debug)
         fs_task = create_fs_task_from_adl(adl_task, domain_name, instance_name)
 
