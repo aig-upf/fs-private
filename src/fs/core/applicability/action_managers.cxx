@@ -183,19 +183,24 @@ BasicApplicabilityAnalyzer::build(bool build_applicable_index) {
 		}
 		*/
 		const GroundAction& action = *_actions[i];
-		if (dynamic_cast<const fs::Tautology*>(action.getPrecondition())) { // If there's no precondition, the action is always potentially applicable
+		const auto precondition = action.getPrecondition();
+		if (dynamic_cast<const fs::Tautology*>(precondition)) { // If there's no precondition, the action is always potentially applicable
 			for (auto& app_set:_applicable) app_set.push_back(i);
 			continue;
 		}
 
-		const fs::Conjunction* precondition = dynamic_cast<const fs::Conjunction*>(action.getPrecondition());
-		if (!precondition) { // If the precondition is not a conjunction, we cannot say much, so we consider the action as always potentially applicable
-			for (auto& app_set:_applicable) app_set.push_back(i);
-			continue;
-		}
+		const auto* prec_conjunction = dynamic_cast<const fs::Conjunction*>(precondition);
+        const auto* prec_atom = dynamic_cast<const fs::AtomicFormula*>(precondition);
 
-		auto preconditions = fs::check_all_atomic_formulas(precondition->getSubformulae());
-
+        std::vector<const fs::AtomicFormula*> preconditions;
+        if (prec_conjunction) {
+            preconditions = fs::check_all_atomic_formulas(prec_conjunction->getSubformulae());
+        } else if (prec_atom) {
+            preconditions = {prec_atom};
+        } else {
+            LPT_INFO("cout", "BasicApplicabilityAnalyzer: Don't know how to handle precondition: " << *precondition);
+            throw std::runtime_error("BasicApplicabilityAnalyzer: Don't know how to handle precondition");
+        }
 
 		std::set<VariableIdx> referenced; // The state variables already made reference to by some precondition
 		for (const fs::AtomicFormula* conjunct:preconditions) {
