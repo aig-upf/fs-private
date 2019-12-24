@@ -8,7 +8,6 @@ from lab.environments import LocalEnvironment
 from fslab.environments import UPFSlurmEnvironment
 from fslab import common_setup
 
-from downward import suites
 from downward.reports.absolute import AbsoluteReport
 from lab.reports import Attribute
 
