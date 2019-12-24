@@ -17,3 +17,17 @@ SCons* text eol=lf
 # Denote all files that are truly binary and should not be modified.
 *.pdf binary
 *.zip binary
+
+CMakeLists.txt export-ignore
+Singularity.lbfs export-ignore
+analysis.sh export-ignore
+build-planner.sh export-ignore
+deploy.sh export-ignore
+doc export-ignore
+examples export-ignore
+external export-ignore
+test export-ignore
+submodules/rapidjson/test export-ignore
+submodules/rapidjson/thirdparty/gtest export-ignore
+submodules/rapidjson/bin export-ignore
+submodules/rapidjson/doc export-ignore

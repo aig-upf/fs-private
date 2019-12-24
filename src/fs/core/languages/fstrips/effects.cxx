@@ -78,8 +78,7 @@ const ActionEffect* ActionEffect::bind(const Binding& binding, const ProblemInfo
 	if (ActionEffect::is_acceptable_lhs(bound_lhs)) {
         return new ActionEffect(bound_lhs, bound_rhs, condition);
 	} else {  // The effect is attempting to assign a truth value to a static atom
-        const auto* c = dynamic_cast<const Constant*>(bound_lhs);
-	    assert(c);
+	    assert(dynamic_cast<const Constant*>(bound_lhs));
 	    // We can only assume that the effect will try to assign the same value to the constant than the one it has
 	    // initially, otherwise it would have been flagged as fluent
 	    return nullptr;

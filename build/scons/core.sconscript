@@ -12,9 +12,11 @@ rapidjson_inc_dir = os.path.join(rapidjson_base_dir, 'include')
 
 sdd_base_dir = os.path.join(env['fs_vendor'], 'sdd')
 
-include_paths = [rapidjson_inc_dir, sdd_base_dir]
+include_paths = [sdd_base_dir]
 
 env.Append(CCFLAGS = ['-Wall', '-pedantic', '-std=c++17'])  # Flags common to all options
+# Include rapidjson as -isystem to skip warnings;
+env.Append(CCFLAGS = ['-isystem' + os.path.abspath(rapidjson_inc_dir)])
 env.Append(CPPPATH = [os.path.abspath(p) for p in include_paths])
 
 

@@ -20,6 +20,7 @@ echo "> Exporting revision ${REVISION} to directory ${OUTPUT_DIR}"
 echo "> Exporting main repository"
 
 # Checkout the desired revision and update the submodules
+git stash
 git checkout ${REVISION}
 git submodule update
 
@@ -35,4 +36,4 @@ git submodule foreach --recursive 'git archive --prefix=$path/ HEAD | tar -x -C 
 echo "Restoring repo state"
 git checkout ${CURRENT_BRANCH}
 git submodule update
-
+git stash pop
