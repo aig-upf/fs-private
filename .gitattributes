@@ -37,3 +37,6 @@ submodules/rapidjson/doc export-ignore
 *.md export-ignore
 *.dblite export-ignore
 requirements.txt export-ignore
+Doxyfile export-ignore
+custom.py export-ignore
+experiments export-ignore
