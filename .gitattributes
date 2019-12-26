@@ -31,3 +31,11 @@ submodules/rapidjson/test export-ignore
 submodules/rapidjson/thirdparty/gtest export-ignore
 submodules/rapidjson/bin export-ignore
 submodules/rapidjson/doc export-ignore
+.build export-ignore
+.clang-format export-ignore
+.git* export-ignore
+*.md export-ignore
+*.dblite export-ignore
+requirements.txt export-ignore
+Doxyfile export-ignore
+experiments export-ignore

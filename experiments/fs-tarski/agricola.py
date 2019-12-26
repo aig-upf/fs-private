@@ -10,14 +10,19 @@ MEMORY_LIMIT = 8000
 SUITE = [
     'agricola-sat18-strips',
 ]
-REVISIONS = ["7a74ab08", "149bbb91"]
+REVISIONS = [
+    "b6c63856",  # fs-sdd with old python frontend
+    "f7830b46"   # The shiny new fs with the tarski frontend
+]
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
 
 def configs():
-    options = ['--asp', '--driver', 'sbfws', "--options", "verbose_stats=true,successor_generation=adaptive,evaluator_t=adaptive,bfws.rs=none"]
+    ray = ['--asp', '--driver', 'sbfws', "--options", "verbose_stats=true,successor_generation=adaptive,evaluator_t=adaptive,bfws.rs=none"]
+    sim = ['--asp', '--driver', 'sbfws', "--options", "verbose_stats=true,successor_generation=adaptive,evaluator_t=adaptive,bfws.rs=sim,sim.r_g_prime=true,width.simulation=2,sim.act_cutoff=40000"]
     return [
-        IssueConfig("bfws-ray", options)
+        IssueConfig("bfws-ray", ray),
+        IssueConfig("bfws-sim", sim),
     ]
 
 
