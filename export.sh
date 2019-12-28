@@ -42,7 +42,9 @@ function cleanup {
 trap cleanup EXIT
 
 # Copy the entire working tree to the temp directory to manipulate it safely
-cp -r $DIR/. $WORK_DIR
+#cp -r $DIR/. $WORK_DIR
+rsync -az --exclude=CMakeFiles --exclude=experiments --exclude=workspace --exclude='*.bin' --exclude='.build' --exclude=".idea" \
+      $DIR/. $WORK_DIR
 cd $WORK_DIR
 
 echo "> Checking out revision $REVISION"
