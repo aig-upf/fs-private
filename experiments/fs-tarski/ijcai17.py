@@ -56,7 +56,7 @@ def configs():
     ray = ['--asp', '--driver', 'sbfws', "--options", "verbose_stats=true,successor_generation=adaptive,evaluator_t=adaptive,bfws.rs=none"]
     sim = ['--asp', '--driver', 'sbfws', "--options", "verbose_stats=true,successor_generation=adaptive,evaluator_t=adaptive,bfws.rs=sim,sim.r_g_prime=true,width.simulation=2,sim.act_cutoff=40000"]
     return [
-        IssueConfig("bfws-ray", ray),
+        # IssueConfig("bfws-ray", ray),
         IssueConfig("bfws-sim", sim),
     ]
 
