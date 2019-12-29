@@ -9,6 +9,17 @@ MEMORY_LIMIT = 8000
 
 SUITE = [
     'agricola-sat18-strips',
+    'caldera-sat18-adl',
+    'caldera-split-sat18-adl',
+    'data-network-sat18-strips',
+    'flashfill-sat18-adl',
+    'nurikabe-sat18-adl',
+    'organic-synthesis-sat18-strips',
+    'organic-synthesis-split-sat18-strips',
+    'settlers-sat18-adl',
+    'snake-sat18-strips',
+    'spider-sat18-strips',
+    'termes-sat18-strips',
 ]
 REVISIONS = [
     "b6c63856",  # fs-sdd with old python frontend
