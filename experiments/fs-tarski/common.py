@@ -21,7 +21,8 @@ def generate_environment(email, partition='short', time_limit=1800, memory_limit
         return UPFSlurmEnvironment(
             partition=partition,
             email=email,
-            export=["PATH", "DOWNWARD_BENCHMARKS", "FSBENCHMARKS", "LD_LIBRARY_PATH", "GRINGO_PATH"],
+            # The GRINGO_PATH variable was necessary for the older, non-tarski versions of the planner
+            export=["PATH", "DOWNWARD_BENCHMARKS", "FSBENCHMARKS", "LIBRARY_PATH", "LD_LIBRARY_PATH", "GRINGO_PATH"],
             time_limit=round(time_limit/60),
             memory_per_cpu='{}M'.format(memory_limit),
         )
