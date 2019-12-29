@@ -19,7 +19,7 @@ SUITE = [
     'settlers-sat18-adl',
     'snake-sat18-strips',
     'spider-sat18-strips',
-    'termes-sat18-strips'
+    'termes-sat18-strips',
 
     # 'barman-sat11-strips',
     'barman-sat14-strips',
