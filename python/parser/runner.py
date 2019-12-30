@@ -42,6 +42,9 @@ def parse_arguments(args):
     parser.add_argument("--options", help='The solver extra options', default="")
     parser.add_argument("--no-reachability", action='store_true',
                         help='Don\'t use the ASP-based reachability analysis.')
+    parser.add_argument("--reachability-includes-variable-inequalities", action='store_true',
+                        help='Include inequalities of the form X != Y in the reachability analysis. This makes the'
+                             'analysis NP-hard, but results in a tighter approximation.')
 
     parser.add_argument('-t', '--tag', default=None,
                         help="(Optional) An arbitrary name that will be used to create the working directory where "
@@ -300,10 +303,13 @@ def run(args):
     do_reachability = not args.no_reachability
     if do_reachability and args.sdd:
         raise RuntimeError("SDD and ASP preprocessing are not compatible")
+    if not do_reachability and args.reachability_includes_variable_inequalities:
+        raise RuntimeError("Cannot do reachability analysis with inequalities if no-reachability option is specified.")
 
     if do_reachability:
         with resources.timing(f"Computing reachable groundings", newline=True):
-            grounding = LPGroundingStrategy(problem)
+            grounding = LPGroundingStrategy(
+                problem, include_variable_inequalities=args.reachability_includes_variable_inequalities)
             ground_variables = grounding.ground_state_variables()
             action_groundings = grounding.ground_actions()
     else:
