@@ -40,7 +40,8 @@ def parse_arguments(args):
 
     parser.add_argument("--driver", help='The solver driver (controller) to be used.', default=None)
     parser.add_argument("--options", help='The solver extra options', default="")
-    parser.add_argument("--asp", action='store_true', help='Use the ASP-based reachability analysis.')
+    parser.add_argument("--no-reachability", action='store_true',
+                        help='Don\'t use the ASP-based reachability analysis.')
 
     parser.add_argument('-t', '--tag', default=None,
                         help="(Optional) An arbitrary name that will be used to create the working directory where "
@@ -296,10 +297,11 @@ def run(args):
         # Both the LP reachability analysis and the backend expect a problem without universally-quantified effects
         problem = compile_universal_effects_away(problem)
 
-    if args.asp and args.sdd:
+    do_reachability = not args.no_reachability
+    if do_reachability and args.sdd:
         raise RuntimeError("SDD and ASP preprocessing are not compatible")
 
-    if args.asp:
+    if do_reachability:
         with resources.timing(f"Computing reachable groundings", newline=True):
             grounding = LPGroundingStrategy(problem)
             ground_variables = grounding.ground_state_variables()
