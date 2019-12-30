@@ -20,7 +20,7 @@ def normalize_and_camelcase(name):
 
 
 def normalize_action_name(name):
-        return normalize_and_camelcase(name) + 'Action'
+    return normalize_and_camelcase(name) + 'Action'
 
 
 def to_camelcase(word):
@@ -49,7 +49,8 @@ def bool_string(value):
 def is_external(symbol):
     return symbol[0] == '@'
 
-def has_unbounded_arity(symbol) :
+
+def has_unbounded_arity(symbol):
     return symbol[0:2] == '@@'
 
 
@@ -76,6 +77,7 @@ class IndexDictionary(object):
     """
     A very basic indexing mechanism object that assigns consecutive indexes to the indexed objects.
     """
+
     def __init__(self, elements=None):
         self.data = OrderedDict()
         self.objects = []

@@ -5,6 +5,14 @@ import yaml
 
 from python import utils, runner, algorithms, FS_WORKSPACE
 
+
+import itertools
+
+
+def dict_product(dicts):
+    return (dict(zip(dicts, x)) for x in itertools.product(*dicts.values()))
+
+
 timestamp = time.strftime("%Y%m%d_%Hh")
 
 # Some directories where different benchmarks might reside
@@ -110,7 +118,7 @@ class FSTester(object):
 
     def cross_product(self):
         all_crossed = []
-        join_options = list(algorithms.dict_product(self.list_planner_options()))
+        join_options = list(dict_product(self.list_planner_options()))
 
         for bm_set, domain, filename in INSTANCES:
             for configuration in join_options:

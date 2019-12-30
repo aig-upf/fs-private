@@ -2,15 +2,7 @@
     This module contains a number of classes and routines to handle the static (external) data, including its
     declaration and serialization.
 """
-import python.utils
-from . import fstrips
-
-
-def instantiate_extension(symbol):
-    if isinstance(symbol, fstrips.Predicate):
-        return instantiate_predicate(symbol.name, len(symbol.arguments))
-    else:  # We have a function
-        return instantiate_function(symbol.name, len(symbol.arguments))
+from .. import utils
 
 
 def instantiate_function(name, arity):
@@ -28,7 +20,7 @@ def instantiate_predicate(name, arity):
 
 
 def serialize_symbol(symbol, table):
-    if python.utils.is_int(symbol) or python.utils.is_float(symbol):
+    if utils.is_int(symbol) or utils.is_float(symbol):
         return str(symbol)
     if symbol is None:
         return ""
@@ -139,7 +131,7 @@ class ZeroarySet(UnarySet):
         super().__init__(name)
         self.elems = {}
 
-    def add(self, args, value):
+    def add(self, args, value=None):
         assert args == ()
         self.elems[args] = value
 

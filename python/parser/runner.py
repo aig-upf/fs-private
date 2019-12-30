@@ -40,8 +40,7 @@ def parse_arguments(args):
 
     parser.add_argument("--driver", help='The solver driver (controller) to be used.', default=None)
     parser.add_argument("--options", help='The solver extra options', default="")
-    parser.add_argument("--asp", action='store_true', help='(Experimental) Use the ASP-based parser+grounder '
-                                                           '(strict ADL, without numerics etc.).')
+    parser.add_argument("--asp", action='store_true', help='Use the ASP-based reachability analysis.')
 
     parser.add_argument('-t', '--tag', default=None,
                         help="(Optional) An arbitrary name that will be used to create the working directory where "
@@ -53,11 +52,11 @@ def parse_arguments(args):
     parser.add_argument('-w', '--workspace', default=None, help="(Optional) Path to the workspace directory.")
     parser.add_argument('--planfile', default=None, help="(Optional) Path to the file where the solution plan "
                                                          "will be left.")
-    parser.add_argument("--disable-static-analysis", action='store_true', help='Disable static fluent symbol analysis')
 
     parser.add_argument("--sdd", action='store_true', help='Use SDD-based successor generator')
     parser.add_argument("--var_ordering", default=None, help='Variable ordering for SDD construction')
-    parser.add_argument("--sdd_incr_minimization_time", default=0, type=int, help='Incremental minimization time for SDD construction')
+    parser.add_argument("--sdd_incr_minimization_time", default=0, type=int,
+                        help='Incremental minimization time for SDD construction')
     parser.add_argument("--sdd_with_reachability", action='store_true', help='Use reachability analysis to improve SDD')
 
     args = parser.parse_args(args)
@@ -68,15 +67,6 @@ def parse_arguments(args):
         parser.error('The "--driver" option is required to run the solver')
 
     return args
-
-
-def parse_pddl_task(domain, instance):
-    """ Parse the given domain and instance filenames by resorting to the FD PDDL parser """
-    from .pddl import tasks, pddl_file
-    domain_pddl = pddl_file.parse_pddl_file("domain", domain)
-    task_pddl = pddl_file.parse_pddl_file("task", instance)
-    task = tasks.Task.parse(domain_pddl, task_pddl)
-    return task
 
 
 def extract_names(domain_filename, instance_filename):
@@ -349,21 +339,6 @@ def run(args):
     # if not, erase grounding files that might exist from previous runs.
     print_groundings(data['action_schemata'], action_groundings, obj_idx, serializer)
     use_vanilla = True
-
-    # TODO Old parsing code. Remove this once port to tarski is complete
-    # from .fs_task import create_fs_task, create_fs_task_from_adl
-    # from .representation import ProblemRepresentation
-    # if args.asp:
-    #     from .asp import processor
-    #     adl_task = processor.parse_and_ground(args.domain, args.instance, workdir, not args.debug)
-    #     fs_task = create_fs_task_from_adl(adl_task, domain_name, instance_name)
-    #
-    # else:
-    #     fd_task = parse_pddl_task(args.domain, args.instance)
-    #     fs_task = create_fs_task(fd_task, domain_name, instance_name)
-    # representation = ProblemRepresentation(fs_task, workdir, args.edebug or args.debug)
-    # representation.generate()
-    # use_vanilla = not representation.requires_compilation()
 
     move_files(args, workdir, use_vanilla)
     if not args.parse_only:

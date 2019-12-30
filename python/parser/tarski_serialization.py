@@ -178,7 +178,8 @@ def serialize_tarski_formula(exp, obj_idx, binding, negated=False):
 
 def serialize_tarski_term(exp, obj_idx, binding):
     if isinstance(exp, Constant):
-        return dict(type='constant', symbol=exp.symbol, type_id=tarski_sort_to_typeid(exp.sort), fstype=tarski_sort_to_typename(exp.sort),
+        return dict(type='constant', symbol=exp.symbol, type_id=tarski_sort_to_typeid(exp.sort),
+                    fstype=tarski_sort_to_typename(exp.sort),
                     value=object_id(exp.symbol, obj_idx))
 
     elif isinstance(exp, CompoundTerm):
@@ -187,7 +188,8 @@ def serialize_tarski_term(exp, obj_idx, binding):
         return dict(type='functional', symbol=str(exp.symbol.name), children=children)
 
     elif isinstance(exp, Variable):
-        return dict(type='variable', symbol=exp.symbol, fstype=tarski_sort_to_typename(exp.sort), position=binding[exp.symbol])
+        return dict(type='variable', symbol=exp.symbol, fstype=tarski_sort_to_typename(exp.sort),
+                    position=binding[exp.symbol])
 
     raise RuntimeError(f'Unknown Tarski expression type {type(exp)} for expression {exp}')
 
