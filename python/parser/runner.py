@@ -300,9 +300,7 @@ def run(args):
         # Both the LP reachability analysis and the backend expect a problem without universally-quantified effects
         problem = compile_universal_effects_away(problem)
 
-    do_reachability = not args.no_reachability
-    if do_reachability and args.sdd:
-        raise RuntimeError("SDD and ASP preprocessing are not compatible")
+    do_reachability = not args.no_reachability and not args.sdd  # SDD not compatible with reachability
     if not do_reachability and args.reachability_includes_variable_inequalities:
         raise RuntimeError("Cannot do reachability analysis with inequalities if no-reachability option is specified.")
 
