@@ -450,23 +450,6 @@ public:
   		run(seed, 1);
 		report_simulation_stats(simt0);
 
-		if (_unreached.size() == 0) {
-			std::vector<NodePT> seed_nodes = extract_seed_nodes();
-			std::vector<bool> R_G = mark_all_atoms_in_path_to_subgoal(seed_nodes);
-			unsigned R_G_size = std::count(R_G.begin(), R_G.end(), true);
-			LPT_INFO("cout", "Simulation - IW(1) run reached all goals");
-			LPT_INFO("cout", "Simulation - |R_G'[1]| = " << R_G_size << " (computed from " << seed_nodes.size() << " subgoal-reaching nodes)");
-			_stats.relevant_atoms(R_G_size);
-			return R_G;
-		}
-
-		LPT_INFO("cout", "Simulation - IW(1) run did not reach all goals");
-
-		if (_config._max_width == 1) {
-			LPT_INFO("cout", "Simulation - Max. simulation width set to 1, falling back to R=R_all");
-			return compute_R_all();
-		}
-
 		if (_config._gr_actions_cutoff < std::numeric_limits<unsigned>::max()) {
 			unsigned num_actions = Problem::getInstance().getGroundActions().size();
 			if (num_actions > _config._gr_actions_cutoff) { // Too many actions to compute IW(º2)
