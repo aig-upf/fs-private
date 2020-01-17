@@ -2,6 +2,7 @@
 import itertools
 import os
 from os import path
+from statistics import mean
 
 import fslab
 from lab.environments import LocalEnvironment
@@ -64,8 +65,8 @@ ALL_ATTRIBUTES = {
     'num_state_vars': 'num_state_vars',
     'iw1_started': 'iw1_started',
     'iw2_started': 'iw2_started',
-    'iw1_reached_subgoals': 'iw1_reached_subgoals',
-    'iw2_reached_subgoals': 'iw2_reached_subgoals',
+    'iw1_reached_subgoals': Attribute('iw1_reached_subgoals', function=mean),
+    'iw2_reached_subgoals': Attribute('iw2_reached_subgoals', function=mean),
     'iw1_finished': 'iw1_finished',
     'iw2_finished': 'iw2_finished',
     'time_reachability': 'time_reachability',
