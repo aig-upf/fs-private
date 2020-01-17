@@ -422,9 +422,9 @@ public:
 
 
 		// Force one simulation from the root node and abort the search
-//        _heuristic.get_hash_r(*root);
+        _heuristic.get_hash_r(*root);
 //  		_heuristic.compute_R(*root);
-// 		return false;
+ 		return false;
 
 
 		// The main search loop
