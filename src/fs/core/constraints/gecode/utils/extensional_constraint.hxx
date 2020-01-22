@@ -6,10 +6,10 @@
 
 namespace Gecode { class TupleSet; }
 namespace fs0 { class State; class AtomIndex; }
-namespace fs0 { namespace language { namespace fstrips { class FluentHeadedNestedTerm; } } }
+namespace fs0::language::fstrips { class FluentHeadedNestedTerm; }
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 class GecodeCSP;
 class CSPTranslator;
@@ -18,13 +18,11 @@ class RPGIndex;
 class ExtensionalConstraint {
 public:
 	
-	ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const AtomIndex& tuple_index, bool predicate);
+	ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const AtomIndex& tuple_index, bool predicate, bool negative);
 	ExtensionalConstraint(const ExtensionalConstraint&) = default;
 	ExtensionalConstraint(ExtensionalConstraint&&) = default;
-	ExtensionalConstraint& operator=(const ExtensionalConstraint& other) = default;
-	ExtensionalConstraint& operator=(ExtensionalConstraint&& other) = default;
-	
-	void register_variables(CSPTranslator& translator) {} // TODO - REMOVE IF NOT NEEDED
+	ExtensionalConstraint& operator=(const ExtensionalConstraint& other) = delete;
+	ExtensionalConstraint& operator=(ExtensionalConstraint&& other) = delete;
 	
 	void register_constraints(CSPTranslator& translator);
 	
@@ -40,7 +38,8 @@ public:
 	std::ostream& print(std::ostream& os) const;
 	
 protected:
-	//!
+	//! Whether the extensional constraint should be posted in negative form
+	bool _negative;
 
 	
 	//! This is a hacky, temporary way of knowing if the current extensional constraint models a predicate or not, in which
@@ -67,5 +66,5 @@ protected:
 };
 
 
-} } // namespaces
+} // namespaces
 

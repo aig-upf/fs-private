@@ -5,7 +5,7 @@
 #include <fs/core/state.hxx>
 #include <utility>
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 Extension::Extension(const AtomIndex& tuple_index) : _tuple_index(tuple_index), _tuples() {}
 
@@ -151,4 +151,4 @@ const Gecode::TupleSet& StateBasedExtensionHandler::retrieve(unsigned symbol) co
 }
 
 
-	} } // namespaces
+	} // namespaces

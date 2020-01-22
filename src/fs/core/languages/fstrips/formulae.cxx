@@ -126,38 +126,6 @@ bool AxiomaticFormula::interpret(const State& state, Binding& binding) const {
 }
 
 
-AxiomaticAtom::~AxiomaticAtom() {
-	for (const auto ptr:_subterms) delete ptr;
-}
-
-AxiomaticAtom::AxiomaticAtom(const AxiomaticAtom& other) :
-	_axiom(other._axiom),
-	_subterms(Utils::clone(other._subterms))
-{}
-
-bool AxiomaticAtom::interpret(const PartialAssignment& assignment, Binding& binding) const {
-	std::vector<object_id> _interpreted_subterms;
-	NestedTerm::interpret_subterms(_subterms, assignment, binding, _interpreted_subterms);
-	Binding axiom_binding(_interpreted_subterms);
-	return _axiom->getDefinition()->interpret(assignment, axiom_binding);
-}
-
-bool AxiomaticAtom::interpret(const State& state, Binding& binding) const {
-	std::vector<object_id> _interpreted_subterms;
-	NestedTerm::interpret_subterms(_subterms, state, binding, _interpreted_subterms);
-	Binding axiom_binding(_interpreted_subterms);
-	return _axiom->getDefinition()->interpret(state, axiom_binding);
-}
-
-std::ostream& AxiomaticAtom::print(std::ostream& os, const fs0::ProblemInfo& info) const {
-	os << _axiom->getName() << "(";
-	for (const auto ptr:_subterms) os << *ptr << ", ";
-	os << ")";
-	return os;
-}
-
-
-
 OpenFormula::OpenFormula(const OpenFormula& other) :
 	_subformulae(Utils::clone(other._subformulae))
 {}

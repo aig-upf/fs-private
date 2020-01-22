@@ -152,7 +152,7 @@ BaseCSP::register_csp_variables() {
 			
 			else {
 				
-				_extensional_constraints.emplace_back(fluent, _tuple_index, is_predicate);
+				_extensional_constraints.emplace_back(fluent, _tuple_index, is_predicate, false);
 				if (!is_predicate) { // If the term is indeed a term and not a predicate, we'll need an extra CSP variable to model it.
 					_translator.registerNestedTerm(fluent);
 					LPT_DEBUG("translation", "Term \"" << *fluent << "\" will be translated into an extensional constraint");
@@ -294,10 +294,11 @@ BaseCSP::index_csp_elements(const std::vector<const fs::Formula*>& conditions) {
 						// CSP variable representing the constant 'b' wrt the extension given by the clear predicate
 						
 						auto value = dynamic_cast<const fs::Constant*>(relational->rhs());
-						if (!value || int(value->getValue()) != 1) {
-							throw UnimplementedFeatureException("Only non-negated relational atoms are supported ATM");
-						}
-						
+						assert(value);
+						auto intval = int(value->getValue());
+						assert(intval == 1 || intval == 0);
+
+
 						// Mark the condition as inserted, so we do not need to insert it again!
 						inserted_conditions.insert(relational);
 						
@@ -306,7 +307,7 @@ BaseCSP::index_csp_elements(const std::vector<const fs::Formula*>& conditions) {
 							inserted_terms.insert(candidate);
 							
 							// We'll have one extensional constraint per predicate appearing on the condition / formula.
-							_extensional_constraints.emplace_back(origin, _tuple_index, true);
+							_extensional_constraints.emplace_back(origin, _tuple_index, true, intval==0);
 							
 							// Insert subterms properly - TODO - Perhaps StateVariable::all_terms should already return these terms?
 							for (auto term:origin->getSubterms()) {

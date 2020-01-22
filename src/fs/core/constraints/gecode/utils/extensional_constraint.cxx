@@ -10,10 +10,10 @@
 #include <fs/core/utils/printers/gecode.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
-ExtensionalConstraint::ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const AtomIndex& tuple_index, bool predicate)
-	: _predicate(predicate), _term(term), _variable_idx(-1), _tuple_index(tuple_index)
+ExtensionalConstraint::ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const AtomIndex& tuple_index, bool predicate, bool negative)
+	: _negative(negative), _predicate(predicate), _term(term), _variable_idx(-1), _tuple_index(tuple_index)
 {}
 
 void ExtensionalConstraint::register_constraints(CSPTranslator& translator) {
@@ -35,7 +35,9 @@ void ExtensionalConstraint::register_constraints(CSPTranslator& translator) {
 // with formulas involving existential variables
 bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translator, const State& state) const {
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
-		return int(state.getValue(_variable_idx)) == 1;
+	    auto intval = int(state.getValue(_variable_idx));
+        assert(intval == 1 || intval == 0);
+		return bool(intval) == !_negative;
 	} else {
 		return update(csp, translator, compute_extension(_term->getSymbolId(), state));
 	}
@@ -43,7 +45,8 @@ bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translat
 
 bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translator, const RPGIndex& layer) const {
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
-		return layer.is_true(_variable_idx);  // return true iff the constraint is satisfied, otherwise the CSP is unsolvable
+	    bool sat = layer.is_true(_variable_idx);  // return true iff the constraint is satisfied, otherwise the CSP is unsolvable
+		return sat == !_negative;
 	} else {
 		LPT_EDEBUG("heuristic", "Updating extension for " << *_term );
 		return update(csp, translator, layer.get_extension(_term->getSymbolId()));
@@ -51,9 +54,10 @@ bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translat
 }
 
 bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const {
-	// Check whether the extension contains no tuples, then the CSP is unsolvable
-    assert( extension.finalized() );
-	if (extension.tuples() == 0 ) return false;
+	// If the extension of the constraint is empty and it is not a negative constraint, then
+	// we can already flag the CSP as unsolvable
+	assert(extension.finalized());
+	if (!_negative && extension.tuples() == 0) return false;
 
 	// Collect the references to the CSP variables
 	Gecode::IntVarArgs variables;
@@ -66,9 +70,7 @@ bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translat
 	}
 
 	// Post the constraint with the given extension
-
-	Gecode::extensional(csp, variables, extension);
-// 	Gecode::extensional(csp, variables, extension, Gecode::IPL_DOM);
+	Gecode::extensional(csp, variables, extension, !_negative);
 
 	LPT_EDEBUG("heuristic", "Posted extensional constraint for term " << *_term << ":\n" << print::extensional(variables, extension));
 	LPT_EDEBUG("heuristic", "Resulting CSP is: " << csp);
@@ -95,4 +97,4 @@ Gecode::TupleSet ExtensionalConstraint::compute_extension(unsigned symbol_id, co
 
 
 
-} } // namespaces
+} // namespaces

@@ -4,10 +4,9 @@
 #include <fs/core/languages/fstrips/builtin.hxx>
 #include <fs/core/languages/fstrips/axioms.hxx>
 #include <fs/core/constraints/registry.hxx>
-#include <fs/core/problem.hxx>
 
 
-namespace fs0 { namespace language { namespace fstrips {
+namespace fs0::language::fstrips {
 
 //! Factory method to create a nested term of the appropriate type
 const Term* _create_nested_term(const std::string& symbol, const std::vector<const Term*>& subterms) {
@@ -58,6 +57,7 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 		std::string symbol = tree["symbol"].GetString();
 		bool negated = tree["negated"].GetBool();
 		std::vector<const Term*> subterms = parseTermList(tree["children"], info);
+        auto symbol_id = info.getSymbolId(symbol);
 
 		// HACK - WONT WORK FOR NEGATED FORMULAS
 		try { return LogicalComponentRegistry::instance().instantiate_formula(symbol, subterms); }
@@ -66,11 +66,10 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 		// TODO - This is a temporary hack to parse predicates 'p(x)' as if they were
 		// equality predicates 'p(x) = 1' with 'p' being a binary function.
 		try {
-			unsigned symbol_id = info.getSymbolId(symbol);
 			if (info.isPredicate(symbol_id)) {
 				//
-				Constant* value = negated ? new Constant(make_object<bool>(0), UNSPECIFIED_NUMERIC_TYPE)
-				                          : new Constant(make_object<bool>(1), UNSPECIFIED_NUMERIC_TYPE);
+				Constant* value = negated ? new Constant(make_object<bool>(false), UNSPECIFIED_NUMERIC_TYPE)
+				                          : new Constant(make_object<bool>(true), UNSPECIFIED_NUMERIC_TYPE);
 
 				subterms = {_create_nested_term(symbol, subterms), value};
 				symbol = "=";
@@ -164,4 +163,4 @@ std::vector<const ActionEffect*> Loader::parseEffectList(const rapidjson::Value&
 }
 
 
-} } } // namespaces
+} // namespaces

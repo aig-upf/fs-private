@@ -5,7 +5,7 @@
 #include <fs/core/constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 		LiftedActionIterator::LiftedActionIterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const std::vector<const fs::Formula*>& state_constraints, const AtomIndex& tuple_index) :
 				_handlers(handlers), _state(state), _state_constraints(state_constraints), _extension_handler(tuple_index, state)
@@ -96,4 +96,4 @@ namespace fs0 { namespace gecode {
 
 			return _current_handler_idx != _handlers.size();
 		}
-	}} // namespaces
+	} // namespaces

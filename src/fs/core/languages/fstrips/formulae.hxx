@@ -14,7 +14,7 @@ class ProblemInfo;
 class Binding;
 }
 
-namespace fs0 { namespace language { namespace fstrips {
+namespace fs0::language::fstrips {
 
 class Term;
 class BoundVariable;
@@ -82,7 +82,7 @@ protected:
 
 class ExternallyDefinedFormula : public AtomicFormula {
 public:
-	ExternallyDefinedFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {}
+	explicit ExternallyDefinedFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {}
 
 	virtual std::string name() const = 0;
 
@@ -94,7 +94,7 @@ public:
 class AxiomaticFormula : public AtomicFormula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
-	AxiomaticFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {}
+	explicit AxiomaticFormula(const std::vector<const Term*>& subterms) : AtomicFormula(subterms) {}
 
 	//! To be subclassed
 	virtual std::string name() const = 0;
@@ -111,29 +111,6 @@ public:
 
 	//! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
-};
-
-class AxiomaticAtom : public Formula {
-public:
-	LOKI_DEFINE_CONST_VISITABLE();
-
-	AxiomaticAtom(const Axiom* axiom, const std::vector<const Term*>& subterms) : _axiom(axiom), _subterms(subterms) {}
-	virtual ~AxiomaticAtom();
-	AxiomaticAtom(const AxiomaticAtom& other);
-	AxiomaticAtom* clone() const override { return new AxiomaticAtom(*this); }
-
-	bool interpret(const PartialAssignment& assignment, Binding& binding) const override;
-	bool interpret(const State& state, Binding& binding) const override;
-
-	std::ostream& print(std::ostream& os, const fs0::ProblemInfo& info) const override;
-
-	const std::vector<const Term*>& getSubterms() const { return _subterms; }
-
-protected:
-	const Axiom* _axiom;
-
-	//! The formula subterms
-	std::vector<const Term*> _subterms;
 };
 
 //! The True truth value
@@ -170,7 +147,7 @@ public:
 //! Will tipically be negation, conjunction, disjunction
 class OpenFormula : public Formula {
 public:
-	OpenFormula(const std::vector<const Formula*>& subformulae) : _subformulae(subformulae) {}
+	explicit OpenFormula(const std::vector<const Formula*>& subformulae) : _subformulae(subformulae) {}
 	~OpenFormula() { for (const auto ptr:_subformulae) delete ptr; }
 	OpenFormula(const OpenFormula& other);
 
@@ -447,7 +424,7 @@ public:
 //! Check that all the given formulas are atomic
 std::vector<const AtomicFormula*>  check_all_atomic_formulas(const std::vector<const Formula*> formulas);
 
-} } } // namespaces
+} // namespaces
 
 // std specializations for terms and term pointers that will allow us to use them in hash-table-like structures
 // NOTE that these specializations are necessary for any use of term pointers in std::map/std::unordered_maps,

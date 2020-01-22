@@ -11,10 +11,10 @@ namespace fs0 {
 	class LiftedActionID;
 }
 
-namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
+namespace fs0::language::fstrips { class Formula; }
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 		class GecodeCSP;
 		class LiftedActionCSP;
@@ -87,4 +87,4 @@ namespace fs0 { namespace gecode {
 		};
 
 
-	} } // namespaces
+	} // namespaces
