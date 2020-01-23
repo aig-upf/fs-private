@@ -48,9 +48,6 @@ public:
 	//! Set a value into the state
 	void set(State& state, const Atom& atom) const;
 	void set(State& state, VariableIdx variable, const object_id& value) const;
-
-protected:
-	IndexT compute_index(const ProblemInfo& info);
 };
 
 class State {
@@ -68,7 +65,6 @@ protected:
 
 	std::size_t _hash;
 
-protected:
 	//! Construct a state specifying the values of all state variables
 	//! Note that it is not necessarily the case that numAtoms == atoms.size(); since the initial values of
 	//! some (Boolean) state variables is often left unspecified and understood to be false.
@@ -88,8 +84,8 @@ public:
 	//! Default copy constructors and assignment operators
 	State(const State&) = default;
 	State(State&&) = default;
-	State& operator=(const State&) = default;
-	State& operator=(State&&) = default;
+	State& operator=(const State&) = delete;
+	State& operator=(State&&) = delete;
 
 	// Check the hash first for performance.
 	bool operator==(const State &rhs) const { return _hash == rhs._hash && _bool_values == rhs._bool_values && _int_values == rhs._int_values; }
@@ -103,7 +99,7 @@ public:
 	unsigned numAtoms() const { return _bool_values.size() + _int_values.size(); }
 
 	//! "Applies" the given atoms into the current state.
-	void accumulate(const std::vector<Atom>& atoms);
+	void update(const std::vector<Atom>& atoms);
 
 	template <typename ValueT>
 	const std::vector<ValueT>& dump() const;

@@ -137,7 +137,7 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 			ExitCode result;
 			if (solved) {
 				if (!valid_plan) {
-					Checker::print_plan_execution(_problem, plan, _problem.getInitialState());
+					Checker::debug_plan_execution(_problem, plan, _problem.getInitialState());
 #ifdef DEBUG
 					LPT_INFO("cout", "WARNING: The plan output by the planner is not correct!");
 #else
