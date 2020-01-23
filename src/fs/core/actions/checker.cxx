@@ -69,10 +69,6 @@ void Checker::debug_plan_execution(const Problem& problem, const std::vector<con
 	for (; i < plan.size(); ++i) {
 		const GroundAction* action = plan[i];
 
-//		std::cerr << std::setw(3) << i;
-//		std::cerr << ". " << *action << std::endl;
-
-
 		if (!manager.isApplicable(state, *action, true)) {
             std::cerr << std::endl << "ERROR: Action (" << i << ")"  << *action << " is not applicable to state (" << i << ")" << std::endl;
             inapplicable = true;
