@@ -9,7 +9,7 @@
 #include <fs/core/search/drivers/sbfws/features/features.hxx>
 
 
-namespace fs0 { namespace drivers {
+namespace fs0::drivers {
 
 
 template <typename StateModelT, typename NoveltyEvaluatorT, typename FeatureEvaluatorT>
@@ -102,11 +102,11 @@ IteratedWidthDriver<GroundStateModel>::search(Problem& problem, const Config& co
 template <>
 ExitCode
 IteratedWidthDriver<CSPLiftedStateModel>::search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) {
-	auto model = GroundingSetup::fully_lifted_model(problem);
+	auto model = GroundingSetup::csp_lifted_model(problem);
 	return do_search(model, config, options, start_time, _stats);
 // 	auto engine = create(config, model);
 // 	return Utils::do_search(*engine, model, out_dir, start_time, _stats);
 }
 
 
-} } // namespaces
+} // namespaces

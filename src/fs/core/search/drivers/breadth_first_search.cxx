@@ -19,7 +19,7 @@ BreadthFirstSearchDriver<GroundStateModel>::setup(Problem& problem) const {
 template <>
 CSPLiftedStateModel
 BreadthFirstSearchDriver<CSPLiftedStateModel>::setup(Problem& problem) const {
-	return GroundingSetup::fully_lifted_model(problem);
+	return GroundingSetup::csp_lifted_model(problem);
 }
 
 template <>

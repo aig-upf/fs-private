@@ -3,19 +3,24 @@
 #include <fs/core/problem_info.hxx>
 #include <fs/core/actions/grounding.hxx>
 #include <fs/core/search/drivers/setups.hxx>
-#include <fs/core/search/drivers/validation.hxx>
 
 namespace fs0::drivers {
 
 CSPLiftedStateModel
-GroundingSetup::fully_lifted_model(Problem& problem) {
-	Validation::check_no_conditional_effects(problem);
-
+GroundingSetup::csp_lifted_model(Problem& problem) {
 	// We don't ground any action
 	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
-	//! Determine if computing successor states requires to handle continuous change
 	return CSPLiftedStateModel::build(problem);
 }
+
+
+SDDLiftedStateModel
+GroundingSetup::sdd_lifted_model(Problem& problem) {
+    // We don't ground any action
+    problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
+    return SDDLiftedStateModel::build(problem);
+}
+
 
 GroundStateModel
 GroundingSetup::fully_ground_model(Problem& problem) {
@@ -39,14 +44,5 @@ GroundingSetup::ground_search_lifted_heuristic(Problem& problem) {
 	return GroundStateModel(problem);
 }
 
-SDDLiftedStateModel
-GroundingSetup::sdd_lifted_model(Problem& problem) {
-    Validation::check_no_conditional_effects(problem);
-
-    // We don't ground any action
-    problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
-
-    return SDDLiftedStateModel::build(problem);
-}
 
 } // namespaces

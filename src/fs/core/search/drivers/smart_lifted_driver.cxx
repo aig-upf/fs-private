@@ -51,7 +51,7 @@ SmartLiftedDriver::create(const Config& config, CSPLiftedStateModel& model, Sear
 
 ExitCode 
 SmartLiftedDriver::search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) {
-	CSPLiftedStateModel model = GroundingSetup::fully_lifted_model(problem);
+	CSPLiftedStateModel model = GroundingSetup::csp_lifted_model(problem);
 	SearchStats stats;
 	auto engine = create(config, model, stats);
 	return Utils::SearchExecution<CSPLiftedStateModel>(model).do_search(*engine, options, start_time, stats);

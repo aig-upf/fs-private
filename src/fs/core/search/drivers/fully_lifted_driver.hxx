@@ -12,7 +12,7 @@
 
 namespace fs0 { class Problem; class SearchStats; }
 
-namespace fs0 { namespace drivers {
+namespace fs0::drivers {
 
 //! A rather more specific engine creator that simply creates a GBFS planner for lifted planning
 class FullyLiftedDriver : public Driver {
@@ -35,4 +35,4 @@ protected:
 	std::unique_ptr<HeuristicT> _heuristic;
 };
 
-} } // namespaces
+} // namespaces
