@@ -195,7 +195,7 @@ getTypename(TypeIdx fstype) const { return fstrips::LanguageInfo::instance().typ
 bool ProblemInfo::
 checkValueIsValid(VariableIdx variable, const object_id& object) const {
 	TypeIdx type = getVariableType(variable);
-	fstrips::LanguageInfo::instance().check_valid_object(object, type);
+	return fstrips::LanguageInfo::instance().check_valid_object(object, type);
 }
 
 std::pair<int,int> ProblemInfo::getTypeBounds(TypeIdx type) const {
