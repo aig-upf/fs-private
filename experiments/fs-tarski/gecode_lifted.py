@@ -22,16 +22,18 @@ SUITE = [
     'termes-sat18-strips',
 ]
 REVISIONS = [
-    "509d79d0"
+    "e154a610"
 ]
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
 
 def configs():
     csp = ['--no-reachability', '--driver', 'lsbfws', '--options', '"verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"']
+    csp_reach = ['--driver', 'lsbfws', '--options', '"verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"']
 
     return [
         IssueConfig("bfws-r_all-csp", csp),
+        IssueConfig("bfws-r_all-csp_reach", csp_reach),
     ]
 
 
