@@ -18,13 +18,13 @@ public:
 	using ActionType = GroundAction;
 	using ActionId = ActionType::IdType;
 
-	GroundStateModel(const Problem& problem);
+	explicit GroundStateModel(const Problem& problem);
 	~GroundStateModel() = default;
 
-	GroundStateModel(const GroundStateModel&) = default;
-	GroundStateModel& operator=(const GroundStateModel&) = default;
+	GroundStateModel(const GroundStateModel&) = delete;
+	GroundStateModel& operator=(const GroundStateModel&) = delete;
 	GroundStateModel(GroundStateModel&&) = default;
-	GroundStateModel& operator=(GroundStateModel&&) = default;
+	GroundStateModel& operator=(GroundStateModel&&) = delete;
 
 	//! Returns initial state of the problem
 	State init() const;

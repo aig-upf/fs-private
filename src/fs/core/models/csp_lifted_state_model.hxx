@@ -6,7 +6,7 @@
 #include <fs/core/actions/lifted_action_iterator.hxx>
 
 
-namespace fs0 { namespace gecode { class LiftedActionCSP; }}
+namespace fs0::gecode { class LiftedActionCSP; }
 
 namespace fs0 {
 
@@ -33,9 +33,9 @@ public:
 	~LiftedStateModel() = default;
 
 	LiftedStateModel(const LiftedStateModel&) = default;
-	LiftedStateModel& operator=(const LiftedStateModel&) = default;
+	LiftedStateModel& operator=(const LiftedStateModel&) = delete;
 	LiftedStateModel(LiftedStateModel&&) = default;
-	LiftedStateModel& operator=(LiftedStateModel&&) = default;
+	LiftedStateModel& operator=(LiftedStateModel&&) = delete;
 
 	//! Returns initial state of the problem
 	State init() const;

@@ -135,8 +135,8 @@ set(SOURCE_FILES
         src/fs/core/search/nodes/blind_node.hxx
         src/fs/core/models/ground_state_model.cxx
         src/fs/core/models/ground_state_model.hxx
-        src/fs/core/models/lifted_state_model.cxx
-        src/fs/core/models/lifted_state_model.hxx
+        src/fs/core/models/csp_lifted_state_model.cxx
+        src/fs/core/models/csp_lifted_state_model.hxx
         src/fs/core/models/sdd_lifted_state_model
         src/fs/core/models/utils
         src/fs/core/models/simple_state_model.cxx

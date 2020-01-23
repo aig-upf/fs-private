@@ -5,7 +5,7 @@
 #include <fs/core/search/drivers/setups.hxx>
 #include <fs/core/search/drivers/validation.hxx>
 
-namespace fs0 { namespace drivers {
+namespace fs0::drivers {
 
 LiftedStateModel
 GroundingSetup::fully_lifted_model(Problem& problem) {
@@ -49,4 +49,4 @@ GroundingSetup::sdd_lifted_model(Problem& problem) {
     return SDDLiftedStateModel::build(problem);
 }
 
-} } // namespaces
+} // namespaces

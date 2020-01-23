@@ -7,7 +7,7 @@
 
 // namespace lapkt { class MultivaluedState; }
 
-namespace fs0 { namespace language { namespace fstrips { class AtomicFormula; }}}
+namespace fs0::language::fstrips { class AtomicFormula; }
 namespace fs = fs0::language::fstrips;
 
 
@@ -37,7 +37,7 @@ public:
 	SimpleStateModel(const SimpleStateModel&) =  delete;
 	SimpleStateModel& operator=(const SimpleStateModel&) = delete;
 	SimpleStateModel(SimpleStateModel&&) = default;
-	SimpleStateModel& operator=(SimpleStateModel&&) = default;
+	SimpleStateModel& operator=(SimpleStateModel&&) = delete;
 
 	//! Returns initial state of the problem
 	StateT init() const;

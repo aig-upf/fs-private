@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fs/core/models/lifted_state_model.hxx>
+#include <fs/core/models/csp_lifted_state_model.hxx>
 #include <fs/core/actions/action_id.hxx>
 #include <fs/core/search/nodes/heuristic_search_node.hxx>
 #include <fs/core/search/drivers/registry.hxx>

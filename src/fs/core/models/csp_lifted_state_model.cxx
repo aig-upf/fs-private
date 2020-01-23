@@ -1,5 +1,5 @@
 
-#include <fs/core/models/lifted_state_model.hxx>
+#include <fs/core/models/csp_lifted_state_model.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/state.hxx>
 #include <fs/core/applicability/formula_interpreter.hxx>

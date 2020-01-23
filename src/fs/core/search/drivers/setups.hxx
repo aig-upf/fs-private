@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fs/core/models/lifted_state_model.hxx>
+#include <fs/core/models/csp_lifted_state_model.hxx>
 #include <fs/core/models/sdd_lifted_state_model.hxx>
 #include <fs/core/models/ground_state_model.hxx>
 #include <fs/core/models/simple_state_model.hxx>
