@@ -28,7 +28,7 @@ SBFWSDriver<SimpleStateModel>::search(Problem& problem, const Config& config, co
 
 template <>
 ExitCode
-SBFWSDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const drivers::EngineOptions& options, float start_time) {
+SBFWSDriver<CSPLiftedStateModel>::search(Problem& problem, const Config& config, const drivers::EngineOptions& options, float start_time) {
 	return do_search(drivers::GroundingSetup::fully_lifted_model(problem), config, options, start_time);
 }
 

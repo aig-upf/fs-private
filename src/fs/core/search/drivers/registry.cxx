@@ -31,9 +31,9 @@ EngineRegistry::EngineRegistry() {
 // 	add("standard",  new GBFS_CRPGDriver());
 	
 // 	add("native",  new NativeDriver<GroundStateModel>());
-// 	add("lnative",  new NativeDriver<LiftedStateModel>()); // The native driver is not ready for this
+// 	add("lnative",  new NativeDriver<CSPLiftedStateModel>()); // The native driver is not ready for this
 	
-// 	add("lunreached",  new UnreachedAtomDriver<LiftedStateModel>());
+// 	add("lunreached",  new UnreachedAtomDriver<CSPLiftedStateModel>());
 
 	// 	add("native",  new NativeDriver<GroundStateModel>());
 
@@ -41,14 +41,14 @@ EngineRegistry::EngineRegistry() {
 	add("native_gc",  new NativeActionDriver<UnsatisfiedGoalAtomsCounter>());
 	
 	add("iw",  new IteratedWidthDriver<GroundStateModel>());
-	add("liw",  new IteratedWidthDriver<LiftedStateModel>());
+	add("liw",  new IteratedWidthDriver<CSPLiftedStateModel>());
 	
 	add("sbfws",  new bfws::SBFWSDriver<SimpleStateModel>());
-	add("lsbfws",  new bfws::SBFWSDriver<LiftedStateModel>());
+	add("lsbfws",  new bfws::SBFWSDriver<CSPLiftedStateModel>());
     add("sbfws-sdd",  new bfws::SBFWSDriver<SDDLiftedStateModel>());
 	
 	add("bfs",  new BreadthFirstSearchDriver<GroundStateModel>());
-	add("lbfs",  new BreadthFirstSearchDriver<LiftedStateModel>());
+	add("lbfs",  new BreadthFirstSearchDriver<CSPLiftedStateModel>());
     add("bfs-sdd",  new BreadthFirstSearchDriver<SDDLiftedStateModel>());
 	
 	add("smart",  new SmartEffectDriver());

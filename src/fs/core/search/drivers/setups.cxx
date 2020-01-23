@@ -7,14 +7,14 @@
 
 namespace fs0::drivers {
 
-LiftedStateModel
+CSPLiftedStateModel
 GroundingSetup::fully_lifted_model(Problem& problem) {
 	Validation::check_no_conditional_effects(problem);
 
 	// We don't ground any action
 	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
 	//! Determine if computing successor states requires to handle continuous change
-	return LiftedStateModel::build(problem);
+	return CSPLiftedStateModel::build(problem);
 }
 
 GroundStateModel

@@ -101,7 +101,7 @@ IteratedWidthDriver<GroundStateModel>::search(Problem& problem, const Config& co
 
 template <>
 ExitCode
-IteratedWidthDriver<LiftedStateModel>::search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) {
+IteratedWidthDriver<CSPLiftedStateModel>::search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) {
 	auto model = GroundingSetup::fully_lifted_model(problem);
 	return do_search(model, config, options, start_time, _stats);
 // 	auto engine = create(config, model);

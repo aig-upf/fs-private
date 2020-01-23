@@ -16,26 +16,26 @@ class GroundAction;
 
 
 //! A state model that works with lifted actions instead of grounded actions
-class LiftedStateModel
+class CSPLiftedStateModel
 {
 public:
 	using StateT = State;
 	using ActionType = LiftedActionID;
 
 protected:
-	LiftedStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals);
+	CSPLiftedStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals);
 
 public:
 
 	//! Factory method
-	static LiftedStateModel build(const Problem& problem);
+	static CSPLiftedStateModel build(const Problem& problem);
 
-	~LiftedStateModel() = default;
+	~CSPLiftedStateModel() = default;
 
-	LiftedStateModel(const LiftedStateModel&) = default;
-	LiftedStateModel& operator=(const LiftedStateModel&) = delete;
-	LiftedStateModel(LiftedStateModel&&) = default;
-	LiftedStateModel& operator=(LiftedStateModel&&) = delete;
+	CSPLiftedStateModel(const CSPLiftedStateModel&) = default;
+	CSPLiftedStateModel& operator=(const CSPLiftedStateModel&) = delete;
+	CSPLiftedStateModel(CSPLiftedStateModel&&) = default;
+	CSPLiftedStateModel& operator=(CSPLiftedStateModel&&) = delete;
 
 	//! Returns initial state of the problem
 	State init() const;

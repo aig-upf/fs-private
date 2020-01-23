@@ -17,8 +17,8 @@ BreadthFirstSearchDriver<GroundStateModel>::setup(Problem& problem) const {
 }
 
 template <>
-LiftedStateModel
-BreadthFirstSearchDriver<LiftedStateModel>::setup(Problem& problem) const {
+CSPLiftedStateModel
+BreadthFirstSearchDriver<CSPLiftedStateModel>::setup(Problem& problem) const {
 	return GroundingSetup::fully_lifted_model(problem);
 }
 
@@ -48,7 +48,7 @@ BreadthFirstSearchDriver<StateModelT>::search(Problem& problem, const Config& co
 
 // explicit instantiations
 template class BreadthFirstSearchDriver<GroundStateModel>;
-template class BreadthFirstSearchDriver<LiftedStateModel>;
+template class BreadthFirstSearchDriver<CSPLiftedStateModel>;
 template class BreadthFirstSearchDriver<SDDLiftedStateModel>;
 
 } } // namespaces

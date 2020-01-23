@@ -19,13 +19,13 @@ class FullyLiftedDriver : public Driver {
 public:
 	using NodeT = HeuristicSearchNode<State, LiftedActionID>;
 	using HeuristicT = fs0::gecode::GecodeCRPG;
-	using EngineT = lapkt::StlBestFirstSearch<NodeT, LiftedStateModel>;
+	using EngineT = lapkt::StlBestFirstSearch<NodeT, CSPLiftedStateModel>;
 	using EnginePT = std::unique_ptr<EngineT>;
 	
 	
-	EnginePT create(const Config& config, LiftedStateModel& model, SearchStats& stats);
+	EnginePT create(const Config& config, CSPLiftedStateModel& model, SearchStats& stats);
 	
-	LiftedStateModel setup(Problem& problem) const;
+	CSPLiftedStateModel setup(Problem& problem) const;
 	
 	ExitCode search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) override;
 

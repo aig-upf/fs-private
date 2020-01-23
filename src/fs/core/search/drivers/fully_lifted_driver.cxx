@@ -11,7 +11,7 @@ using namespace fs0::gecode;
 namespace fs0 { namespace drivers {
 	
 FullyLiftedDriver::EnginePT
-FullyLiftedDriver::create(const Config& config, LiftedStateModel& model, SearchStats& stats) {
+FullyLiftedDriver::create(const Config& config, CSPLiftedStateModel& model, SearchStats& stats) {
 	LPT_INFO("main", "Using the Fully-lifted driver");
 	const Problem& problem = model.getTask();
 	
@@ -35,17 +35,17 @@ FullyLiftedDriver::create(const Config& config, LiftedStateModel& model, SearchS
 }
 
 
-LiftedStateModel
+CSPLiftedStateModel
 FullyLiftedDriver::setup(Problem& problem) const {
 	return GroundingSetup::fully_lifted_model(problem);
 }
 
 ExitCode 
 FullyLiftedDriver::search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) {
-	LiftedStateModel model = setup(problem);
+	CSPLiftedStateModel model = setup(problem);
 	SearchStats stats;
 	auto engine = create(config, model, stats);
-	return Utils::SearchExecution<LiftedStateModel>(model).do_search(*engine, options, start_time, stats);
+	return Utils::SearchExecution<CSPLiftedStateModel>(model).do_search(*engine, options, start_time, stats);
 }
 
 } } // namespaces
