@@ -57,7 +57,6 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 		std::string symbol = tree["symbol"].GetString();
 		bool negated = tree["negated"].GetBool();
 		std::vector<const Term*> subterms = parseTermList(tree["children"], info);
-        auto symbol_id = info.getSymbolId(symbol);
 
 		// HACK - WONT WORK FOR NEGATED FORMULAS
 		try { return LogicalComponentRegistry::instance().instantiate_formula(symbol, subterms); }
@@ -65,6 +64,7 @@ const Formula* Loader::parseFormula(const rapidjson::Value& tree, const ProblemI
 
 		// TODO - This is a temporary hack to parse predicates 'p(x)' as if they were
 		// equality predicates 'p(x) = 1' with 'p' being a binary function.
+        auto symbol_id = info.getSymbolId(symbol);
 		try {
 			if (info.isPredicate(symbol_id)) {
 				//
