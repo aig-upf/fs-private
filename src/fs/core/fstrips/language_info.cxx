@@ -101,7 +101,7 @@ private:
 	}
 
 
-	const std::string get_typename(const type_id& type) const {
+	std::string get_typename(const type_id& type) const {
 		return to_string(type);
 	}
 
@@ -127,7 +127,7 @@ private:
 	}
 
 
-	const std::string get_object_name(const object_id& object) const {
+	std::string get_object_name(const object_id& object) const {
 		type_id t = o_type(object);
 		if (t == type_id::bool_t) return std::string((fs0::value<bool>(object) ? "true" : "false"));
 		else if (t == type_id::int_t) return std::to_string(fs0::value<int>(object));
@@ -147,7 +147,7 @@ private:
 		assert(_symbol_info.size() == symbolIds.size());
 		unsigned id = symbolIds.size();
 		symbolIds.insert(std::make_pair(name, id));
-		_symbol_info.push_back(SymbolInfo(id, type, name, signature, static_));
+		_symbol_info.emplace_back(id, type, name, signature, static_);
 		return id;
 	}
 
@@ -176,8 +176,8 @@ private:
 
 		TypeIdx id = _fstype_info.size();
 		_name_to_type.insert(std::make_pair(name, id));
-		_fstype_objects.push_back(std::vector<object_id>()); // Push back an empty vector
-		_fstype_info.push_back(FSTypeInfo(id, name, underlying_type, range));
+		_fstype_objects.emplace_back(); // Push back an empty vector
+		_fstype_info.emplace_back(id, name, underlying_type, range);
 
 		return id;
 	}
@@ -243,11 +243,9 @@ private:
 	}
 	
 	
-	const object_id get_object_id(const std::string& name) const {return _object_ids.at(name);}
+	const object_id& get_object_id(const std::string& name) const {return _object_ids.at(name);}
 	
 	
-	
-
 	unsigned num_objects() const { return _object_names.size(); }
 
 	void bind_object_to_type(TypeIdx fstype, object_id object) {
@@ -261,10 +259,10 @@ private:
 	}
 	
 	//! Check that the given object is a valid object of the given FS type, raise exception if not.
-	void check_valid_object(const object_id& object, TypeIdx type) const {
+	bool check_valid_object(const object_id& object, TypeIdx type) const {
 		// Currently we simply check that the given value is within bounds
 		const FSTypeInfo& tinfo = typeinfo(type);
-		if (!tinfo.bounded()) return;
+		if (!tinfo.bounded()) return true;
 		
 		type_id t = get_type_id(type);
 
@@ -278,9 +276,8 @@ private:
 			float value = fs0::value<float>(object);
 			if (value < bounds.first || value > bounds.second) throw out_of_range_object(object, get_typename(type));
 		}
-
-		
-	}	
+        return true;
+	}
 
 
 	//! Map between predicate and function symbols names and IDs.
@@ -345,16 +342,16 @@ get_type_id(TypeIdx fstype) const { return impl().get_type_id(fstype); }
 
 
 
-const std::string LanguageInfo::
+std::string LanguageInfo::
 get_typename(const type_id& type) const { return impl().get_typename(type); }
 
 const std::string& LanguageInfo::
 get_typename(const TypeIdx& fstype) const { return impl().get_typename(fstype); }
 
-const std::string LanguageInfo::
+std::string LanguageInfo::
 get_object_name(const object_id& object) const { return impl().get_object_name(object); }
 
-const object_id LanguageInfo::get_object_id(const std::string& name) const { return impl().get_object_id(name);}
+const object_id& LanguageInfo::get_object_id(const std::string& name) const { return impl().get_object_id(name);}
 
 symbol_id LanguageInfo::
 add_symbol(const std::string& name, const symbol_t& type, const Signature& signature, bool static_) { return impl().add_symbol(name, type, signature, static_); }
@@ -384,7 +381,7 @@ symbolinfo(const symbol_id& sid) const { return impl().symbolinfo(sid); }
 const std::vector<object_id>& LanguageInfo::
 type_objects(TypeIdx fstype) const { return impl().type_objects(fstype); }
 
-void LanguageInfo::
+bool LanguageInfo::
 check_valid_object(const object_id& object, TypeIdx type) const { return impl().check_valid_object(object, type); }
 
 

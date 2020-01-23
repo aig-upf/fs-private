@@ -2,10 +2,12 @@
 #pragma once
 
 #include <memory>
+#include <utility>
+
 #include <fs/core/fs_types.hxx> // TODO - REMOVE DEPENDENCY?
 
 
-namespace fs0 { namespace fstrips {
+namespace fs0::fstrips {
 
 using symbol_id = unsigned;
 enum class symbol_t {Predicate, Function};
@@ -13,8 +15,8 @@ enum class symbol_t {Predicate, Function};
 
 class FSTypeInfo {
 public:
-	FSTypeInfo(TypeIdx id, const std::string& name_, type_id underlying_type, const type_range& bounds)
-		: _id(id), _name(name_), _type_id(underlying_type), _bounds(bounds)
+	FSTypeInfo(TypeIdx id, std::string  name_, type_id underlying_type, const type_range& bounds)
+		: _id(id), _name(std::move(name_)), _type_id(underlying_type), _bounds(bounds)
 	{}
 
 	//!
@@ -30,7 +32,7 @@ public:
 	bool bounded() const { return _bounds != INVALID_TYPE_RANGE; }
 
 	template <typename T>
-	const std::pair<T, T> bounds() const {
+	std::pair<T, T> bounds() const {
 		return std::make_pair<T>(value<T>(_bounds.first), value<T>(_bounds.second));
 	}
 
@@ -122,14 +124,14 @@ public:
 	type_id get_type_id(const std::string& fstype) const;
 	type_id get_type_id(TypeIdx fstype) const;
 
-	void check_valid_object(const object_id& object, TypeIdx type) const;
+	bool check_valid_object(const object_id& object, TypeIdx type) const;
 
-	const std::string get_typename(const type_id& type) const;
+	std::string get_typename(const type_id& type) const;
 	const std::string& get_typename(const TypeIdx& fstype) const;
 
-	const std::string get_object_name(const object_id& object) const;
+	std::string get_object_name(const object_id& object) const;
 
-	const object_id get_object_id(const std::string& name) const;
+	const object_id& get_object_id(const std::string& name) const;
 
 	//! Return the number of registered objects
 	unsigned num_objects() const;
@@ -200,4 +202,4 @@ private:
 };
 
 
-} } // namespaces
+} // namespaces

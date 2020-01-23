@@ -122,7 +122,7 @@ public:
 	const std::string& getVariableName(VariableIdx index) const;
 	inline VariableIdx getVariableId(const std::string& name) const { return variableIds.at(name); }
 
-	const object_id get_object_id(const std::string& name) const;
+	object_id get_object_id(const std::string& name) const;
 
 
 	const TypeIdx getVariableType(VariableIdx index) const { return variableTypes.at(index); }
@@ -205,11 +205,11 @@ public:
 
 	//! Check that the value of a given variable is within the bounds of the variable,
 	//! in case it is a variable of a bounded type.
-	void checkValueIsValid(VariableIdx variable, const object_id& value) const;
+    bool checkValueIsValid(VariableIdx variable, const object_id& value) const;
 
 	bool isBoundedType(TypeIdx type) const;
 
-	const std::pair<int,int> getTypeBounds(TypeIdx type) const;
+	std::pair<int,int> getTypeBounds(TypeIdx type) const;
 
 	void setDomainName(const std::string& domain) { _domain = domain; }
 	void setInstanceName(const std::string& instance) { _instance_name = instance; }
