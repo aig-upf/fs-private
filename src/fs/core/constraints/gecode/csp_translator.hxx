@@ -11,7 +11,7 @@
 
 namespace fs0 { class State; }
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 class GecodeCSP;
 class RPGIndex;
@@ -21,8 +21,8 @@ class RPGIndex;
  */
 class UnregisteredStateVariableError : public std::runtime_error {
 public:
-	UnregisteredStateVariableError( const char* what_msg ) : std::runtime_error( what_msg ) {}
-	UnregisteredStateVariableError( const std::string& what_msg ) : std::runtime_error( what_msg ) {}
+	explicit UnregisteredStateVariableError( const char* what_msg ) : std::runtime_error( what_msg ) {}
+	explicit UnregisteredStateVariableError( const std::string& what_msg ) : std::runtime_error( what_msg ) {}
 };
 
 /**
@@ -36,7 +36,7 @@ public:
 class CSPTranslator {
 public:
 
-	CSPTranslator(GecodeCSP& base_csp) : _base_csp(base_csp) {}
+	explicit CSPTranslator(GecodeCSP& base_csp) : _base_csp(base_csp) {}
 	virtual ~CSPTranslator() = default;
 	CSPTranslator(const CSPTranslator&) = delete;
 	CSPTranslator(CSPTranslator&&) = delete;
@@ -91,7 +91,7 @@ public:
 	void updateStateVariableDomains(GecodeCSP& csp, const std::vector<const Gecode::IntSet*>& domains) const;
 	void updateStateVariableDomains(GecodeCSP& csp, const State& state) const;
 
-	const unsigned resolveInputVariableIndex(VariableIdx variable) const {
+	unsigned resolveInputVariableIndex(VariableIdx variable) const {
 		const auto& it = _input_state_variables.find(variable);
 		if (it == _input_state_variables.end()) throw UnregisteredStateVariableError("Trying to resolve non-registered input state variable");
 		return it->second;
@@ -101,7 +101,7 @@ public:
 	const Gecode::IntVar& resolveInputStateVariable(const GecodeCSP& csp, VariableIdx variable) const;
 
 	//! Returns the value of the CSP variable that corresponds to the given input state variable, in the given CSP.
-	const object_id resolveInputStateVariableValue(const GecodeCSP& csp, VariableIdx variable) const {
+	object_id resolveInputStateVariableValue(const GecodeCSP& csp, VariableIdx variable) const {
 		return make_object(resolveInputStateVariable(csp, variable).val());
 	}
 
@@ -170,4 +170,4 @@ protected:
 
 
 
-} } // namespaces
+} // namespaces

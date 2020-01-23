@@ -5,18 +5,15 @@
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
 #include <fs/core/constraints/gecode/handlers/base_csp.hxx>
-#include <fs/core/constraints/gecode/helper.hxx>
-#include <fs/core/heuristics/relaxed_plan/rpg_data.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/constraints/registry.hxx>
-#include <gecode/driver.hh>
 #include <fs/core/constraints/gecode/language_translators.hxx>
 #include <fs/core/utils/config.hxx>
 #include <fs/core/constraints/gecode/extensions.hxx>
 #include <fs/core/utils/utils.hxx>
 
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 BaseCSP::BaseCSP(const AtomIndex& tuple_index, bool approximate) :
 	_base_csp(new GecodeCSP()),
@@ -141,7 +138,11 @@ BaseCSP::register_csp_variables() {
 		if (const auto * fluent = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) {
 			unsigned symbol_id = fluent->getSymbolId();
 			bool is_predicate = info.isPredicate(symbol_id);
-			
+
+            // Fake fluent-headed terms that are indeed predicates have already been dealt with in method
+            // `index_csp_elements`, so this should not be a predicate
+			assert (!is_predicate);
+
 			if (config.getOption("element_constraint", true) && _counter.symbol_requires_element_constraint(symbol_id) && !is_predicate) {
 				LPT_DEBUG("translation", "Term \"" << *fluent << "\" will be translated into an element constraint");
 				NestedFluentElementTranslator tr(fluent);
@@ -151,14 +152,11 @@ BaseCSP::register_csp_variables() {
 			}
 			
 			else {
-				
+                // In order to model an actual term f(x), we'll need an extra CSP variable to model the f-application,
+                // i.e. to model it as an extensional constraint that corresponds to the predicate f(x, z)
 				_extensional_constraints.emplace_back(fluent, _tuple_index, is_predicate, false);
-				if (!is_predicate) { // If the term is indeed a term and not a predicate, we'll need an extra CSP variable to model it.
-					_translator.registerNestedTerm(fluent);
-					LPT_DEBUG("translation", "Term \"" << *fluent << "\" will be translated into an extensional constraint");
-				} else {
-					LPT_DEBUG("translation", "Atom \"" << *fluent << "\" will be translated into an extensional constraint");
-				}
+                _translator.registerNestedTerm(fluent);
+                LPT_DEBUG("translation", "Term \"" << *fluent << "\" will be translated into an extensional constraint");
 			}
 			
 		} else if (auto statevar = dynamic_cast<const fs::StateVariable*>(term)) {
@@ -301,16 +299,15 @@ BaseCSP::index_csp_elements(const std::vector<const fs::Formula*>& conditions) {
 
 						// Mark the condition as inserted, so we do not need to insert it again!
 						inserted_conditions.insert(relational);
-						
+                        // For _predicate_ state variables, we don't need an actual CSP variable modeling it, so we spare it.
+                        inserted_terms.insert(candidate);
+                        // We'll have one extensional constraint per predicate appearing on the condition / formula.
+                        _extensional_constraints.emplace_back(origin, _tuple_index, true, intval==0);
+
 						if (statevar) {
-							// For _predicate_ state variables, we don't need an actual CSP variable modeling it, so we spare it.
-							inserted_terms.insert(candidate);
-							
-							// We'll have one extensional constraint per predicate appearing on the condition / formula.
-							_extensional_constraints.emplace_back(origin, _tuple_index, true, intval==0);
-							
 							// Insert subterms properly - TODO - Perhaps StateVariable::all_terms should already return these terms?
 							for (auto term:origin->getSubterms()) {
+                                // Subterms here should always be constants, otherwise this wouldn't be a state variable
 								auto tmp = fs::all_terms(*term);
 								_all_terms.insert(tmp.cbegin(), tmp.cend()); // TODO These should go away once we deal with constants separately
 							}
@@ -329,6 +326,8 @@ BaseCSP::index_csp_elements(const std::vector<const fs::Formula*>& conditions) {
 		else if (auto fluent = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) _counter.count_nested(fluent->getSymbolId());
 	}
 
+	// Insert into `_all_terms` any term collected in `terms` which is not in `inserted_terms`, i.e., which is
+	// not a state variable
     std::copy_if(terms.begin(), terms.end(), std::inserter(_all_terms, _all_terms.begin()),
                  [&inserted_terms] (const fs::Term* term) { return inserted_terms.find(term) == inserted_terms.end(); });
 
@@ -353,4 +352,4 @@ BaseCSP::index_csp_elements(const std::vector<const fs::Formula*>& conditions) {
 }
 
 
-} } // namespaces
+} // namespaces
