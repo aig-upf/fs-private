@@ -1,18 +1,18 @@
 
 #include <fs/core/state.hxx>
-#include <fs/core/actions/lifted_action_iterator.hxx>
+#include <fs/core/actions/csp_action_iterator.hxx>
 #include <fs/core/actions/action_id.hxx>
 #include <fs/core/constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
 
 namespace fs0::gecode {
 
-		LiftedActionIterator::LiftedActionIterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const std::vector<const fs::Formula*>& state_constraints, const AtomIndex& tuple_index) :
+		CSPActionIterator::CSPActionIterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const std::vector<const fs::Formula*>& state_constraints, const AtomIndex& tuple_index) :
 				_handlers(handlers), _state(state), _state_constraints(state_constraints), _extension_handler(tuple_index, state)
 		{
 		}
 
-		LiftedActionIterator::Iterator::Iterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const std::vector<const fs::Formula*>& state_constraints, const StateBasedExtensionHandler& extension_handler, unsigned currentIdx) :
+		CSPActionIterator::Iterator::Iterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const std::vector<const fs::Formula*>& state_constraints, const StateBasedExtensionHandler& extension_handler, unsigned currentIdx) :
 				_handlers(handlers),
 				_state(state),
 				_current_handler_idx(currentIdx),
@@ -25,13 +25,13 @@ namespace fs0::gecode {
 			advance();
 		}
 
-		LiftedActionIterator::Iterator::~Iterator() {
+		CSPActionIterator::Iterator::~Iterator() {
 			delete _action;
 			delete _engine;
 			delete _csp;
 		}
 
-		void LiftedActionIterator::Iterator::advance() {
+		void CSPActionIterator::Iterator::advance() {
 			while (next_solution()) {
 
 				return;
@@ -58,7 +58,7 @@ namespace fs0::gecode {
 		}
 
 
-		bool LiftedActionIterator::Iterator::next_solution() {
+		bool CSPActionIterator::Iterator::next_solution() {
 			for (;_current_handler_idx < _handlers.size(); ++_current_handler_idx) {
 				LiftedActionCSP& handler = *_handlers[_current_handler_idx];
 

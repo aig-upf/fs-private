@@ -50,10 +50,10 @@ namespace fs0 {
     }
 
 
-    gecode::LiftedActionIterator CSPLiftedStateModel::applicable_actions(const State& state, bool enforce_state_constraints) const {
+    gecode::CSPActionIterator CSPLiftedStateModel::applicable_actions(const State& state, bool enforce_state_constraints) const {
         if ( enforce_state_constraints )
-            return gecode::LiftedActionIterator(state, _handlers, _task.getStateConstraints(), _task.get_tuple_index());
-        return gecode::LiftedActionIterator(state, _handlers, {}, _task.get_tuple_index());
+            return gecode::CSPActionIterator(state, _handlers, _task.getStateConstraints(), _task.get_tuple_index());
+        return gecode::CSPActionIterator(state, _handlers, {}, _task.get_tuple_index());
     }
 
 

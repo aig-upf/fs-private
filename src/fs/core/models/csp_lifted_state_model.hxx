@@ -3,7 +3,7 @@
 
 #include <fs/core/atom.hxx>
 #include <fs/core/actions/action_id.hxx>
-#include <fs/core/actions/lifted_action_iterator.hxx>
+#include <fs/core/actions/csp_action_iterator.hxx>
 
 
 namespace fs0::gecode { class LiftedActionCSP; }
@@ -44,8 +44,8 @@ public:
 	bool goal(const State& state) const;
 
 	//! Returns applicable action set object
-	gecode::LiftedActionIterator applicable_actions(const State& state, bool enforce_state_constraints) const;
-	gecode::LiftedActionIterator applicable_actions(const State& state) const {
+	gecode::CSPActionIterator applicable_actions(const State& state, bool enforce_state_constraints) const;
+	gecode::CSPActionIterator applicable_actions(const State& state) const {
 		return applicable_actions(state, true);
 	}
 

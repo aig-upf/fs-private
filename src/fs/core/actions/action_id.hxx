@@ -4,7 +4,7 @@
 #include <fs/core/fs_types.hxx>
 #include <fs/core/utils/binding.hxx>
 
-namespace fs0::gecode { class LiftedActionIterator; }
+namespace fs0::gecode { class CSPActionIterator; }
 
 namespace fs0 {
 
@@ -51,7 +51,7 @@ protected:
 public:
 	//! Type aliases required for the lifted state model
 	typedef LiftedActionID IdType;
-	typedef gecode::LiftedActionIterator ApplicableSet;
+	typedef gecode::CSPActionIterator ApplicableSet;
 	
 	static const LiftedActionID invalid_action_id;
 	
