@@ -54,9 +54,10 @@ bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translat
 }
 
 bool ExtensionalConstraint::update(GecodeCSP& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const {
-	// If the extension of the constraint is empty and it is not a negative constraint, then
-	// we can already flag the CSP as unsolvable
-	assert(extension.finalized());
+    assert(extension.finalized());
+
+    // If the extension of the constraint is empty and it is not a negative constraint, then
+    // we can already flag the CSP as unsolvable
 	if (!_negative && extension.tuples() == 0) return false;
 
 	// Collect the references to the CSP variables
