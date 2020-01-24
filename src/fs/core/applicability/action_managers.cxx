@@ -36,12 +36,6 @@ bool NaiveApplicabilityManager::isApplicable(const State& state, const GroundAct
 	return true;
 }
 
-bool NaiveApplicabilityManager::isActive(const State& state, const GroundAction& action) const {
-    if (!action.isNatural()) return false;
-	if (!checkFormulaHolds(action.getPrecondition(), state)) return false;
-	return true;
-}
-
 //! Note that this might return some repeated atom - and even two contradictory atoms... we don't check that here.
 std::vector<Atom>
 NaiveApplicabilityManager::computeEffects(const State& state, const GroundAction& action) {

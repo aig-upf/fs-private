@@ -5,8 +5,9 @@
 
 #include <fs/core/fs_types.hxx>
 #include <fs/core/applicability/base.hxx>
+#include <utility>
 
-namespace fs0 { namespace language { namespace fstrips { class Term; class Formula; class AtomicFormula; } }}
+namespace fs0::language::fstrips { class Term; class Formula; class AtomicFormula; }
 namespace fs = fs0::language::fstrips;
 namespace fs0 {
 
@@ -19,13 +20,10 @@ class AtomIndex;
 //! A simple manager that only checks applicability of actions in a non-relaxed setting.
 class NaiveApplicabilityManager {
 public:
-	NaiveApplicabilityManager(const std::vector<const fs::Formula*>& state_constraints);
+	explicit NaiveApplicabilityManager(const std::vector<const fs::Formula*>& state_constraints);
 
 	//! An action is applicable iff its preconditions hold and its application does not violate any state constraint.
 	bool isApplicable(const State& state, const GroundAction& action, bool enforce_state_constraints) const;
-    //! A process (natural action) is active if its preconditions hold, note that state constraints
-    //! need to be validated over the interval [t, t+dt]
-    bool isActive( const State& state, const GroundAction& process ) const;
 
 	//! Note that this might return some repeated atom - and even two contradictory atoms... we don't check that here.
 	static std::vector<Atom> computeEffects(const State& state, const GroundAction& action);
@@ -90,7 +88,7 @@ public:
 	using ApplicableSet = typename Base::ApplicableSet;
 
 	NaiveActionManager(const std::vector<const GroundAction*>& actions, const std::vector<const fs::Formula*>& state_constraints);
-	~NaiveActionManager() = default;
+	~NaiveActionManager() override = default;
 
 	//! Return the set of all actions applicable in a given state
 	ApplicableSet applicable(const State& state, bool enforce_state_constraints) const override;
@@ -128,7 +126,7 @@ public:
 	using ApplicableSet = typename Base::ApplicableSet;
 
 	SmartActionManager(const std::vector<const GroundAction*>& actions, const std::vector<const fs::Formula*>& state_constraints, const AtomIndex& tuple_idx, const BasicApplicabilityAnalyzer& analyzer);
-	~SmartActionManager() = default;
+	~SmartActionManager() override = default;
 	SmartActionManager(const SmartActionManager&) = default;
 
 protected:
@@ -166,8 +164,8 @@ class GroundApplicableSet {
 protected:
 	friend class NaiveActionManager;
 
-	GroundApplicableSet(const ActionManagerI& manager, const State& state, const std::vector<ActionIdx>& action_whitelist, bool enforce_state_constraints):
-		_manager(manager), _state(state), _whitelist(action_whitelist), _enforce_state_constraints(enforce_state_constraints)
+	GroundApplicableSet(const ActionManagerI& manager, const State& state, std::vector<ActionIdx>  action_whitelist, bool enforce_state_constraints):
+		_manager(manager), _state(state), _whitelist(std::move(action_whitelist)), _enforce_state_constraints(enforce_state_constraints)
 	{}
 
 	class Iterator {
