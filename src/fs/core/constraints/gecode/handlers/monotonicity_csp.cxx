@@ -37,12 +37,12 @@ MonotonicityCSP::MonotonicityCSP(const fs::Formula* formula, const AtomIndex& tu
        _monotonicity(tuple_index, transitions)
 {}
 
-GecodeCSP* MonotonicityCSP::
+GecodeSpace* MonotonicityCSP::
 instantiate_from_changeset(const DomainTracker& base_domains, const State& state) const {
 
     // First update the domains of those CSP variables that correspond to state variables
     // which have their domain restricted by monotonicity constraints
-    auto clone = static_cast<GecodeCSP*>(_base_csp->clone());
+    auto clone = static_cast<GecodeSpace*>(_base_csp->clone());
 
     _translator.updateStateVariableDomains(*clone, base_domains.to_intsets(), true);
 
@@ -201,7 +201,7 @@ post_monotonicity_csp_from_domains(const State& state, const DomainTracker& doma
 
 
 
-DomainTracker MonotonicityCSP::prune_domains(const GecodeCSP& csp, const DomainTracker& tracker) const {
+DomainTracker MonotonicityCSP::prune_domains(const GecodeSpace& csp, const DomainTracker& tracker) const {
 
     std::vector<TransitionGraph::BitmapT> pruned(tracker.size());
     const auto& original_domains = tracker.domains();
@@ -237,8 +237,8 @@ DomainTracker MonotonicityCSP::prune_domains(const GecodeCSP& csp, const DomainT
 }
 
 
-GecodeCSP* MonotonicityCSP::
-check_consistency(GecodeCSP* csp, bool stick_to_solution) const {
+GecodeSpace* MonotonicityCSP::
+check_consistency(GecodeSpace* csp, bool stick_to_solution) const {
 
     if (!csp) return nullptr;
 
@@ -251,7 +251,7 @@ check_consistency(GecodeCSP* csp, bool stick_to_solution) const {
 //    _translator.print(std::cout, *csp);
 
     if (!_approximate || stick_to_solution) {  // Solve the CSP completely
-        GecodeCSP* solution = solve_csp(csp);
+        GecodeSpace* solution = solve_csp(csp);
         if (!solution) {
             delete csp;
             return nullptr;
@@ -273,9 +273,9 @@ check_consistency(GecodeCSP* csp, bool stick_to_solution) const {
     return csp;
 }
 
-GecodeCSP*
-MonotonicityCSP::solve_csp(GecodeCSP* csp) {
-    Gecode::DFS<GecodeCSP> engine(csp);
+GecodeSpace*
+MonotonicityCSP::solve_csp(GecodeSpace* csp) {
+    Gecode::DFS<GecodeSpace> engine(csp);
     return engine.next();
 }
 

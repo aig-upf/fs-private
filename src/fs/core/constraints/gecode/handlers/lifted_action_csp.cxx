@@ -106,7 +106,7 @@ LiftedActionCSP::register_csp_variables() {
 
 
 
-Binding LiftedActionCSP::build_binding_from_solution(const GecodeCSP* solution) const {
+Binding LiftedActionCSP::build_binding_from_solution(const GecodeSpace* solution) const {
     std::vector<object_id> values;
     std::vector<bool> valid;
     values.reserve(_parameter_variables.size());
@@ -132,11 +132,11 @@ const fs::Formula* LiftedActionCSP::get_precondition() const {
 }
 
 // Simply forward to the more concrete method
-const ActionID* LiftedActionCSP::get_action_id(const GecodeCSP* solution) const {
+const ActionID* LiftedActionCSP::get_action_id(const GecodeSpace* solution) const {
     return get_lifted_action_id(solution);
 }
 
-LiftedActionID* LiftedActionCSP::get_lifted_action_id(const GecodeCSP* solution) const {
+LiftedActionID* LiftedActionCSP::get_lifted_action_id(const GecodeSpace* solution) const {
     return new LiftedActionID(&_action, build_binding_from_solution(solution));
 }
 

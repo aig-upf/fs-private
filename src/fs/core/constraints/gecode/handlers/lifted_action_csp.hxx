@@ -38,7 +38,7 @@ public:
     const fs::Formula* get_precondition() const override;
 
     //! Return the (Lifted) ActionID corresponding to the given solution
-    LiftedActionID* get_lifted_action_id(const GecodeCSP* solution) const;
+    LiftedActionID* get_lifted_action_id(const GecodeSpace* solution) const;
 
 protected:
     //! We override the base method to ensure all action parameters are registered as CSP variables
@@ -62,10 +62,10 @@ protected:
     void index_parameters();
 
     //! Return the action binding that corresponds to the given solution
-    Binding build_binding_from_solution(const GecodeCSP* solution) const override;
+    Binding build_binding_from_solution(const GecodeSpace* solution) const override;
 
     //! Return the (Lifted) ActionID corresponding to the given solution
-    const ActionID* get_action_id(const GecodeCSP* solution) const override;
+    const ActionID* get_action_id(const GecodeSpace* solution) const override;
 
     //! Log some handler-related into
     void log() const override;

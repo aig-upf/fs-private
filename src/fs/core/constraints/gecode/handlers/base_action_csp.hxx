@@ -80,28 +80,28 @@ protected:
 	//! Preprocess the action to store the IDs of direct and indirect state variables
 	virtual void index_scopes();
 	
-	void compute_support(GecodeCSP* csp, RPGIndex& graph) const;	
+	void compute_support(GecodeSpace* csp, RPGIndex& graph) const;
 	
 	// Constraint registration methods
 	void registerEffectConstraints(const fs::ActionEffect* effect);
 	
 	//! Process the given solution of the action CSP
-	void process_solution(GecodeCSP* solution, RPGIndex& graph) const;
+	void process_solution(GecodeSpace* solution, RPGIndex& graph) const;
 	
 	//!
-	void simple_atom_processing(GecodeCSP* solution, RPGIndex& graph, AtomIdx tuple, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
+	void simple_atom_processing(GecodeSpace* solution, RPGIndex& graph, AtomIdx tuple, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 	
-// 	void hmax_based_atom_processing(GecodeCSP* solution, RPGIndex& graph, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
+// 	void hmax_based_atom_processing(GecodeSpace* solution, RPGIndex& graph, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 
 	//! Extracts the full support of a given effect corresponding to the given solution
-	std::vector<AtomIdx> extract_support_from_solution(GecodeCSP* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
+	std::vector<AtomIdx> extract_support_from_solution(GecodeSpace* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const;
 	
 	
 	//! Return the ActionID that corresponds to the current action / action schema, for some given solution
-	virtual const ActionID* get_action_id(const GecodeCSP* solution) const = 0;
+	virtual const ActionID* get_action_id(const GecodeSpace* solution) const = 0;
 	
 	//! Return the action binding that corresponds to the given solution - by default, return an empty binding
-	virtual Binding build_binding_from_solution(const GecodeCSP* solution) const;
+	virtual Binding build_binding_from_solution(const GecodeSpace* solution) const;
 	
 	//! A simple helper to log the processing message
 	virtual void log() const = 0;
@@ -110,10 +110,10 @@ protected:
 	void create_novelty_constraint() override;
 	
 	//!
-	void post_novelty_constraint(GecodeCSP& csp, const RPGIndex& rpg) const override;
+	void post_novelty_constraint(GecodeSpace& csp, const RPGIndex& rpg) const override;
 	
 	//!
-	void extract_nested_term_support(const GecodeCSP* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<AtomIdx>& support) const;
+	void extract_nested_term_support(const GecodeSpace* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<AtomIdx>& support) const;
 };
 
 } } // namespaces

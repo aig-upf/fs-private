@@ -52,12 +52,12 @@ void GroundEffectCSP::log() const {
 	LPT_EDEBUG("heuristic", "Processing effect \"" << *get_effect() << "\" of action " << _action);
 }
 
-const ActionID* GroundEffectCSP::get_action_id(const GecodeCSP* solution) const {
+const ActionID* GroundEffectCSP::get_action_id(const GecodeSpace* solution) const {
 	return new PlainActionID(&_action);
 }
 
-GecodeCSP* GroundEffectCSP::preinstantiate(const RPGIndex& rpg) const {
-	GecodeCSP* csp = instantiate(rpg);
+GecodeSpace* GroundEffectCSP::preinstantiate(const RPGIndex& rpg) const {
+	GecodeSpace* csp = instantiate(rpg);
 	if (!csp) return nullptr;
 	
 	if (!csp->propagate()) { // This colaterally enforces propagation of constraints
@@ -69,10 +69,10 @@ GecodeCSP* GroundEffectCSP::preinstantiate(const RPGIndex& rpg) const {
 }
 
 
-bool GroundEffectCSP::find_atom_support(AtomIdx tuple, const Atom& atom, const State& seed, GecodeCSP& layer_csp, RPGIndex& rpg) const {
+bool GroundEffectCSP::find_atom_support(AtomIdx tuple, const Atom& atom, const State& seed, GecodeSpace& layer_csp, RPGIndex& rpg) const {
 	log();
 	
-	std::unique_ptr<GecodeCSP> csp = std::unique_ptr<GecodeCSP>(static_cast<GecodeCSP*>(layer_csp.clone()));
+	std::unique_ptr<GecodeSpace> csp = std::unique_ptr<GecodeSpace>(static_cast<GecodeSpace*>(layer_csp.clone()));
 	
 	post(*csp, atom);
 
@@ -91,10 +91,10 @@ bool GroundEffectCSP::find_atom_support(AtomIdx tuple, const Atom& atom, const S
 	}
 }
 
-bool GroundEffectCSP::solve(AtomIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const {
+bool GroundEffectCSP::solve(AtomIdx tuple, gecode::GecodeSpace* csp, RPGIndex& graph) const {
 	// We just want to search for one solution and extract the support from it
-	Gecode::DFS<GecodeCSP> engine(csp);
-	GecodeCSP* solution = engine.next();
+	Gecode::DFS<GecodeSpace> engine(csp);
+	GecodeSpace* solution = engine.next();
 	if (!solution) return false; // The CSP has no solution at all
 	
 	bool reached = graph.reached(tuple);
@@ -112,7 +112,7 @@ bool GroundEffectCSP::solve(AtomIdx tuple, gecode::GecodeCSP* csp, RPGIndex& gra
 
 
 
-void GroundEffectCSP::post(GecodeCSP& csp, const Atom& atom) const {
+void GroundEffectCSP::post(GecodeSpace& csp, const Atom& atom) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	assert(_effects.size() == 1);
 	const auto& effect = _effects[0];

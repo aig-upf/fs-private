@@ -63,8 +63,8 @@ set(SOURCE_FILES
         src/fs/core/constraints/gecode/csp_translator.hxx
         src/fs/core/constraints/gecode/extensions.cxx
         src/fs/core/constraints/gecode/extensions.hxx
-        src/fs/core/constraints/gecode/gecode_csp.cxx
-        src/fs/core/constraints/gecode/gecode_csp.hxx
+        src/fs/core/constraints/gecode/gecode_space.cxx
+        src/fs/core/constraints/gecode/gecode_space.hxx
         src/fs/core/constraints/gecode/helper.cxx
         src/fs/core/constraints/gecode/helper.hxx
         src/fs/core/constraints/gecode/lifted_plan_extractor.cxx

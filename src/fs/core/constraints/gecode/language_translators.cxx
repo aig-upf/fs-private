@@ -2,7 +2,7 @@
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
 #include <fs/core/constraints/gecode/language_translators.hxx>
-#include <fs/core/constraints/gecode/gecode_csp.hxx>
+#include <fs/core/constraints/gecode/gecode_space.hxx>
 #include <fs/core/constraints/gecode/csp_translator.hxx>
 #include <fs/core/constraints/gecode/helper.hxx>
 #include <fs/core/constraints/gecode/handlers/base_csp.hxx>
@@ -76,22 +76,22 @@ void ArithmeticTermTranslator::registerConstraints(const fs::Term* term, CSPTran
 	LPT_EDEBUG("translation", "Registering constraints for arithmetic term " << *term);
 
 	// Now we assert that the root temporary variable equals the sum of the subterms
-	GecodeCSP& csp = translator.getBaseCSP();
+	GecodeSpace& csp = translator.getBaseCSP();
 	const Gecode::IntVar& result = translator.resolveVariable(arithmetic_term, csp);
 	Gecode::IntVarArgs operands = translator.resolveVariables(arithmetic_term->getSubterms(), csp);
 	post(csp, operands, result);
 }
 
 
-void AdditionTermTranslator::post(GecodeCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
+void AdditionTermTranslator::post(GecodeSpace& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
 	Gecode::linear(csp, getLinearCoefficients(), operands, getRelationType(), result);
 }
 
-void SubtractionTermTranslator::post(GecodeCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
+void SubtractionTermTranslator::post(GecodeSpace& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
 	Gecode::linear(csp, getLinearCoefficients(), operands, getRelationType(), result);
 }
 
-void MultiplicationTermTranslator::post(GecodeCSP& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
+void MultiplicationTermTranslator::post(GecodeSpace& csp, const Gecode::IntVarArgs& operands, const Gecode::IntVar& result) const {
 	Gecode::mult(csp, operands[0], operands[1], result);
 }
 
@@ -117,7 +117,7 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term* term, CSPTr
 
 //	LPT_DEBUG("translation", "Registering constraints for static nested term " << *static_term);
 
-	GecodeCSP& csp = translator.getBaseCSP();
+	GecodeSpace& csp = translator.getBaseCSP();
 
 	// Assume we have a term s(t_1, ..., t_n), where s is a static function symbol.
 	// We have registered a CSP variable Z for the whole term, plus CSP variables Z_i accounting for each subterm t_i
@@ -143,7 +143,7 @@ void RelationalFormulaTranslator::registerConstraints(const fs::Formula* formula
 	assert(condition);
 
 	// And register the relation constraint itself
-	GecodeCSP& csp = translator.getBaseCSP();
+	GecodeSpace& csp = translator.getBaseCSP();
 	const Gecode::IntVar& lhs_gec_var = translator.resolveVariable(condition->lhs(), csp);
 	const Gecode::IntVar& rhs_gec_var = translator.resolveVariable(condition->rhs(), csp);
 
@@ -162,7 +162,7 @@ void AlldiffGecodeTranslator::registerConstraints(const fs::Formula* formula, CS
 	auto alldiff = dynamic_cast<const fs::AlldiffFormula*>(formula);
 	assert(alldiff);
 
-	GecodeCSP& csp = translator.getBaseCSP();
+	GecodeSpace& csp = translator.getBaseCSP();
 
 	Gecode::IntVarArgs variables = translator.resolveVariables(alldiff->getSubterms(), csp);
 	Gecode::distinct(csp, variables);
@@ -172,7 +172,7 @@ void SumGecodeTranslator::registerConstraints(const fs::Formula* formula, CSPTra
 	auto sum = dynamic_cast<const fs::SumFormula*>(formula);
 	assert(sum);
 
-	GecodeCSP& csp = translator.getBaseCSP();
+	GecodeSpace& csp = translator.getBaseCSP();
 	Gecode::IntVarArgs variables = translator.resolveVariables(sum->getSubterms(), csp);
 
 	// The sum constraint is a particular subcase of gecode's linear constraint with all variables' coefficients set to 1
@@ -189,7 +189,7 @@ void NValuesGecodeTranslator::registerConstraints(const fs::Formula* formula, CS
 	auto nvalues = dynamic_cast<const fs::NValuesFormula*>(formula);
 	assert(nvalues);
 
-	GecodeCSP& csp = translator.getBaseCSP();
+	GecodeSpace& csp = translator.getBaseCSP();
 
 	std::vector<const fs::Term*> st = nvalues->getSubterms();
 	assert(st.size()>1);
@@ -203,7 +203,7 @@ void NValuesGecodeTranslator::registerConstraints(const fs::Formula* formula, CS
 
 //void ExtensionalTranslator::registerConstraints(const fs::Formula* formula, CSPTranslator& translator) const {
 //
-//	GecodeCSP& csp = translator.getBaseCSP();
+//	GecodeSpace& csp = translator.getBaseCSP();
 //	// We post an extensional constraint on the CSP variables modeling the value of each of the subterms formula
 //	Gecode::IntVarArgs variables = translator.resolveVariables(formula->getSubterms(), csp);
 //	Gecode::TupleSet extension = Helper::extensionalize(formula);
@@ -217,7 +217,7 @@ void DisjunctionTranslator::registerConstraints(const fs::Formula* formula,
 	auto disjunction = dynamic_cast<const fs::Disjunction*>(formula);
 	assert(disjunction);
 
-	GecodeCSP& csp = translator.getBaseCSP();
+	GecodeSpace& csp = translator.getBaseCSP();
 
 	// We collect all disjuncts in the disjunction
 	Gecode::BoolVarArgs reification_vars;

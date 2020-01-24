@@ -80,7 +80,7 @@ bool CSPActionIterator::Iterator::next_solution() {
         }
 
         // We have an instantiated engine in '_engine'
-        GecodeCSP* solution = _engine->next();
+        GecodeSpace* solution = _engine->next();
         if (!solution) {
             delete _csp; _csp = nullptr;
             delete _engine; _engine = nullptr;

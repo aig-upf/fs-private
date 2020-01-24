@@ -51,8 +51,8 @@ FormulaCSP::FormulaCSP(const fs::Formula* formula, const AtomIndex& tuple_index,
 
 FormulaCSP::~FormulaCSP() { delete _formula; }
 
-bool FormulaCSP::compute_support(GecodeCSP* csp, std::vector<AtomIdx>& support) const {
-	GecodeCSP* solution = compute_single_solution(csp);
+bool FormulaCSP::compute_support(GecodeSpace* csp, std::vector<AtomIdx>& support) const {
+	GecodeSpace* solution = compute_single_solution(csp);
 	if (!solution) return false;
 	
 	LPT_EDEBUG("heuristic", "Formula CSP solution found: " << fs0::print::csp(_translator, *solution));
@@ -63,15 +63,15 @@ bool FormulaCSP::compute_support(GecodeCSP* csp, std::vector<AtomIdx>& support) 
 	return true;
 }
 
-bool FormulaCSP::is_satisfiable(GecodeCSP* csp) const {
-	GecodeCSP* solution = compute_single_solution(csp);
+bool FormulaCSP::is_satisfiable(GecodeSpace* csp) const {
+	GecodeSpace* solution = compute_single_solution(csp);
 	if (!solution) return false;
 	delete solution;
 	return true;
 }
 
-GecodeCSP* FormulaCSP::compute_single_solution(GecodeCSP* csp) {
-	Gecode::DFS<GecodeCSP> engine(csp);
+GecodeSpace* FormulaCSP::compute_single_solution(GecodeSpace* csp) {
+	Gecode::DFS<GecodeSpace> engine(csp);
 	return engine.next();
 }
 

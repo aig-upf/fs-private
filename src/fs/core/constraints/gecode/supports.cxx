@@ -1,7 +1,7 @@
 
 #include <fs/core/constraints/gecode/supports.hxx>
 #include <fs/core/constraints/gecode/csp_translator.hxx>
-#include <fs/core/constraints/gecode/gecode_csp.hxx>
+#include <fs/core/constraints/gecode/gecode_space.hxx>
 #include <fs/core/utils/atom_index.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/problem_info.hxx>
@@ -9,7 +9,7 @@
 namespace fs0 { namespace gecode {
 
 std::vector<AtomIdx>
-Supports::extract_support(const GecodeCSP* solution, const CSPTranslator& translator, const std::vector<std::pair<unsigned, std::vector<unsigned>>>& tuple_indexes, const std::vector<AtomIdx>& necessary_tuples) {
+Supports::extract_support(const GecodeSpace* solution, const CSPTranslator& translator, const std::vector<std::pair<unsigned, std::vector<unsigned>>>& tuple_indexes, const std::vector<AtomIdx>& necessary_tuples) {
 	const auto& info = ProblemInfo::getInstance();
 	const auto& tuple_index = Problem::getInstance().get_tuple_index();
 	std::vector<AtomIdx> support;
