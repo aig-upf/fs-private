@@ -5,7 +5,7 @@
 #include <gecode/int.hh>
 
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 class MinHMaxValueSelector;
 
@@ -48,4 +48,4 @@ protected:
 	std::shared_ptr<MinHMaxValueSelector> _value_selector;
 };
 
-} } // namespaces
+} // namespaces

@@ -5,10 +5,8 @@
 #include <fs/core/constraints/gecode/handlers/base_action_csp.hxx>
 #include <fs/core/constraints/gecode/helper.hxx>
 #include <fs/core/constraints/gecode/utils/novelty_constraints.hxx>
-#include <fs/core/constraints/gecode/supports.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <gecode/driver.hh>
-#include <fs/core/utils/printers/gecode.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_data.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>
@@ -17,7 +15,7 @@
 #include <fs/core/utils/atom_index.hxx>
 
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 
 BaseActionCSP::BaseActionCSP(const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions)
@@ -312,4 +310,4 @@ void BaseActionCSP::hmax_based_atom_processing(GecodeCSP* solution, RPGIndex& gr
 }
 */
 
-} } // namespaces
+} // namespaces

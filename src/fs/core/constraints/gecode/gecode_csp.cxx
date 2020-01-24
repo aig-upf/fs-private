@@ -3,7 +3,7 @@
 #include <fs/core/constraints/gecode/utils/value_selection.hxx>
 
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 GecodeCSP::GecodeCSP() : _value_selector(nullptr) {}
 
@@ -44,4 +44,4 @@ int GecodeCSP::select_value(Gecode::IntVar& x, int csp_var_idx) const {
 	return _value_selector->select(x, static_cast<unsigned int>(csp_var_idx));
 }
 
-} } // namespaces
+} // namespaces
