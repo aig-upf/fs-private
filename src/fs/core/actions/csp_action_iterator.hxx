@@ -7,8 +7,8 @@
 #include <fs/core/constraints/gecode/extensions.hxx>
 
 namespace fs0 {
-	class State;
-	class LiftedActionID;
+    class State;
+    class LiftedActionID;
 }
 
 namespace fs0::language::fstrips { class Formula; }
@@ -16,8 +16,8 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0::gecode {
 
-		class GecodeCSP;
-		class LiftedActionCSP;
+class GecodeCSP;
+class LiftedActionCSP;
 
 //! An iterator that models action schema applicability as an action CSP.
 //! The iterator receives an (ordered) set of lifted-action CSP handlers, and upon iteration
@@ -86,5 +86,4 @@ public:
     Iterator end() const { return Iterator(_state,_handlers, _state_constraints, _extension_handler, _handlers.size()); }
 };
 
-
-	} // namespaces
+} // namespaces
