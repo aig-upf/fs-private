@@ -51,12 +51,12 @@ public:
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const BaseCSP& o) { return o.print(os); }
-	std::ostream& print(std::ostream& os) const { return print(os, *_base_csp); }
+	std::ostream& print(std::ostream& os) const { return print(os, *_gecode_space); }
 	std::ostream& print(std::ostream& os, const GecodeSpace& csp) const;
 	
 protected:
 	//! The base Gecode CSP
-	std::unique_ptr<GecodeSpace> _base_csp;
+	std::unique_ptr<GecodeSpace> _gecode_space;
 	
 	//! Whether the underlying CSP gecode space has already been detected as failed.
 	bool _failed;

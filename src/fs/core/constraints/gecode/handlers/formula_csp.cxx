@@ -30,12 +30,12 @@ FormulaCSP::FormulaCSP(const fs::Formula* formula, const AtomIndex& tuple_index,
 	register_csp_constraints();
 	index_existential_variable_uses();
 	
-	Helper::postBranchingStrategy(*_base_csp);
+	Helper::postBranchingStrategy(*_gecode_space);
 	
 //	 std::cout << "Goal CSP:" << std::endl << _translator << std::endl;
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until fixed point
-	Gecode::SpaceStatus st = _base_csp->status();
+	Gecode::SpaceStatus st = _gecode_space->status();
 	
 	if (st == Gecode::SpaceStatus::SS_SOLVED) {
 		LPT_INFO("main", "Formula CSP was statically solved:" << std::endl <<  *this);
@@ -87,7 +87,7 @@ void FormulaCSP::index() {
 }
 
 void FormulaCSP::init_value_selector(const RPGIndex* graph) {
-	_base_csp->init_value_selector(std::make_shared<TupleMinHMaxValueSelector>(&_tuple_index, &_translator, graph));
+	_gecode_space->init_value_selector(std::make_shared<TupleMinHMaxValueSelector>(&_tuple_index, &_translator, graph));
 }
 
 void FormulaCSP::index_existential_variable_uses() {
@@ -100,7 +100,7 @@ void FormulaCSP::index_existential_variable_uses() {
 	// atoms are achieved the earliest possible
 
 	std::vector<std::vector<std::unordered_map<int, AtomIdx>>> existential_data;
-	existential_data.resize(_base_csp->_intvars.size());
+	existential_data.resize(_gecode_space->_intvars.size());
 	
 	for (const ExtensionalConstraint& extensional:_extensional_constraints) {
 		const fs::FluentHeadedNestedTerm* fluent = extensional.get_term();

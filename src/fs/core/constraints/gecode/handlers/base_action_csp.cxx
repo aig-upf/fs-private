@@ -33,22 +33,22 @@ bool BaseActionCSP::init(bool use_novelty_constraint) {
 	index();
 	
 	createCSPVariables(use_novelty_constraint);
-	Helper::postBranchingStrategy(*_base_csp);
+	Helper::postBranchingStrategy(*_gecode_space);
 	
-// 	LPT_DEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: no constraints): " << _translator); // Uncomment for extreme debugging
+// 	LPT_DEBUG("translation", "CSP so far consistent? " << (_gecode_space.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: no constraints): " << _translator); // Uncomment for extreme debugging
 
 	for (const auto effect:get_effects()) {
 		registerEffectConstraints(effect);
 	}
 	
-// 	LPT_DEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: type-bound constraints only): " << _translator); // Uncomment for extreme debugging
+// 	LPT_DEBUG("translation", "CSP so far consistent? " << (_gecode_space.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: type-bound constraints only): " << _translator); // Uncomment for extreme debugging
 	
 	register_csp_constraints();
 
 	LPT_DEBUG("translation", "Action " << get_action() << " results in CSP handler:" << std::endl << *this);
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until a fixpoint
-	Gecode::SpaceStatus st = _base_csp->status();
+	Gecode::SpaceStatus st = _gecode_space->status();
 	if (st == Gecode::SpaceStatus::SS_FAILED) return false;
 	
 	index_scopes(); // This needs to be _after_ the CSP variable registration
@@ -172,15 +172,15 @@ void BaseActionCSP::post_novelty_constraint(GecodeSpace& csp, const RPGIndex& rp
 void BaseActionCSP::registerEffectConstraints(const fs::ActionEffect* effect) {
 	// Note: we no longer use output variables, etc.
 	// Equate the output variable corresponding to the LHS term with the input variable corresponding to the RHS term
-	// const Gecode::IntVar& lhs_gec_var = _translator.resolveVariable(effect->lhs(), CSPVariableType::Output, _base_csp);
-	// const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), CSPVariableType::Input, _base_csp);
-	// Gecode::rel(_base_csp, lhs_gec_var, Gecode::IRT_EQ, rhs_gec_var);
+	// const Gecode::IntVar& lhs_gec_var = _translator.resolveVariable(effect->lhs(), CSPVariableType::Output, _gecode_space);
+	// const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), CSPVariableType::Input, _gecode_space);
+	// Gecode::rel(_gecode_space, lhs_gec_var, Gecode::IRT_EQ, rhs_gec_var);
 	
 	// Impose a bound on the RHS based on the type of the LHS
 	if (ProblemInfo::getInstance().isBoundedType(fs::type(*effect->lhs()))) {
-		const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), *_base_csp);
+		const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), *_gecode_space);
 		const auto& lhs_bounds = fs::bounds(*effect->lhs());
-		Gecode::dom(*_base_csp, rhs_gec_var, lhs_bounds.first, lhs_bounds.second);
+		Gecode::dom(*_gecode_space, rhs_gec_var, lhs_bounds.first, lhs_bounds.second);
 	}
 }
 

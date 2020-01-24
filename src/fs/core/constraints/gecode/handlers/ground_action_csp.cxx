@@ -56,7 +56,7 @@ void GroundActionCSP::log() const {
 GecodeSpace*
 GroundActionCSP::post(VariableIdx variable, const object_id& value) const {
 	if (_failed) return nullptr;
-	GecodeSpace* clone = static_cast<GecodeSpace*>(_base_csp->clone());
+	GecodeSpace* clone = static_cast<GecodeSpace*>(_gecode_space->clone());
 	const auto& csp_var = _translator.resolveInputStateVariable(*clone, variable);
 	
 	Gecode::rel(*clone, csp_var,  Gecode::IRT_EQ, fs0::value<int>(value));

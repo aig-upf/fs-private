@@ -42,7 +42,7 @@ instantiate_from_changeset(const DomainTracker& base_domains, const State& state
 
     // First update the domains of those CSP variables that correspond to state variables
     // which have their domain restricted by monotonicity constraints
-    auto clone = static_cast<GecodeSpace*>(_base_csp->clone());
+    auto clone = static_cast<GecodeSpace*>(_gecode_space->clone());
 
     _translator.updateStateVariableDomains(*clone, base_domains.to_intsets(), true);
 

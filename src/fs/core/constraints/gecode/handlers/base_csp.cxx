@@ -16,16 +16,16 @@
 namespace fs0::gecode {
 
 BaseCSP::BaseCSP(const AtomIndex& tuple_index, bool approximate) :
-	_base_csp(new GecodeSpace()),
-	_failed(false),
-	_approximate(approximate),
-	_translator(*_base_csp),
-	_tuple_index(tuple_index)
+        _gecode_space(new GecodeSpace()),
+        _failed(false),
+        _approximate(approximate),
+        _translator(*_gecode_space),
+        _tuple_index(tuple_index)
 {}
 
 void
 BaseCSP::update_csp(std::unique_ptr<GecodeSpace>&& csp) {
-	_base_csp = std::move(csp);
+    _gecode_space = std::move(csp);
 }
 
 
@@ -102,14 +102,14 @@ _instantiate(const GecodeSpace& csp,
 GecodeSpace*
 BaseCSP::instantiate_wo_novelty(const RPGIndex& graph) const {
 	if (_failed) return nullptr;
-	GecodeSpace* csp = _instantiate(*_base_csp, _tuple_index, _translator, _extensional_constraints, graph);
+	GecodeSpace* csp = _instantiate(*_gecode_space, _tuple_index, _translator, _extensional_constraints, graph);
 	return csp;
 }
 
 GecodeSpace*
 BaseCSP::instantiate(const RPGIndex& graph) const {
 	if (_failed) return nullptr;
-	GecodeSpace* csp = _instantiate(*_base_csp, _tuple_index, _translator, _extensional_constraints, graph);
+	GecodeSpace* csp = _instantiate(*_gecode_space, _tuple_index, _translator, _extensional_constraints, graph);
 	if (!csp) return csp; // The CSP was detected unsatisfiable even before propagating anything
 	
 	// Post the novelty constraint
@@ -121,7 +121,7 @@ BaseCSP::instantiate(const RPGIndex& graph) const {
 GecodeSpace*
 BaseCSP::instantiate(const State& state, const StateBasedExtensionHandler& handler) const {
 	if (_failed) return nullptr;
-	return _instantiate(*_base_csp, _tuple_index, _translator, _extensional_constraints, state, handler);
+	return _instantiate(*_gecode_space, _tuple_index, _translator, _extensional_constraints, state, handler);
 }
 
 void
@@ -196,14 +196,14 @@ BaseCSP::register_csp_constraints() {
 		}
 		
 		registerTermConstraints(term, _translator);
-// 		LPT_DEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *term << "): " << _translator); // Uncomment for extreme debugging
+// 		LPT_DEBUG("translation", "CSP so far consistent? " << (_gecode_space.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *term << "): " << _translator); // Uncomment for extreme debugging
 	}
 	
 	//! Register any possible CSP variable that arises from the logical formulas
 	for (auto condition:_all_formulas) {
 //		std::cout << "Registering variables for formula: " << *condition << std::endl;
 		registerFormulaConstraints(condition, _translator);
-// 		LPT_DEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *condition << "): " << _translator); // Uncomment for extreme debugging		
+// 		LPT_DEBUG("translation", "CSP so far consistent? " << (_gecode_space.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *condition << "): " << _translator); // Uncomment for extreme debugging
 	}
 	
 	for (ExtensionalConstraint& constraint:_extensional_constraints) {
@@ -212,7 +212,7 @@ BaseCSP::register_csp_constraints() {
 	
 	for (NestedFluentElementTranslator& tr:_nested_fluent_translators) {
 		tr.register_constraints(_translator);
-		// FDEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *tr.getTerm() << "): " << _translator); // Uncomment for extreme debugging
+		// FDEBUG("translation", "CSP so far consistent? " << (_gecode_space.status() != Gecode::SpaceStatus::SS_FAILED) << "(#: " << i++ << ", what: " << *tr.getTerm() << "): " << _translator); // Uncomment for extreme debugging
 	}
 }
 
