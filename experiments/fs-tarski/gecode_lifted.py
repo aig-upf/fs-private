@@ -10,30 +10,32 @@ MEMORY_LIMIT = 8000
 SUITE = [
     'agricola-sat18-strips',
     'caldera-sat18-adl',
-    # 'caldera-split-sat18-adl',
+    'caldera-split-sat18-adl',
     'data-network-sat18-strips',
-    # 'flashfill-sat18-adl',
+    'flashfill-sat18-adl',
     'nurikabe-sat18-adl',
     'organic-synthesis-sat18-strips',
     'organic-synthesis-split-sat18-strips',
-    # 'settlers-sat18-adl',
+    'settlers-sat18-adl',
     'snake-sat18-strips',
     'spider-sat18-strips',
     'termes-sat18-strips',
 ]
 REVISIONS = [
-    "33681d27"
+    "a7f3899c"
 ]
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
 
 def configs():
-    csp = ['--no-reachability', '--driver', 'lsbfws', '--options', '"verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"']
-    csp_reach = ['--driver', 'lsbfws', '--options', '"verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"']
+    csp = '--reachability=none --driver lsbfws --options "verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"'
+    csp_reach_full = '--reachability=full --driver lsbfws --options "verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"'
+    csp_reach_vars = '--reachability=vars --driver lsbfws --options "verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"'
 
     return [
-        IssueConfig("bfws-r_all-csp", csp),
-        IssueConfig("bfws-r_all-csp_reach", csp_reach),
+        IssueConfig("bfws-r_all-csp-no-reach", csp.split()),
+        IssueConfig("bfws-r_all-csp-full-reach", csp_reach_full.split()),
+        IssueConfig("bfws-r_all-csp-var-reach", csp_reach_vars.split()),
     ]
 
 
