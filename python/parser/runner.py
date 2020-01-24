@@ -40,10 +40,10 @@ def parse_arguments(args):
 
     parser.add_argument("--driver", help='The solver driver (controller) to be used.', default=None)
     parser.add_argument("--options", help='The solver extra options', default="")
-    parser.add_argument("--no-reachability", action='store_true',
-                        help='Don\'t use the ASP-based reachability analysis.')
+    parser.add_argument("--reachability", help='The type of reachability analysis performed', default="full",
+                        choices=('full', 'vars', 'none'))
     parser.add_argument("--reachability-includes-variable-inequalities", action='store_true',
-                        help='Include inequalities of the form X != Y in the reachability analysis. This makes the'
+                        help='Include inequalities of the form X != Y in the reachability analysis. This makes the '
                              'analysis NP-hard, but results in a tighter approximation.')
 
     parser.add_argument('-t', '--tag', default=None,
@@ -300,21 +300,26 @@ def run(args):
         # Both the LP reachability analysis and the backend expect a problem without universally-quantified effects
         problem = compile_universal_effects_away(problem)
 
-    do_reachability = not args.no_reachability and not args.sdd  # SDD not compatible with reachability
+    do_reachability = args.reachability != 'none' and not args.sdd  # SDD not compatible with reachability
     if not do_reachability and args.reachability_includes_variable_inequalities:
-        raise RuntimeError("Cannot do reachability analysis with inequalities if no-reachability option is specified.")
+        raise RuntimeError("Cannot do reachability analysis with inequalities if reachability=none is specified.")
 
+    action_groundings = None  # Schemas will be ground in the backend
     if do_reachability:
-        with resources.timing(f"Computing reachable groundings", newline=True):
-            grounding = LPGroundingStrategy(
-                problem, include_variable_inequalities=args.reachability_includes_variable_inequalities)
+        ground_actions = args.reachability == 'full'
+        msg = "Computing reachable groundings " + ("(actions+vars)" if ground_actions else "(vars only)")
+        with resources.timing(msg, newline=True):
+            grounding = LPGroundingStrategy(problem,
+                                            ground_actions=ground_actions,
+                                            include_variable_inequalities=
+                                            args.reachability_includes_variable_inequalities)
             ground_variables = grounding.ground_state_variables()
-            action_groundings = grounding.ground_actions()
+            if ground_actions:
+                action_groundings = grounding.ground_actions()
     else:
         with resources.timing(f"Computing naive groundings", newline=True):
             grounding = NaiveGroundingStrategy(problem, ignore_symbols={'total-cost'})
             ground_variables = grounding.ground_state_variables()
-            action_groundings = None  # Schemas will be ground in the backend
 
     statics, fluents = grounding.static_symbols, grounding.fluent_symbols
 
