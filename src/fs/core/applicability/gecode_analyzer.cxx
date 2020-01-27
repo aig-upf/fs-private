@@ -56,7 +56,7 @@ GecodeApplicabilityAnalyzer::build(bool build_applicable_index) {
 		for (VariableIdx relevant:all_relevant) {
 			for (const object_id& value:info.getVariableObjects(relevant)) {
 
-				GecodeCSP* restricted = manager.post(relevant, value);
+				GecodeSpace* restricted = manager.post(relevant, value);
 				if (manager.check_one_solution_exists(restricted)) {
 					AtomIdx tup = _tuple_idx.to_index(relevant, value);
 					_applicable[tup].push_back(i);

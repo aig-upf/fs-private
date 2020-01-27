@@ -5,10 +5,8 @@
 #include <fs/core/constraints/gecode/handlers/base_action_csp.hxx>
 #include <fs/core/constraints/gecode/helper.hxx>
 #include <fs/core/constraints/gecode/utils/novelty_constraints.hxx>
-#include <fs/core/constraints/gecode/supports.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <gecode/driver.hh>
-#include <fs/core/utils/printers/gecode.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_data.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 #include <fs/core/languages/fstrips/scopes.hxx>
@@ -17,7 +15,7 @@
 #include <fs/core/utils/atom_index.hxx>
 
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 
 BaseActionCSP::BaseActionCSP(const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions)
@@ -35,22 +33,22 @@ bool BaseActionCSP::init(bool use_novelty_constraint) {
 	index();
 	
 	createCSPVariables(use_novelty_constraint);
-	Helper::postBranchingStrategy(*_base_csp);
+	Helper::postBranchingStrategy(*_gecode_space);
 	
-// 	LPT_DEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: no constraints): " << _translator); // Uncomment for extreme debugging
+// 	LPT_DEBUG("translation", "CSP so far consistent? " << (_gecode_space.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: no constraints): " << _translator); // Uncomment for extreme debugging
 
 	for (const auto effect:get_effects()) {
 		registerEffectConstraints(effect);
 	}
 	
-// 	LPT_DEBUG("translation", "CSP so far consistent? " << (_base_csp.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: type-bound constraints only): " << _translator); // Uncomment for extreme debugging
+// 	LPT_DEBUG("translation", "CSP so far consistent? " << (_gecode_space.status() != Gecode::SpaceStatus::SS_FAILED) << " (#: type-bound constraints only): " << _translator); // Uncomment for extreme debugging
 	
 	register_csp_constraints();
 
 	LPT_DEBUG("translation", "Action " << get_action() << " results in CSP handler:" << std::endl << *this);
 	
 	// MRJ: in order to be able to clone a CSP, we need to ensure that it is "stable" i.e. propagate all constraints until a fixpoint
-	Gecode::SpaceStatus st = _base_csp->status();
+	Gecode::SpaceStatus st = _gecode_space->status();
 	if (st == Gecode::SpaceStatus::SS_FAILED) return false;
 	
 	index_scopes(); // This needs to be _after_ the CSP variable registration
@@ -61,7 +59,7 @@ bool BaseActionCSP::init(bool use_novelty_constraint) {
 void BaseActionCSP::process(RPGIndex& graph) const {
 	log();
 	
-	GecodeCSP* csp = instantiate(graph);
+	GecodeSpace* csp = instantiate(graph);
 
 	if (!csp || !csp->propagate()) { // This colaterally enforces propagation of constraints
 		LPT_EDEBUG("heuristic", "The action CSP is locally inconsistent "); // << print::csp(handler->getTranslator(), *csp));
@@ -167,30 +165,30 @@ void BaseActionCSP::create_novelty_constraint() {
 	_novelty = NoveltyConstraint::createFromEffects(_translator, get_precondition(), get_effects());
 }
 
-void BaseActionCSP::post_novelty_constraint(GecodeCSP& csp, const RPGIndex& rpg) const {
+void BaseActionCSP::post_novelty_constraint(GecodeSpace& csp, const RPGIndex& rpg) const {
 	if (_novelty) _novelty->post_constraint(csp, rpg);
 }
 
 void BaseActionCSP::registerEffectConstraints(const fs::ActionEffect* effect) {
 	// Note: we no longer use output variables, etc.
 	// Equate the output variable corresponding to the LHS term with the input variable corresponding to the RHS term
-	// const Gecode::IntVar& lhs_gec_var = _translator.resolveVariable(effect->lhs(), CSPVariableType::Output, _base_csp);
-	// const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), CSPVariableType::Input, _base_csp);
-	// Gecode::rel(_base_csp, lhs_gec_var, Gecode::IRT_EQ, rhs_gec_var);
+	// const Gecode::IntVar& lhs_gec_var = _translator.resolveVariable(effect->lhs(), CSPVariableType::Output, _gecode_space);
+	// const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), CSPVariableType::Input, _gecode_space);
+	// Gecode::rel(_gecode_space, lhs_gec_var, Gecode::IRT_EQ, rhs_gec_var);
 	
 	// Impose a bound on the RHS based on the type of the LHS
 	if (ProblemInfo::getInstance().isBoundedType(fs::type(*effect->lhs()))) {
-		const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), *_base_csp);
+		const Gecode::IntVar& rhs_gec_var = _translator.resolveVariable(effect->rhs(), *_gecode_space);
 		const auto& lhs_bounds = fs::bounds(*effect->lhs());
-		Gecode::dom(*_base_csp, rhs_gec_var, lhs_bounds.first, lhs_bounds.second);
+		Gecode::dom(*_gecode_space, rhs_gec_var, lhs_bounds.first, lhs_bounds.second);
 	}
 }
 
-void BaseActionCSP::compute_support(GecodeCSP* csp, RPGIndex& graph) const {
+void BaseActionCSP::compute_support(GecodeSpace* csp, RPGIndex& graph) const {
 	LPT_EDEBUG("heuristic", "Computing full support for action " << get_action());
-	Gecode::DFS<GecodeCSP> engine(csp);
+	Gecode::DFS<GecodeSpace> engine(csp);
 	unsigned num_solutions = 0;
-	while (GecodeCSP* solution = engine.next()) {
+	while (GecodeSpace* solution = engine.next()) {
 		LPT_EDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": " << print::csp(_translator, *solution))
 		process_solution(solution, graph);
 		++num_solutions;
@@ -201,7 +199,7 @@ void BaseActionCSP::compute_support(GecodeCSP* csp, RPGIndex& graph) const {
 }
 
 
-void BaseActionCSP::process_solution(GecodeCSP* solution, RPGIndex& graph) const {
+void BaseActionCSP::process_solution(GecodeSpace* solution, RPGIndex& graph) const {
 	PartialAssignment assignment;
 	Binding binding;
 	if (_has_nested_lhs || _has_nested_relevant_terms) {
@@ -221,7 +219,7 @@ void BaseActionCSP::process_solution(GecodeCSP* solution, RPGIndex& graph) const
 	}
 }
 
-void BaseActionCSP::simple_atom_processing(GecodeCSP* solution, RPGIndex& graph, AtomIdx tuple, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
+void BaseActionCSP::simple_atom_processing(GecodeSpace* solution, RPGIndex& graph, AtomIdx tuple, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
 	
 	bool reached = graph.reached(tuple);
 	LPT_EDEBUG("heuristic", "Processing effect \"" << *get_effects()[effect_idx] << "\" produces " << (reached ? "repeated" : "new") << " tuple " << tuple);
@@ -239,7 +237,7 @@ void BaseActionCSP::simple_atom_processing(GecodeCSP* solution, RPGIndex& graph,
 }
 
 
-std::vector<AtomIdx> BaseActionCSP::extract_support_from_solution(GecodeCSP* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
+std::vector<AtomIdx> BaseActionCSP::extract_support_from_solution(GecodeSpace* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
 	std::vector<AtomIdx> support;
 
 	// First extract the supports of the "direct" state variables
@@ -257,9 +255,9 @@ std::vector<AtomIdx> BaseActionCSP::extract_support_from_solution(GecodeCSP* sol
 	return support;
 }
 
-Binding BaseActionCSP::build_binding_from_solution(const GecodeCSP* solution) const { return Binding::EMPTY_BINDING; }
+Binding BaseActionCSP::build_binding_from_solution(const GecodeSpace* solution) const { return Binding::EMPTY_BINDING; }
 
-void BaseActionCSP::extract_nested_term_support(const GecodeCSP* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<AtomIdx>& support) const {
+void BaseActionCSP::extract_nested_term_support(const GecodeSpace* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<AtomIdx>& support) const {
 	if (nested_terms.empty()) return;
 
 	// And now of the derived state variables. Note that we keep track dynamically (with the 'insert' set) of the actual variables into which
@@ -288,7 +286,7 @@ void BaseActionCSP::extract_nested_term_support(const GecodeCSP* solution, const
 
 // TODO - This hasn't been adapted yet to the new tuple-based data structures
 /* 
-void BaseActionCSP::hmax_based_atom_processing(GecodeCSP* solution, RPGIndex& graph, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
+void BaseActionCSP::hmax_based_atom_processing(GecodeSpace* solution, RPGIndex& graph, const Atom& atom, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
 	auto hint = bookkeeping.getInsertionHint(atom);
 	LPT_EDEBUG("heuristic", "Effect produces " << (hint.first ? "new" : "repeated") << " atom " << atom);
 	
@@ -312,4 +310,4 @@ void BaseActionCSP::hmax_based_atom_processing(GecodeCSP* solution, RPGIndex& gr
 }
 */
 
-} } // namespaces
+} // namespaces

@@ -1,16 +1,15 @@
 
 #pragma once
 
-#include <fs/core/languages/fstrips/language_fwd.hxx>
-#include <fs/core/languages/fstrips/terms.hxx>
-#include <fs/core/languages/fstrips/formulae.hxx>
-
 #include <unordered_set>
 #include <unordered_map>
 
+#include <fs/core/languages/fstrips/language_fwd.hxx>
+#include <fs/core/languages/fstrips/terms.hxx>
+#include <fs/core/languages/fstrips/formulae.hxx>
 #include <fs/core/fs_types.hxx>
 #include <fs/core/atom.hxx>
-#include <fs/core/constraints/gecode/gecode_csp.hxx>
+#include <fs/core/constraints/gecode/gecode_space.hxx>
 #include <fs/core/constraints/gecode/utils/extensional_constraint.hxx>
 #include <fs/core/constraints/gecode/utils/element_constraint.hxx>
 #include <fs/core/constraints/gecode/csp_translator.hxx>
@@ -18,7 +17,7 @@
 
 namespace fs0 { class RPGData; class Binding; }
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 class StateBasedExtensionHandler;
 
@@ -34,11 +33,11 @@ public:
 	
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
-	GecodeCSP* instantiate(const RPGIndex& graph) const;
-	GecodeCSP* instantiate(const State& state, const StateBasedExtensionHandler& handler) const;
-	GecodeCSP* instantiate_wo_novelty(const RPGIndex& graph) const;
+	GecodeSpace* instantiate(const RPGIndex& graph) const;
+	GecodeSpace* instantiate(const State& state, const StateBasedExtensionHandler& handler) const;
+	GecodeSpace* instantiate_wo_novelty(const RPGIndex& graph) const;
 	
-	void update_csp(std::unique_ptr<GecodeCSP>&& csp);
+	void update_csp(std::unique_ptr<GecodeSpace>&& csp);
 	
 	const CSPTranslator& getTranslator() const { return _translator; }
 
@@ -51,12 +50,12 @@ public:
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const BaseCSP& o) { return o.print(os); }
-	std::ostream& print(std::ostream& os) const { return print(os, *_base_csp); }
-	std::ostream& print(std::ostream& os, const GecodeCSP& csp) const;
+	std::ostream& print(std::ostream& os) const { return print(os, *_gecode_space); }
+	std::ostream& print(std::ostream& os, const GecodeSpace& csp) const;
 	
 protected:
 	//! The base Gecode CSP
-	std::unique_ptr<GecodeCSP> _base_csp;
+	std::unique_ptr<GecodeSpace> _gecode_space;
 	
 	//! Whether the underlying CSP gecode space has already been detected as failed.
 	bool _failed;
@@ -113,7 +112,7 @@ protected:
 	virtual void create_novelty_constraint() {}
 	
 	//! By default, we post no novelty constraint whatsoever
-	virtual void post_novelty_constraint(GecodeCSP& csp, const RPGIndex& rpg) const {}
+	virtual void post_novelty_constraint(GecodeSpace& csp, const RPGIndex& rpg) const {}
 };
 
-} } // namespaces
+} // namespaces

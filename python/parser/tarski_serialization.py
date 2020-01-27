@@ -212,6 +212,10 @@ def serialize_tarski_model(init_model, variables, obj_idx, fluents, statics):
             d = static.instantiate_function(sname, symbol.arity)
             _ = [d.add(tuple(x.symbol for x in point[:-1]), point[-1].symbol) for point in extensions[symbol.signature]]
 
+        # All symbols need serialization except nullary atoms that are false in the initial state.
+        # This is because for nullary atoms p, the hacky way the backend has to distinguish between
+        # the case where p holds and that where it doesn't is to either have an empty serialized
+        # file or to have no file at all
         if d.needs_serialization():
             init_data[symbol] = d.serialize_data(obj_idx)
 
@@ -431,14 +435,13 @@ def serialize_representation(data, init_atoms, serializer: Serializer, debug):
 
     # For historical reasons, we used to serialize the list of static atoms separately and in a custom format
     # (namely, in combined task-and-motion planning problems, the amount of static data was so huge, that it paid
-    # off to deal with it separately.
+    # off to deal with it separately).
     # This is nowadays a terrible PITA though, but hopefully we'll get rid of it soon once we transition
-    # to a Python-module based architecture
+    # to a Python-module based architecture.
     for symbol, symbol_data in init_atoms.items():
-        if isinstance(symbol, Predicate) and symbol.arity == 0:
-            # For nullary atoms p, the hacky way the backend has to distinguish between the case where p holds and that
-            # where it doesn't is to either have an empty serialized file or to have no file at all
-            continue
+        # Nullary atoms p() that are false in the initial state will not appear
+        # on this iteration; those that are true will appear and will be serialized
+        # as an empty file, which is what the backend expects.
         serializer.dump(symbol.name, symbol_data, extension='data')
 
     if debug:

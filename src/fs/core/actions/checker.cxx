@@ -26,7 +26,7 @@ bool Checker::check_correctness(const Problem& problem, const std::vector<const 
 	for (const GroundAction* action:plan) {
 		if (!manager.isApplicable(state, *action, true)) return false;
         if (print_plan_trace) LPT_INFO("plan_trace", "a=" <<  *action);
-		state.accumulate(NaiveApplicabilityManager::computeEffects(state, *action)); // Accumulate the newly-produced atoms
+        state.update(NaiveApplicabilityManager::computeEffects(state, *action)); // Accumulate the newly-produced atoms
         if (print_plan_trace) LPT_INFO("plan_trace", "s=" <<  state);
 	}
 
@@ -57,44 +57,46 @@ std::vector<const GroundAction*> Checker::transform(const Problem& problem, cons
 }
 
 
-void Checker::print_plan_execution(const Problem& problem, const std::vector<const GroundAction*>& plan, const State& s0) {
+void Checker::debug_plan_execution(const Problem& problem, const std::vector<const GroundAction*>& plan, const State& s0) {
 	NaiveApplicabilityManager manager(problem.getStateConstraints());
 
-	unsigned i = 0;
+	std::size_t i = 0;
 	State state(s0);
 
-	std::cout << std::setw(3) << i;
-	std::cout << ". " << state << std::endl;
+	std::cerr << std::setw(3) << i;
+	std::cerr << ". " << state << std::endl;
+	bool inapplicable = false;
 	for (; i < plan.size(); ++i) {
 		const GroundAction* action = plan[i];
 
-		std::cout << std::setw(3) << i;
-		std::cout << ". " << *action << std::endl << std::endl;
-
 		if (!manager.isApplicable(state, *action, true)) {
-			std::cout << "ERROR! Action is NOT applicable on the previous state" << std::endl;
+            std::cerr << std::endl << "ERROR: Action (" << i << ")"  << *action << " is not applicable to state (" << i << ")" << std::endl;
+            inapplicable = true;
+            break;
 		}
-		state.accumulate(NaiveApplicabilityManager::computeEffects(state, *action)); // Accumulate the newly-produced atoms
+        std::cerr << "\tAction (" << i << ") " << *action << " successfully applied to state (" << i << ")" << std::endl << std::endl;
 
-		std::cout << std::setw(3) << i + 1;
-		std::cout << ". " << state << std::endl;
+        state.update(NaiveApplicabilityManager::computeEffects(state, *action)); // Accumulate the newly-produced atoms
+
+		std::cerr << std::setw(3) << i + 1;
+		std::cerr << ". " << state << std::endl;
 	}
 
 	// Now check that the resulting state is indeed a goal
-	if (!problem.getGoalSatManager().satisfied(state)) {
-		std::cout << "ERROR! The state that results from aplying the whole plan is NOT a goal state" << std::endl;
+	if (!inapplicable && !problem.getGoalSatManager().satisfied(state)) {
+		std::cerr << "ERROR! The state that results from aplying the whole plan is NOT a goal state" << std::endl;
 	}
 }
 
-void Checker::print_plan_execution(const Problem& problem, const ActionPlan& plan, const State& s0) {
+void Checker::debug_plan_execution(const Problem& problem, const ActionPlan& plan, const State& s0) {
     auto transformed = transform(problem, plan);
-    print_plan_execution(problem, transformed, s0);
+    debug_plan_execution(problem, transformed, s0);
     for (auto x:transformed) delete x;
 }
 
-void Checker::print_plan_execution(const Problem& problem, const std::vector<LiftedActionID>& plan, const State& s0) {
+void Checker::debug_plan_execution(const Problem& problem, const std::vector<LiftedActionID>& plan, const State& s0) {
     auto transformed = transform(problem, plan);
-    print_plan_execution(problem, transformed, s0);
+    debug_plan_execution(problem, transformed, s0);
     for (auto x:transformed) delete x;
 }
 

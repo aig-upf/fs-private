@@ -11,9 +11,9 @@
 
 namespace fs0 { class State; }
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
-class GecodeCSP;
+class GecodeSpace;
 class RPGIndex;
 
 /**
@@ -21,8 +21,8 @@ class RPGIndex;
  */
 class UnregisteredStateVariableError : public std::runtime_error {
 public:
-	UnregisteredStateVariableError( const char* what_msg ) : std::runtime_error( what_msg ) {}
-	UnregisteredStateVariableError( const std::string& what_msg ) : std::runtime_error( what_msg ) {}
+	explicit UnregisteredStateVariableError( const char* what_msg ) : std::runtime_error( what_msg ) {}
+	explicit UnregisteredStateVariableError( const std::string& what_msg ) : std::runtime_error( what_msg ) {}
 };
 
 /**
@@ -36,7 +36,7 @@ public:
 class CSPTranslator {
 public:
 
-	CSPTranslator(GecodeCSP& base_csp) : _base_csp(base_csp) {}
+	explicit CSPTranslator(GecodeSpace& base_csp) : _base_csp(base_csp) {}
 	virtual ~CSPTranslator() = default;
 	CSPTranslator(const CSPTranslator&) = delete;
 	CSPTranslator(CSPTranslator&&) = delete;
@@ -71,37 +71,37 @@ public:
     unsigned int resolveReifiedAtomVariableIndex(const language::fstrips::AtomicFormula* atom) const;
 	
 	//! Returns the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
-	const Gecode::IntVar& resolveVariable(const fs::Term* term, const GecodeCSP& csp) const;
-    const Gecode::BoolVar& resolveReifiedAtomVariable(const fs::AtomicFormula* atom, const GecodeCSP& csp) const;
+	const Gecode::IntVar& resolveVariable(const fs::Term* term, const GecodeSpace& csp) const;
+    const Gecode::BoolVar& resolveReifiedAtomVariable(const fs::AtomicFormula* atom, const GecodeSpace& csp) const;
 
 	//! Returns the value of the Gecode CSP variable that corresponds to the given term under the given role, for the given CSP
-	object_id resolveValue(const fs::Term* term, const GecodeCSP& csp) const;
+	object_id resolveValue(const fs::Term* term, const GecodeSpace& csp) const;
 	
-	const Gecode::IntVar& resolveVariableFromIndex(unsigned variable_index, const GecodeCSP& csp) const;
-    const Gecode::BoolVar& resolveBoolVariableFromIndex(unsigned int variable_index, const GecodeCSP& csp) const;
-	object_id resolveValueFromIndex(unsigned variable_index, const GecodeCSP& csp) const;
+	const Gecode::IntVar& resolveVariableFromIndex(unsigned variable_index, const GecodeSpace& csp) const;
+    const Gecode::BoolVar& resolveBoolVariableFromIndex(unsigned int variable_index, const GecodeSpace& csp) const;
+	object_id resolveValueFromIndex(unsigned variable_index, const GecodeSpace& csp) const;
 
 	//! Helper to resolve several variables at the same time
-	Gecode::IntVarArgs resolveVariables(const std::vector<const fs::Term*>& terms, const GecodeCSP& csp) const;
-	std::vector<object_id> resolveValues(const std::vector<const fs::Term*>& terms, const GecodeCSP& csp) const;
+	Gecode::IntVarArgs resolveVariables(const std::vector<const fs::Term*>& terms, const GecodeSpace& csp) const;
+	std::vector<object_id> resolveValues(const std::vector<const fs::Term*>& terms, const GecodeSpace& csp) const;
 
 	//! The key operation in the RPG progression: to update the domains of the relevant state variables for a certain layer of the RPG.
-	void updateStateVariableDomains(GecodeCSP& csp, const RPGIndex& graph) const;
-	void updateStateVariableDomains(GecodeCSP& csp, const std::vector<Gecode::IntSet>& domains, bool empty_means_no_constraint = false) const;
-	void updateStateVariableDomains(GecodeCSP& csp, const std::vector<const Gecode::IntSet*>& domains) const;
-	void updateStateVariableDomains(GecodeCSP& csp, const State& state) const;
+	void updateStateVariableDomains(GecodeSpace& csp, const RPGIndex& graph) const;
+	void updateStateVariableDomains(GecodeSpace& csp, const std::vector<Gecode::IntSet>& domains, bool empty_means_no_constraint = false) const;
+	void updateStateVariableDomains(GecodeSpace& csp, const std::vector<const Gecode::IntSet*>& domains) const;
+	void updateStateVariableDomains(GecodeSpace& csp, const State& state) const;
 
-	const unsigned resolveInputVariableIndex(VariableIdx variable) const {
+	unsigned resolveInputVariableIndex(VariableIdx variable) const {
 		const auto& it = _input_state_variables.find(variable);
 		if (it == _input_state_variables.end()) throw UnregisteredStateVariableError("Trying to resolve non-registered input state variable");
 		return it->second;
 	}
 	
 	//! Returns the CSP variable that corresponds to the given input state variable, in the given CSP.
-	const Gecode::IntVar& resolveInputStateVariable(const GecodeCSP& csp, VariableIdx variable) const;
+	const Gecode::IntVar& resolveInputStateVariable(const GecodeSpace& csp, VariableIdx variable) const;
 
 	//! Returns the value of the CSP variable that corresponds to the given input state variable, in the given CSP.
-	const object_id resolveInputStateVariableValue(const GecodeCSP& csp, VariableIdx variable) const {
+	object_id resolveInputStateVariableValue(const GecodeSpace& csp, VariableIdx variable) const {
 		return make_object(resolveInputStateVariable(csp, variable).val());
 	}
 
@@ -113,13 +113,13 @@ public:
 	
 	
 	//! Returns a partial assignment of values to the input state variables of the CSP managed by this translator, built from the given solution.
-	PartialAssignment buildAssignment(GecodeCSP& solution) const;
+	PartialAssignment buildAssignment(GecodeSpace& solution) const;
 
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const CSPTranslator& o) { return o.print(os, o._base_csp); }
-	std::ostream& print(std::ostream& os, const GecodeCSP& csp) const;
+	std::ostream& print(std::ostream& os, const GecodeSpace& csp) const;
 	
-	GecodeCSP& getBaseCSP() { return _base_csp; }
+	GecodeSpace& getBaseCSP() { return _base_csp; }
 	
 	VariableIdx getPlanningVariable(unsigned csp_var_idx) const;
 	
@@ -141,7 +141,7 @@ public:
 
 protected:
 	//! The base CSP object upon which static variable and constraint registration processes act.
-	GecodeCSP& _base_csp;
+	GecodeSpace& _base_csp;
 	
 	// The list of integer and boolean CSP variables that is created during the variable registration state
 	Gecode::IntVarArgs _intvars;
@@ -170,4 +170,4 @@ protected:
 
 
 
-} } // namespaces
+} // namespaces

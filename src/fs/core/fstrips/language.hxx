@@ -3,8 +3,9 @@
 
 #include <fs/core/languages/fstrips/base.hxx>
 #include <fs/core/fs_types.hxx> //  TODO[LAMBDA] - REMOVE THIS DEPENDENCY ?
+#include <utility>
 
-namespace fs0 { namespace fstrips {
+namespace fs0::fstrips {
 
 class LanguageInfo;
 
@@ -30,7 +31,7 @@ class LogicalElement :
 //	public fs0::utils::BaseVisitable<void>
 {
 public:
-	virtual ~LogicalElement() = default;
+	~LogicalElement() override = default;
 	
 	//! Clone idiom
 	virtual LogicalElement* clone() const = 0;
@@ -49,7 +50,7 @@ public:
 class Term : public LogicalElement {
 public:
 	Term() = default;
-	virtual ~Term() = default;
+	~Term() override = default;
 
 	Term* clone() const override = 0;
 };
@@ -58,9 +59,9 @@ class LogicalVariable : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 
-	LogicalVariable(unsigned id, const std::string& name, TypeIdx type) : _id(id), _name(name), _type(type) {}
+	LogicalVariable(unsigned id, std::string name, TypeIdx type) : _id(id), _name(std::move(name)), _type(type) {}
 
-	~LogicalVariable() = default;
+	~LogicalVariable() override = default;
 	LogicalVariable(const LogicalVariable&) = default;
 
 	LogicalVariable* clone() const override { return new LogicalVariable(*this); }
@@ -93,7 +94,7 @@ class Constant : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	Constant(object_id value, TypeIdx type)  : _value(value), _type(type) {}
-	~Constant() = default;
+	~Constant() override = default;
 	Constant(const Constant&) = default;
 
 	Constant* clone() const override { return new Constant(*this); }
@@ -119,8 +120,8 @@ class FunctionalTerm : public Term {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	
-	FunctionalTerm(unsigned symbol_id, const std::vector<const Term*>& subterms) : _symbol_id(symbol_id), _children(subterms) {}
-	~FunctionalTerm() = default;
+	FunctionalTerm(unsigned symbol_id, std::vector<const Term*> subterms) : _symbol_id(symbol_id), _children(std::move(subterms)) {}
+	~FunctionalTerm() override = default;
 	FunctionalTerm(const FunctionalTerm&);
 
 	FunctionalTerm* clone() const override { return new FunctionalTerm(*this); }
@@ -143,7 +144,7 @@ protected:
 class Formula : public LogicalElement {
 public:
 	Formula() = default;
-	virtual ~Formula() = default;
+	~Formula() override = default;
 
 	Formula* clone() const override = 0;
 };
@@ -173,8 +174,8 @@ class AtomicFormula : public Formula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	
-	AtomicFormula(unsigned symbol_id, const std::vector<const Term*>& subterms) : _symbol_id(symbol_id), _children(subterms) {}
-	~AtomicFormula() = default;
+	AtomicFormula(unsigned symbol_id, std::vector<const Term*> subterms) : _symbol_id(symbol_id), _children(std::move(subterms)) {}
+	~AtomicFormula() override = default;
 	AtomicFormula(const AtomicFormula&);
 
 	AtomicFormula* clone() const override { return new AtomicFormula(*this); }
@@ -201,8 +202,8 @@ class OpenFormula : public Formula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	
-	OpenFormula(Connective connective, const std::vector<const Formula*>& subformulae) : _connective(connective), _children(subformulae) {}
-	~OpenFormula() { for (const auto ptr:_children) delete ptr; }
+	OpenFormula(Connective connective, std::vector<const Formula*> subformulae) : _connective(connective), _children(std::move(subformulae)) {}
+	~OpenFormula() override { for (const auto ptr:_children) delete ptr; }
 	OpenFormula(const OpenFormula&);
 	
 	OpenFormula* clone() const override { return new OpenFormula(*this); }
@@ -227,9 +228,9 @@ class QuantifiedFormula : public Formula {
 public:
 	LOKI_DEFINE_CONST_VISITABLE();
 	
-	QuantifiedFormula(Quantifier quantifier, const std::vector<const LogicalVariable*>& variables, const Formula* subformula) : _quantifier(quantifier), _variables(variables), _subformula(subformula) {}
+	QuantifiedFormula(Quantifier quantifier, std::vector<const LogicalVariable*> variables, const Formula* subformula) : _quantifier(quantifier), _variables(std::move(variables)), _subformula(subformula) {}
 
-	virtual ~QuantifiedFormula() {
+	~QuantifiedFormula() override {
 		delete _subformula;
 		for (auto ptr:_variables) delete ptr;
 	}
@@ -267,7 +268,7 @@ protected:
 //! with the particularity that LHS must be either a state variable or a fluent-headed nested term.
 class ActionEffect {
 public:
-	ActionEffect(const Formula* condition) : _condition(condition) {}
+	explicit ActionEffect(const Formula* condition) : _condition(condition) {}
 	
 	virtual ~ActionEffect() { delete _condition; };
 	
@@ -300,7 +301,7 @@ class FunctionalEffect : public ActionEffect {
 public:
 	FunctionalEffect(const FunctionalTerm* lhs, const Term* rhs, const Formula* condition)
 		: ActionEffect(condition), _lhs(lhs), _rhs(rhs) {}
-	virtual ~FunctionalEffect() { delete _lhs; delete _rhs; };
+	~FunctionalEffect() override { delete _lhs; delete _rhs; };
 	
 	FunctionalEffect(const FunctionalEffect&);
 	FunctionalEffect(FunctionalEffect&&) = default;
@@ -335,19 +336,19 @@ public:
 	
 	AtomicEffect(const AtomicFormula* atom, Type type, const Formula* condition)
 		: ActionEffect(condition), _atom(atom), _type(type) {}
-	virtual ~AtomicEffect() { delete _atom; };
+	~AtomicEffect() override { delete _atom; };
 	
 	AtomicEffect(const AtomicEffect&);
 	AtomicEffect(AtomicEffect&&) = default;
 	AtomicEffect& operator=(const AtomicEffect&) = delete;
-	AtomicEffect& operator=(AtomicEffect&&) = default;
+	AtomicEffect& operator=(AtomicEffect&&) = delete;
 	
 	AtomicEffect* clone() const override { return new AtomicEffect(*this); }
 	
 	std::ostream& print(std::ostream& os, const LanguageInfo& info) const override;
 
 	const AtomicFormula* getAtom() const { return _atom; }
-	const Type getType() const { return _type; }
+	Type getType() const { return _type; }
 	
 	bool is_predicative() const override { return true; };
 	bool is_add() const override { return _type == Type::ADD; }
@@ -399,5 +400,5 @@ public:
 
 
 
-} } // namespaces
+} // namespaces
 

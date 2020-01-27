@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fs/core/models/lifted_state_model.hxx>
+#include <fs/core/models/csp_lifted_state_model.hxx>
 #include <fs/core/models/sdd_lifted_state_model.hxx>
 #include <fs/core/models/ground_state_model.hxx>
 #include <fs/core/models/simple_state_model.hxx>
@@ -16,7 +16,7 @@ namespace fs0 { namespace drivers {
 //! A catalog of common setups for grounding actions for both search and heuristic computations.
 class GroundingSetup {
 public:
-	static LiftedStateModel fully_lifted_model(Problem& problem);
+	static CSPLiftedStateModel csp_lifted_model(Problem& problem);
 
     static SDDLiftedStateModel sdd_lifted_model(Problem& problem);
 	

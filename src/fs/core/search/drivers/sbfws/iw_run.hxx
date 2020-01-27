@@ -386,9 +386,7 @@ public:
 			return compute_R_g_prime(seed);
 		}
 
-		if (_config._force_adaptive_run) {
-			return compute_adaptive_R(seed);
-		} else if (_config._max_width == 1){
+		if (_config._max_width == 1){
 			return compute_plain_R1(seed);
 		} else if (_config._max_width == 2){
 			return compute_plain_RG2(seed);
@@ -452,7 +450,7 @@ public:
 
 		if (_config._gr_actions_cutoff < std::numeric_limits<unsigned>::max()) {
 			unsigned num_actions = Problem::getInstance().getGroundActions().size();
-			if (num_actions > _config._gr_actions_cutoff) { // Too many actions to compute IW(º2)
+			if (num_actions > _config._gr_actions_cutoff) { // Too many actions to compute IW(2)
 				LPT_INFO("cout", "Simulation - Number of actions (" << num_actions << " > " << _config._gr_actions_cutoff << ") considered too high to run IW(2).");
 				return compute_R_all();
 			} else {
@@ -477,35 +475,6 @@ public:
 
 		LPT_INFO("cout", "Simulation - IW(2) run did not reach all goals, falling back to R=R_all");
 		return compute_R_all();
-	}
-
-
-
-	std::vector<bool> compute_adaptive_R(const StateT& seed) {
-		const AtomIndex& index = Problem::getInstance().get_tuple_index();
-		_config._complete = false;
-
-
-		float simt0 = aptk::time_used();
-  		run(seed, 1);
-		report_simulation_stats(simt0);
-
-		if (_unreached.size() == 0) {
-			// If a single IW[1] run reaches all subgoals, we return R=emptyset
-			LPT_INFO("cout", "Simulation - IW(1) run reached all goals, thus R={}");
-			_stats.r_type(0);
-			return std::vector<bool>(index.size(), false);
-		} else {
-			LPT_INFO("cout", "Simulation - IW(1) run did not reach all goals, throwing IW(2) simulation");
-		}
-
-		// Otherwise, run IW(2)
-		reset();
-		run(seed, 2);
-		report_simulation_stats(simt0);
-		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
-
-		return extract_R_G(true);
 	}
 
 	//! Extracts the goal-oriented set of relevant atoms after a simulation run

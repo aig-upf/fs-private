@@ -5,7 +5,7 @@
 #include <gecode/int.hh>
 
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 class MinHMaxValueSelector;
 
@@ -13,16 +13,16 @@ class MinHMaxValueSelector;
  * A Gecode CSP with sets of integer and binary variables, and the possibility of using
  * a custom value selection strategy.
  */
-class GecodeCSP : public Gecode::Space {
+class GecodeSpace : public Gecode::Space {
 public:
-	GecodeCSP();
-	GecodeCSP(GecodeCSP&&) = delete;
-	GecodeCSP& operator=(const GecodeCSP&) = delete;
-	GecodeCSP& operator=(GecodeCSP&&) = default;
-	~GecodeCSP() override;
+	GecodeSpace();
+	GecodeSpace(GecodeSpace&&) = delete;
+	GecodeSpace& operator=(const GecodeSpace&) = delete;
+	GecodeSpace& operator=(GecodeSpace&&) = default;
+	~GecodeSpace() override;
 	
 	//! Cloning constructor, required by Gecode
-	GecodeCSP(GecodeCSP& other);
+	GecodeSpace(GecodeSpace& other);
 
 	///! Shallow copy operator, mandatory according to the documentation
 	virtual Gecode::Space* copy();
@@ -32,7 +32,7 @@ public:
 	bool propagate();
 
 	//! Prints a representation of a CSP. Mostly for debugging purposes
-	friend std::ostream& operator<<(std::ostream &os, const GecodeCSP&  csp) { return csp.print(os); }
+	friend std::ostream& operator<<(std::ostream &os, const GecodeSpace&  csp) { return csp.print(os); }
 	std::ostream& print(std::ostream& os) const;
 	
 	void init_value_selector(std::shared_ptr<MinHMaxValueSelector> value_selector);
@@ -48,4 +48,4 @@ protected:
 	std::shared_ptr<MinHMaxValueSelector> _value_selector;
 };
 
-} } // namespaces
+} // namespaces

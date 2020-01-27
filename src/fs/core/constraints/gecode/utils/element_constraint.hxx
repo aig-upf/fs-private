@@ -20,7 +20,7 @@ class FluentHeadedNestedTerm;
 namespace fs0 { namespace gecode {
 
 class CSPTranslator;
-class GecodeCSP;
+class GecodeSpace;
 
 //! A compact class that indexes the number of occurrences of state variables in our CSPs,
 //! making a distinction between direct and derived state variables, and encapsulating the logic
@@ -74,12 +74,12 @@ public:
 	void setIndex(unsigned index) { _index_position = index; }
 	
 	//! Returns the Gecode temporary variable for the index of the element constraint
-	const Gecode::IntVar& getIndex(const GecodeCSP& csp) const;
+	const Gecode::IntVar& getIndex(const GecodeSpace& csp) const;
 	
 	std::vector<VariableIdx>& getTableVariables() { return _table_variables; }
 	
 	//! Returns the ID of the state variable into which the current nested fluent resolves under the given CSP
-	VariableIdx resolveStateVariable(const GecodeCSP& csp) const;
+	VariableIdx resolveStateVariable(const GecodeSpace& csp) const;
 
 protected:
 	//! The index (within the CSP _intvars array) of the element constraint index variable;

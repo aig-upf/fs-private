@@ -1,7 +1,7 @@
 #! /usr/bin/env python
-import itertools
 import os
 from os import path
+from statistics import mean
 
 import fslab
 from lab.environments import LocalEnvironment
@@ -64,8 +64,15 @@ ALL_ATTRIBUTES = {
     'num_state_vars': 'num_state_vars',
     'iw1_started': 'iw1_started',
     'iw2_started': 'iw2_started',
-    'iw1_reached_subgoals': 'iw1_reached_subgoals',
-    'iw2_reached_subgoals': 'iw2_reached_subgoals',
+    'iw1_reached_subgoals': Attribute('iw1_reached_subgoals', function=mean, min_wins=False),
+    'iw2_reached_subgoals': Attribute('iw2_reached_subgoals', function=mean, min_wins=False),
+    'total_simulation_time': Attribute('total_simulation_time', function=mean, min_wins=True),
+
+    'sim_iw1_successful': Attribute('sim_iw1_successful', min_wins=False),
+    'sim_rall_because_too_many_actions': Attribute('sim_rall_because_too_many_actions', min_wins=False),
+    'sim_iw2_successful': Attribute('sim_iw2_successful', min_wins=False),
+    'sim_rall_because_iw2_unsuccessful': Attribute('sim_rall_because_iw2_unsuccessful', min_wins=False),
+
     'iw1_finished': 'iw1_finished',
     'iw2_finished': 'iw2_finished',
     'time_reachability': 'time_reachability',

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <fs/core/models/lifted_state_model.hxx>
+#include <fs/core/models/csp_lifted_state_model.hxx>
 #include <fs/core/actions/action_id.hxx>
 #include <fs/core/search/nodes/heuristic_search_node.hxx>
 #include <fs/core/search/drivers/registry.hxx>
@@ -19,11 +19,11 @@ class SmartLiftedDriver : public Driver {
 protected:
 	using NodeT = HeuristicSearchNode<State, LiftedActionID>;
 	using HeuristicT = fs0::gecode::SmartRPG<gecode::LiftedEffectCSP>;
-	using EngineT = lapkt::StlBestFirstSearch<NodeT, LiftedStateModel>;
+	using EngineT = lapkt::StlBestFirstSearch<NodeT, CSPLiftedStateModel>;
 	using EnginePT = std::unique_ptr<EngineT>;
 
 public:
-	EnginePT create(const Config& config, LiftedStateModel& model, SearchStats& stats);
+	EnginePT create(const Config& config, CSPLiftedStateModel& model, SearchStats& stats);
 	
 	ExitCode search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) override;
 

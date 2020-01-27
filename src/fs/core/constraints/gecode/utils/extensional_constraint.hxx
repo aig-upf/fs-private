@@ -6,41 +6,40 @@
 
 namespace Gecode { class TupleSet; }
 namespace fs0 { class State; class AtomIndex; }
-namespace fs0 { namespace language { namespace fstrips { class FluentHeadedNestedTerm; } } }
+namespace fs0::language::fstrips { class FluentHeadedNestedTerm; }
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
-class GecodeCSP;
+class GecodeSpace;
 class CSPTranslator;
 class RPGIndex;
 
 class ExtensionalConstraint {
 public:
 	
-	ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const AtomIndex& tuple_index, bool predicate);
+	ExtensionalConstraint(const fs::FluentHeadedNestedTerm* term, const AtomIndex& tuple_index, bool predicate, bool negative);
 	ExtensionalConstraint(const ExtensionalConstraint&) = default;
 	ExtensionalConstraint(ExtensionalConstraint&&) = default;
-	ExtensionalConstraint& operator=(const ExtensionalConstraint& other) = default;
-	ExtensionalConstraint& operator=(ExtensionalConstraint&& other) = default;
-	
-	void register_variables(CSPTranslator& translator) {} // TODO - REMOVE IF NOT NEEDED
+	ExtensionalConstraint& operator=(const ExtensionalConstraint& other) = delete;
+	ExtensionalConstraint& operator=(ExtensionalConstraint&& other) = delete;
 	
 	void register_constraints(CSPTranslator& translator);
 	
 	const fs::FluentHeadedNestedTerm* get_term() const {return _term; }
 	
 	//! Constraint-posting routines
-	bool update(GecodeCSP& csp, const CSPTranslator& translator, const State& state) const;
-	bool update(GecodeCSP& csp, const CSPTranslator& translator, const RPGIndex& layer) const;
-	bool update(GecodeCSP& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const;
+	bool update(GecodeSpace& csp, const CSPTranslator& translator, const State& state) const;
+	bool update(GecodeSpace& csp, const CSPTranslator& translator, const RPGIndex& layer) const;
+	bool update(GecodeSpace& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const;
 
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ExtensionalConstraint&  o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
 	
 protected:
-	//!
+	//! Whether the extensional constraint should be posted in negative form
+	bool _negative;
 
 	
 	//! This is a hacky, temporary way of knowing if the current extensional constraint models a predicate or not, in which
@@ -67,5 +66,5 @@ protected:
 };
 
 
-} } // namespaces
+} // namespaces
 

@@ -12,7 +12,7 @@ using namespace fs0::gecode;
 namespace fs0 { namespace drivers {
 	
 SmartLiftedDriver::EnginePT
-SmartLiftedDriver::create(const Config& config, LiftedStateModel& model, SearchStats& stats) {
+SmartLiftedDriver::create(const Config& config, CSPLiftedStateModel& model, SearchStats& stats) {
 	LPT_INFO("main", "Using the Partially-lifted smart driver");
 	const Problem& problem = model.getTask();
 	
@@ -51,10 +51,10 @@ SmartLiftedDriver::create(const Config& config, LiftedStateModel& model, SearchS
 
 ExitCode 
 SmartLiftedDriver::search(Problem& problem, const Config& config, const EngineOptions& options, float start_time) {
-	LiftedStateModel model = GroundingSetup::fully_lifted_model(problem);
+	CSPLiftedStateModel model = GroundingSetup::csp_lifted_model(problem);
 	SearchStats stats;
 	auto engine = create(config, model, stats);
-	return Utils::SearchExecution<LiftedStateModel>(model).do_search(*engine, options, start_time, stats);
+	return Utils::SearchExecution<CSPLiftedStateModel>(model).do_search(*engine, options, start_time, stats);
 }
 
 } } // namespaces

@@ -24,9 +24,6 @@ struct IWRunConfig {
     bool _goal_directed;
 
     //!
-    bool _force_adaptive_run;
-
-    //!
     bool _force_R_all;
 
     //!

@@ -48,7 +48,7 @@ namespace fs0 {
 
     State SDDLiftedStateModel::next(const State& state, const GroundAction& action) const {
 //	NaiveApplicabilityManager manager(_task.getStateConstraints()); // UNUSED
-        action.apply( state, _effects_cache );
+        NaiveApplicabilityManager::computeEffects(state, action, _effects_cache);
         return State(state, _effects_cache); // Copy everything into the new state and apply the changeset
     }
 

@@ -71,7 +71,7 @@ LiftedEffectUnreachedCSP::create_novelty_constraint() {
 }
 
 void
-LiftedEffectUnreachedCSP::post_novelty_constraint(GecodeCSP& csp, const RPGIndex& rpg) const {
+LiftedEffectUnreachedCSP::post_novelty_constraint(GecodeSpace& csp, const RPGIndex& rpg) const {
 	if (_novelty) _novelty->post_constraint(csp, rpg);
 }
 
@@ -83,10 +83,10 @@ LiftedEffectUnreachedCSP::get_precondition() const {
 
 
 
-bool LiftedEffectUnreachedCSP::find_atom_support(AtomIdx tuple, const Atom& atom, const State& seed, GecodeCSP& layer_csp, RPGIndex& rpg) const {
+bool LiftedEffectUnreachedCSP::find_atom_support(AtomIdx tuple, const Atom& atom, const State& seed, GecodeSpace& layer_csp, RPGIndex& rpg) const {
 	log();
 	
-	std::unique_ptr<GecodeCSP> csp = std::unique_ptr<GecodeCSP>(static_cast<GecodeCSP*>(layer_csp.clone()));
+	std::unique_ptr<GecodeSpace> csp = std::unique_ptr<GecodeSpace>(static_cast<GecodeSpace*>(layer_csp.clone()));
 	
 	post_atom(*csp, atom);
 
@@ -104,10 +104,10 @@ bool LiftedEffectUnreachedCSP::find_atom_support(AtomIdx tuple, const Atom& atom
 	}
 }
 
-bool LiftedEffectUnreachedCSP::solve_for_tuple(AtomIdx tuple, gecode::GecodeCSP* csp, RPGIndex& graph) const {
+bool LiftedEffectUnreachedCSP::solve_for_tuple(AtomIdx tuple, gecode::GecodeSpace* csp, RPGIndex& graph) const {
 	// We just want to search for one solution and extract the support from it
-	Gecode::DFS<GecodeCSP> engine(csp);
-	GecodeCSP* solution = engine.next();
+	Gecode::DFS<GecodeSpace> engine(csp);
+	GecodeSpace* solution = engine.next();
 	if (!solution) return false; // The CSP has no solution at all
 	
 	bool reached = graph.reached(tuple);
@@ -124,7 +124,7 @@ bool LiftedEffectUnreachedCSP::solve_for_tuple(AtomIdx tuple, gecode::GecodeCSP*
 }
 
 
-void LiftedEffectUnreachedCSP::post_atom(GecodeCSP& csp, const Atom& atom) const {
+void LiftedEffectUnreachedCSP::post_atom(GecodeSpace& csp, const Atom& atom) const {
 	const ProblemInfo& info = ProblemInfo::getInstance();
 	const auto& effect = get_effect();
 	if (auto statevar = dynamic_cast<const fs::StateVariable*>(effect->lhs())) {
@@ -160,8 +160,8 @@ std::vector<unsigned> LiftedEffectUnreachedCSP::index_lhs_subterms() {
 }
 
 
-GecodeCSP* LiftedEffectUnreachedCSP::preinstantiate(const RPGIndex& rpg) const {
-	GecodeCSP* csp = instantiate(rpg);
+GecodeSpace* LiftedEffectUnreachedCSP::preinstantiate(const RPGIndex& rpg) const {
+	GecodeSpace* csp = instantiate(rpg);
 	if (!csp) return nullptr;
 	
 	if (!csp->propagate()) { // This colaterally enforces propagation of constraints

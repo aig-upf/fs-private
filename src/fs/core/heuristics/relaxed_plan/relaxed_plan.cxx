@@ -9,7 +9,7 @@ namespace fs0 { namespace gecode { namespace support {
 
 long compute_rpg_cost(const AtomIndex& tuple_index, const RPGIndex& graph, const FormulaCSP& goal_handler, std::vector<Atom>& relevant) {
 	long cost = -1;
-	if (GecodeCSP* csp = goal_handler.instantiate(graph)) {
+	if (GecodeSpace* csp = goal_handler.instantiate(graph)) {
 		if (csp->propagate()) { // ATM we only take into account full goal resolution
 			LPT_EDEBUG("heuristic", "Goal formula CSP is consistent: " << *csp);
 			std::vector<AtomIdx> causes;
@@ -30,7 +30,7 @@ long compute_rpg_cost(const AtomIndex& tuple_index, const RPGIndex& graph, const
 
 long compute_hmax_cost(const AtomIndex& tuple_index, const RPGIndex& graph, const FormulaCSP& goal_handler) {
 	long cost = -1;
-	if (GecodeCSP* csp = goal_handler.instantiate(graph)) {
+	if (GecodeSpace* csp = goal_handler.instantiate(graph)) {
 		if (csp->propagate() && goal_handler.is_satisfiable(csp)) { // ATM we only take into account full goal resolution
 			LPT_EDEBUG("heuristic", "Found solution of Goal formula CSPn");
 			cost = graph.getCurrentLayerIdx();

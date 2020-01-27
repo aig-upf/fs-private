@@ -17,7 +17,7 @@ set(SOURCE_FILES
         src/fs/core/actions/checker.hxx
         src/fs/core/actions/grounding.cxx
         src/fs/core/actions/grounding.hxx
-        src/fs/core/actions/lifted_action_iterator
+        src/fs/core/actions/csp_action_iterator
         src/fs/core/actions/sdd_action_iterator
         src/fs/core/applicability/action_managers.cxx
         src/fs/core/applicability/action_managers.hxx
@@ -63,8 +63,8 @@ set(SOURCE_FILES
         src/fs/core/constraints/gecode/csp_translator.hxx
         src/fs/core/constraints/gecode/extensions.cxx
         src/fs/core/constraints/gecode/extensions.hxx
-        src/fs/core/constraints/gecode/gecode_csp.cxx
-        src/fs/core/constraints/gecode/gecode_csp.hxx
+        src/fs/core/constraints/gecode/gecode_space.cxx
+        src/fs/core/constraints/gecode/gecode_space.hxx
         src/fs/core/constraints/gecode/helper.cxx
         src/fs/core/constraints/gecode/helper.hxx
         src/fs/core/constraints/gecode/lifted_plan_extractor.cxx
@@ -135,8 +135,8 @@ set(SOURCE_FILES
         src/fs/core/search/nodes/blind_node.hxx
         src/fs/core/models/ground_state_model.cxx
         src/fs/core/models/ground_state_model.hxx
-        src/fs/core/models/lifted_state_model.cxx
-        src/fs/core/models/lifted_state_model.hxx
+        src/fs/core/models/csp_lifted_state_model.cxx
+        src/fs/core/models/csp_lifted_state_model.hxx
         src/fs/core/models/sdd_lifted_state_model
         src/fs/core/models/utils
         src/fs/core/models/simple_state_model.cxx

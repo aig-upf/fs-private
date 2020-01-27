@@ -3,10 +3,10 @@
 
 #include <fs/core/atom.hxx>
 #include <fs/core/actions/action_id.hxx>
-#include <fs/core/actions/lifted_action_iterator.hxx>
+#include <fs/core/actions/csp_action_iterator.hxx>
 
 
-namespace fs0 { namespace gecode { class LiftedActionCSP; }}
+namespace fs0::gecode { class LiftedActionCSP; }
 
 namespace fs0 {
 
@@ -16,26 +16,26 @@ class GroundAction;
 
 
 //! A state model that works with lifted actions instead of grounded actions
-class LiftedStateModel
+class CSPLiftedStateModel
 {
 public:
 	using StateT = State;
 	using ActionType = LiftedActionID;
 
 protected:
-	LiftedStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals);
+	CSPLiftedStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals);
 
 public:
 
 	//! Factory method
-	static LiftedStateModel build(const Problem& problem);
+	static CSPLiftedStateModel build(const Problem& problem);
 
-	~LiftedStateModel() = default;
+	~CSPLiftedStateModel() = default;
 
-	LiftedStateModel(const LiftedStateModel&) = default;
-	LiftedStateModel& operator=(const LiftedStateModel&) = default;
-	LiftedStateModel(LiftedStateModel&&) = default;
-	LiftedStateModel& operator=(LiftedStateModel&&) = default;
+	CSPLiftedStateModel(const CSPLiftedStateModel&) = default;
+	CSPLiftedStateModel& operator=(const CSPLiftedStateModel&) = delete;
+	CSPLiftedStateModel(CSPLiftedStateModel&&) = default;
+	CSPLiftedStateModel& operator=(CSPLiftedStateModel&&) = delete;
 
 	//! Returns initial state of the problem
 	State init() const;
@@ -44,8 +44,8 @@ public:
 	bool goal(const State& state) const;
 
 	//! Returns applicable action set object
-	gecode::LiftedActionIterator applicable_actions(const State& state, bool enforce_state_constraints) const;
-	gecode::LiftedActionIterator applicable_actions(const State& state) const {
+	gecode::CSPActionIterator applicable_actions(const State& state, bool enforce_state_constraints) const;
+	gecode::CSPActionIterator applicable_actions(const State& state) const {
 		return applicable_actions(state, true);
 	}
 

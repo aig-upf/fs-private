@@ -417,9 +417,9 @@ public:
             }
         }
 
+        // Note that in general, the root node will have novelty 1, unless we are ignoring negative literals and
+        // the initial state happens to be the empty set, i.e. the state where no atom holds.
         create_node(root);
-        assert(_open.top()->w_g_r == 1); // The root node must necessarily have novelty 1
-
 
 		// Force one simulation from the root node and abort the search
         _heuristic.get_hash_r(*root);

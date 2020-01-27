@@ -32,22 +32,6 @@ StateAtomIndexer::StateAtomIndexer(IndexT&& index, unsigned n_bool, unsigned n_i
 {
 }
 
-StateAtomIndexer::IndexT
-StateAtomIndexer::compute_index(const ProblemInfo& info) {
-	unsigned n_vars = info.getNumVariables(), n_bool = 0, n_int = 0;
-	IndexT index;
-	index.reserve(n_vars);
-	for (unsigned var = 0; var < n_vars; ++var) {
-		if (info.isPredicativeVariable(var)) {
-			index.push_back(std::make_pair(true, n_bool++)); // Important to post-increment
-		} else {
-			index.push_back(std::make_pair(false, n_int++)); // Important to post-increment
-		}
-	}
-	assert(index.size() == n_vars && n_vars == n_bool + n_int);
-	return index;
-}
-
 object_id
 StateAtomIndexer::get(const State& state, VariableIdx variable) const {
 	std::size_t n_vars = _index.size();
@@ -90,8 +74,9 @@ State* State::create(const StateAtomIndexer& index, unsigned numAtoms, const std
 
 State::State(const StateAtomIndexer& index, const std::vector<Atom>& atoms) :
 	_indexer(index),
-	_bool_values(index.num_bool(), 0),
-	_int_values(index.num_int(), object_id::INVALID)
+	_bool_values(index.num_bool(), false),
+	_int_values(index.num_int(), object_id::INVALID),
+    _hash(0)
 {
 	// Note that those facts not explicitly set in the initial state will be initialized to 0, i.e. "false", which is convenient to us.
 	for (const Atom& atom:atoms) { // Insert all the elements of the vector
@@ -102,7 +87,7 @@ State::State(const StateAtomIndexer& index, const std::vector<Atom>& atoms) :
 
 State::State(const State& state, const std::vector<Atom>& atoms) :
 	State(state) {
-	accumulate(atoms);
+    update(atoms);
 }
 
 void State::set(const Atom& atom) {
@@ -124,7 +109,7 @@ State::getValue(const VariableIdx& variable) const {
 }
 
 //! Applies the given changeset into the current state.
-void State::accumulate(const std::vector<Atom>& atoms) {
+void State::update(const std::vector<Atom>& atoms) {
 	for (const Atom& fact:atoms) {
 		set(fact);
 	}
