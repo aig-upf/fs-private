@@ -1,13 +1,12 @@
 
 #pragma once
 
-#include <fs/core/languages/fstrips/language_fwd.hxx>
-#include <fs/core/languages/fstrips/terms.hxx>
-#include <fs/core/languages/fstrips/formulae.hxx>
-
 #include <unordered_set>
 #include <unordered_map>
 
+#include <fs/core/languages/fstrips/language_fwd.hxx>
+#include <fs/core/languages/fstrips/terms.hxx>
+#include <fs/core/languages/fstrips/formulae.hxx>
 #include <fs/core/fs_types.hxx>
 #include <fs/core/atom.hxx>
 #include <fs/core/constraints/gecode/gecode_space.hxx>
@@ -18,7 +17,7 @@
 
 namespace fs0 { class RPGData; class Binding; }
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 class StateBasedExtensionHandler;
 
@@ -116,4 +115,4 @@ protected:
 	virtual void post_novelty_constraint(GecodeSpace& csp, const RPGIndex& rpg) const {}
 };
 
-} } // namespaces
+} // namespaces

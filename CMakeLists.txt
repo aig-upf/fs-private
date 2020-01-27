@@ -17,7 +17,7 @@ set(SOURCE_FILES
         src/fs/core/actions/checker.hxx
         src/fs/core/actions/grounding.cxx
         src/fs/core/actions/grounding.hxx
-        src/fs/core/actions/lifted_action_iterator
+        src/fs/core/actions/csp_action_iterator
         src/fs/core/actions/sdd_action_iterator
         src/fs/core/applicability/action_managers.cxx
         src/fs/core/applicability/action_managers.hxx
