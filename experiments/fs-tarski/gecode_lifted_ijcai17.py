@@ -56,7 +56,7 @@ def configs():
     grounded_mt = '--driver sbfws --options "verbose_stats=true,successor_generation=match_tree,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"'
 
     return [
-        IssueConfig("bfws-r_all-mt", grounded_mt.split()),
+        # IssueConfig("bfws-r_all-mt", grounded_mt.split()),
         IssueConfig("bfws-r_all-csp-no-reach", csp.split()),
         IssueConfig("bfws-r_all-csp-var-reach", csp_reach_vars.split()),
     ]
