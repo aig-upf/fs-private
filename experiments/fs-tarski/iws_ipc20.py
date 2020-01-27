@@ -29,11 +29,11 @@ BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
 def configs():
     grounded_mt_noreach = ['--no-reachability', '--driver', 'sbfws', '--options', "verbose_stats=true,successor_generation=match_tree,evaluator_t=adaptive,bfws.rs=sim,sim.r_g_prime=true,width.simulation=2,sim.act_cutoff=40000"]
-    grounded_mt_reach = ['--driver', 'sbfws', '--options', "verbose_stats=true,successor_generation=match_tree,evaluator_t=adaptive,bfws.rs=sim,sim.r_g_prime=true,width.simulation=2,sim.act_cutoff=40000"]
+    grounded_mt_reach = ['--driver', 'sbfws', '--options', "verbose_stats=true,successor_generation=match_tree,evaluator_t=adaptive,bfws.rs=sim,sim.r_g_prime=true,width.simulation=2"]  # No action cutoff
 
     return [
-        IssueConfig("bfws-iw2-mt_noreach", grounded_mt_noreach),
-        IssueConfig("bfws-iw2-mt_each", grounded_mt_reach),
+        # IssueConfig("bfws-iw2-mt_noreach", grounded_mt_noreach),
+        IssueConfig("bfws-iw2-mt_reach", grounded_mt_reach),
     ]
 
 
