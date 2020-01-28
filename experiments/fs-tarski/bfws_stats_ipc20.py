@@ -28,7 +28,7 @@ BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
 
 def configs():
-    grounded_mt_reach_rall = '--driver sbfws --options "verbose_stats=true,successor_generation=match_tree,evaluator_t=adaptive,bfws.rs=sim,sim.r_g_prime=true,width.simulation=2,sim.act_cutoff=40000"'
+    grounded_mt_reach_rall = '--driver sbfws --options "verbose_stats=true,successor_generation=match_tree,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"'
     grounded_mt_reach_r0 = '--driver sbfws --options "verbose_stats=true,successor_generation=match_tree,evaluator_t=adaptive,bfws.rs=none"'
     grounded_mt_reach_rg = '--driver sbfws --options "verbose_stats=true,successor_generation=match_tree,evaluator_t=adaptive,bfws.rs=sim,sim.r_g_prime=true,width.simulation=2"'  # i.e. no action cutoff
 
