@@ -17,9 +17,45 @@
 #include <fs/core/utils/printers/actions.hxx>
 #include <lapkt/search/components/open_lists.hxx>
 #include <fs/core/utils/config.hxx>
+#include <fs/core/applicability/action_managers.hxx>
 
+#include <fs/core/languages/fstrips/language.hxx>
+
+
+namespace fs = fs0::language::fstrips;
 
 namespace fs0::bfws {
+
+struct ConditionCounter {
+    ConditionCounter(const std::vector<const fs::Formula*>& conditions) :
+        conditions_(conditions), indiv_reached_(conditions.size(), false), wholly_reached_(false) {}
+
+    void mark(const State& state) {
+        bool some_not_satisfied = false;
+        for (std::size_t i = 0; i < conditions_.size(); ++i) {
+            if (conditions_[i]->interpret(state)) indiv_reached_[i] = true;
+            else some_not_satisfied = true;
+        }
+        if (!some_not_satisfied) wholly_reached_ = true;
+    }
+
+    // True iff all individual preconditions have been reached but the entire precondition not
+    bool indiv_reached() const {
+        for (const auto& b:indiv_reached_) {
+            if (!b) return false;
+        }
+        // If we reach here, all indiv precs have been reached
+        return !wholly_reached_;
+    }
+
+    const std::vector<const fs::Formula*> conditions_;
+    std::vector<bool> indiv_reached_;
+    bool wholly_reached_;
+};
+
+//! A helper to derive the distinct goal atoms
+ConditionCounter
+build_condition_counter(const fs::Formula* formula);
 
 template <typename StateT, typename ActionType>
 class IWRunNode {
@@ -620,14 +656,29 @@ public:
 
 		open_w1.insert(root);
 
-		while (true) {
+        auto all_actions = _model.manager().getAllActions();
+        std::vector<ConditionCounter> counters;
+        for (unsigned ii = 0; ii < all_actions.size(); ++ii) {
+            counters.push_back(build_condition_counter(all_actions[ii]->getPrecondition()));
+        }
+
+        while (true) {
 			while (!open_w1.empty() || !open_w2.empty()) {
 				NodePT current = open_w1.empty() ? open_w2.next() : open_w1.next();
 
 				// Expand the node
 				update_novelty_counters_on_expansion(current->_w);
 
-				for (const auto& a : _model.applicable_actions(current->state, true)) {
+
+                for (unsigned ii = 0; ii < all_actions.size(); ++ii) {
+                    const auto* action = all_actions[ii];
+                    counters.at(ii).mark(current->state);
+                    if (!NaiveApplicabilityManager::checkFormulaHolds(action->getPrecondition(), current->state)) continue;
+
+                    auto a = action->getId();
+                    assert (a == ii);
+
+//				for (const auto& a : _model.applicable_actions(current->state, true)) {
 					StateT s_a = _model.next( current->state, a );
 					NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
 
@@ -637,7 +688,7 @@ public:
 					// LPT_INFO("cout", "Simulation - Node generated: " << *successor);
 
 					if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
-						report("All subgoals reached", max_width);
+						report("All subgoals reached", max_width, counters);
 						return true;
 					}
 
@@ -653,7 +704,7 @@ public:
 			if (open_w1.empty() && open_w2.empty()) break;
 		}
 
-		report("State space exhausted", max_width);
+		report("State space exhausted", max_width, counters);
 		return false;
 	}
 
@@ -668,11 +719,18 @@ public:
 		else ++_w_gt2_nodes_generated;
 	}
 
-	void report(const std::string& result, unsigned max_width) const {
+	void report(const std::string& result, unsigned max_width, const std::vector<ConditionCounter>& counters) const {
 		if (!_verbose) return;
+
 		float perc_reached_subgoals = float(_model.num_subgoals() - _unreached.size()) / _model.num_subgoals();
+		unsigned ops_indiv_reached = 0;
+		for (const auto& c:counters) {
+		    if (c.indiv_reached()) ++ops_indiv_reached;
+		}
+
 		LPT_INFO("cout", "Simulation - Finished IW(" << max_width << ") Simulation. Fraction reached subgoals: " << std::fixed << std::setprecision(2) << perc_reached_subgoals);
 		LPT_INFO("cout", "Simulation - Reached " << (_model.num_subgoals() - _unreached.size()) << " / " << _model.num_subgoals() << " subgoals");
+        LPT_INFO("cout", "Simulation - Operators where all preconditions atoms have been reached but whole precondition not: " << ops_indiv_reached << "/" << counters.size());
 		LPT_INFO("cout", "Simulation - Expanded nodes with w=1 " << _w1_nodes_expanded);
 		LPT_INFO("cout", "Simulation - Expanded nodes with w=2 " << _w2_nodes_expanded);
 		LPT_INFO("cout", "Simulation - Generated nodes with w=1 " << _w1_nodes_generated);

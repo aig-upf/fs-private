@@ -74,6 +74,8 @@ public:
 		return _effects_cache;
 	}
 
+    const ActionManagerI& manager() const { return *_manager; }
+
 protected:
 	// The underlying planning problem.
 	const Problem& _task;

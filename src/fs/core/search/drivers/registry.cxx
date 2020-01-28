@@ -41,11 +41,11 @@ EngineRegistry::EngineRegistry() {
 	add("native_gc",  new NativeActionDriver<UnsatisfiedGoalAtomsCounter>());
 	
 	add("iw",  new IteratedWidthDriver<GroundStateModel>());
-	add("liw",  new IteratedWidthDriver<CSPLiftedStateModel>());
+//	add("liw",  new IteratedWidthDriver<CSPLiftedStateModel>());
 	
 	add("sbfws",  new bfws::SBFWSDriver<SimpleStateModel>());
-	add("lsbfws",  new bfws::SBFWSDriver<CSPLiftedStateModel>());
-    add("sbfws-sdd",  new bfws::SBFWSDriver<SDDLiftedStateModel>());
+//	add("lsbfws",  new bfws::SBFWSDriver<CSPLiftedStateModel>());
+//    add("sbfws-sdd",  new bfws::SBFWSDriver<SDDLiftedStateModel>());
 	
 	add("bfs",  new BreadthFirstSearchDriver<GroundStateModel>());
 	add("lbfs",  new BreadthFirstSearchDriver<CSPLiftedStateModel>());
