@@ -22,20 +22,22 @@ SUITE = [
     'termes-sat18-strips',
 ]
 REVISIONS = [
-    "a7f3899c"
+    "44c60867"
 ]
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
 
 def configs():
-    csp = '--reachability=none --driver lsbfws --options "verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"'
-    csp_reach_full = '--reachability=full --driver lsbfws --options "verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"'
+    # csp = '--reachability=none --driver lsbfws --options "verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"'
+    # csp_reach_full = '--reachability=full --driver lsbfws --options "verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"'
     csp_reach_vars = '--reachability=vars --driver lsbfws --options "verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"'
+    grounded_mt = '--driver sbfws --options "verbose_stats=true,successor_generation=match_tree,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"'
 
     return [
-        IssueConfig("bfws-r_all-csp-no-reach", csp.split()),
-        IssueConfig("bfws-r_all-csp-full-reach", csp_reach_full.split()),
+        IssueConfig("bfws-r_all-mt", grounded_mt.split()),
         IssueConfig("bfws-r_all-csp-var-reach", csp_reach_vars.split()),
+        # IssueConfig("bfws-r_all-csp-no-reach", csp.split()),
+        # IssueConfig("bfws-r_all-csp-full-reach", csp_reach_full.split()),
     ]
 
 
