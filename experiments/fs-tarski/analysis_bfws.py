@@ -1,74 +1,19 @@
 #! /usr/bin/env python
 import itertools
-import json
+import os
+
 from os import path
-import subprocess
-from statistics import mean
+from helper import parse_json, layout_results, generate_latex_pagebreak, generate_latex_section, generate_latex_report
 
-import pandas as pd
 
-pd.set_option('display.max_colwidth', -1)
-pd.set_option('display.max_columns', None)
-
-here = path.abspath(path.dirname(__file__))
+here = os.path.abspath(os.path.dirname(__file__))
 ALGORITHMS = {'5ba85646-bfws-r0': 'BFWS(R_0)',
               '5ba85646-bfws-rall': 'BFWS(R_all)',
               '5ba85646-bfws-rg': 'BFWS(R_G)'}
 
-
-def parse_json(filename):
-    with open(filename, 'r') as f:
-        data = json.load(f)
-    return data
-
-
-def print_results(results, name):
-    means = ['iw1_reached_subgoals', 'iw2_reached_subgoals', 'num_reach_actions', 'num_state_vars', 'total_simulation_time', 'iw_precondition_reachability']
-    aggrs = list(ALGORITHMS.values())
-
-    domains = sorted(set(k[0] for k in results.keys()))
-    per_domain = []
-    per_instance = []
-
-    with open(path.join(here, f'instances_{name}.txt'), 'w') as f:
-        for d in domains:
-            instances = [v for k, v in results.items() if k[0] == d]
-            summary = {'problem': d}
-            for a in means:
-                summary[a] = mean(v[a] for v in instances)
-            for a in aggrs:
-                summary[a] = sum(v[a] for v in instances)
-            per_domain.append(summary)
-
-            # print(f'\n\n{d}\n{pd.DataFrame(instances)}')
-            # print(f'\n\n{d}\n{pd.DataFrame(instances)}', file=f)
-            per_instance.append((d, pd.DataFrame(instances)))
-
-    total_summary = {'problem': 'Summary'}
-    for a in means:
-        total_summary[a] = mean(v[a] for v in per_domain)
-    for a in aggrs:
-        total_summary[a] = sum(v[a] for v in per_domain)
-
-    return pd.DataFrame(per_domain + [total_summary]), per_instance
-
-
-def generate_latex_report(content, filename):
-    with open(path.join(here, 'tpl.tex'), 'r') as f:
-        tpl = f.read()
-    output = path.join(here, filename)
-    with open(output, 'w') as f:
-        print(tpl.replace('#Content#', content), file=f)
-    subprocess.run(["ls", "-l"])
-    subprocess.run(f"pdflatex {filename}".split(),  check=True)
-
-
-def generate_latex_section(title, content):
-    return f'\\section{{{title}}}\n\n{content}'
-
-
-def generate_latex_pagebreak():
-    return f'\\newpage'
+means = ['iw1_reached_subgoals', 'iw2_reached_subgoals', 'num_reach_actions', 'num_state_vars', 'total_simulation_time',
+         'iw_precondition_reachability']
+aggrs = list(ALGORITHMS.values())
 
 
 def collect_results_ipc18():
@@ -91,7 +36,7 @@ def collect_results_ipc18():
         algo = ALGORITHMS[run['algorithm']]
         results[problem_id][algo] = int('coverage' in run and run['coverage'] == 1)
 
-    return print_results(results, "ipc18")
+    return layout_results(results, means, aggrs)
 
 
 def collect_results_jcai17():
@@ -112,7 +57,7 @@ def collect_results_jcai17():
         algo = ALGORITHMS[run['algorithm']]
         results[problem_id][algo] = int('coverage' in run and run['coverage'] == 1)
 
-    return print_results(results, "ijcai17")
+    return layout_results(results, means, aggrs)
 
 
 def copy_run_data(run, results):
