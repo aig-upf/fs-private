@@ -445,7 +445,8 @@ public:
 
 
 		auto simt0 = aptk::time_used();
-  		run(seed, 1);
+//  		run(seed, 1);
+        run_true_iw(seed, 1);
 		report_simulation_stats(simt0);
 
 		if (_unreached.size() == 0) {
@@ -476,7 +477,8 @@ public:
 		}
         LPT_INFO("cout", "Simulation - Throwing IW(2) simulation");
 		reset();
-		run(seed, 2);
+//		run(seed, 2);
+        run_true_iw(seed, 2);
 		report_simulation_stats(simt0);
 		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
 
@@ -673,6 +675,53 @@ public:
 		report("State space exhausted", max_width);
 		return false;
 	}
+
+    bool run_true_iw(const StateT& seed, unsigned max_width) {
+        if (_verbose) LPT_INFO("cout", "Simulation - Starting IW(" << max_width << ") Simulation");
+
+        NodePT root = std::make_shared<NodeT>(seed, _generated++);
+        mark_seed_subgoals(root);
+
+        auto nov =_evaluator.evaluate(*root);
+        assert(nov==1);
+        update_novelty_counters_on_generation(nov);
+
+// 		LPT_DEBUG("cout", "Simulation - Seed node: " << *root);
+        OpenListT open;
+
+        open.insert(root);
+
+        // Note that we don't used any closed list / duplicate detection of any kind, but let the novelty engine take care of that
+        while (!open.empty()) {
+            NodePT current = open.next();
+
+            // Expand the node
+            update_novelty_counters_on_expansion(current->_w);
+
+            for (const auto& a : _model.applicable_actions(current->state)) {
+                StateT s_a = _model.next(current->state, a);
+                NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
+
+                unsigned novelty = _evaluator.evaluate(*successor);
+                update_novelty_counters_on_generation(novelty);
+
+                // LPT_INFO("cout", "Simulation - Node generated: " << *successor);
+
+                if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
+                    report("All subgoals reached", max_width);
+                    return true;
+                }
+
+                if (novelty <= _config._max_width) {
+                    open.insert(successor);
+                }
+            }
+        }
+
+        report("State space exhausted", max_width);
+        return false;
+    }
+
 
 	void update_novelty_counters_on_expansion(unsigned char novelty) {
 		if (novelty == 1) ++_w1_nodes_expanded;
