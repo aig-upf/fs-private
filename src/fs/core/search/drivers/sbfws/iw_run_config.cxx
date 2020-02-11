@@ -4,7 +4,7 @@
 #include <fs/core/utils/config.hxx>
 
 
-namespace fs0 { namespace bfws {
+namespace fs0::bfws {
 
 
         IWRunConfig::IWRunConfig(bool complete, bool mark_negative, unsigned max_width, const fs0::Config& global_config) :
@@ -22,4 +22,4 @@ namespace fs0 { namespace bfws {
                 _log_search(global_config.getOption<bool>("sim.log", false))
         {}
 
-} } // namespaces
+} // namespaces

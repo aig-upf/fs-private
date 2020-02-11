@@ -17,7 +17,7 @@ L0RelevantAtomsCounter<NodeT>::~L0RelevantAtomsCounter() { delete _l0_heuristic;
 
 template <typename NodeT>
 unsigned L0RelevantAtomsCounter<NodeT>::count(NodeT& node, BFWSStats& stats) const {
-	return (unsigned) _l0_heuristic->evaluate(node.state);
+    return (unsigned) _l0_heuristic->evaluate(node.state);
 }
 
 
