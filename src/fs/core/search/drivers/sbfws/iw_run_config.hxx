@@ -5,7 +5,7 @@
 
 namespace fs0 { class Config; }
 
-namespace fs0 { namespace bfws {
+namespace fs0::bfws {
 
 struct IWRunConfig {
     //! Whether to perform a complete run or a partial one, i.e. up until (independent) satisfaction of all goal atoms.
@@ -47,4 +47,4 @@ struct IWRunConfig {
     IWRunConfig(bool complete, bool mark_negative, unsigned max_width, const fs0::Config& global_config);
 };
 
-} } // namespaces
+} // namespaces
