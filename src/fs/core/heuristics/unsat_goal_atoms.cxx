@@ -8,12 +8,12 @@
 
 namespace fs0 {
 
-UnsatisfiedGoalAtomsCounter::UnsatisfiedGoalAtomsCounter(const Problem& problem) :
-	_formula_atoms(extract_goal_conjunction(problem))
+UnsatisfiedGoalAtomsCounter::UnsatisfiedGoalAtomsCounter(const fs::Formula* formula, const AtomIndex& atomidx) :
+	_formula_atoms(extract_formula_components(formula, atomidx))
 {}
 
-float UnsatisfiedGoalAtomsCounter::evaluate(const State& state) const {
-	unsigned unsatisfied = 0;
+unsigned UnsatisfiedGoalAtomsCounter::evaluate(const State& state) const {
+    unsigned unsatisfied = 0;
 	for (const auto& condition:_formula_atoms) {
 		if (!condition->interpret(state)) ++unsatisfied;
 	}
@@ -22,12 +22,11 @@ float UnsatisfiedGoalAtomsCounter::evaluate(const State& state) const {
 
 
 std::vector<const fs::Formula*>
-UnsatisfiedGoalAtomsCounter::extract_goal_conjunction(const Problem& problem) {
+extract_formula_components(const fs::Formula* formula, const AtomIndex& atomidx) {
 	std::vector<const fs::Formula*> atoms;
 
-	auto goal = problem.getGoalConditions();
-	const auto* conjunction = dynamic_cast<const fs::Conjunction*>(goal);
-	const auto* ex_q = dynamic_cast<const fs::ExistentiallyQuantifiedFormula*>(goal);
+	const auto* conjunction = dynamic_cast<const fs::Conjunction*>(formula);
+	const auto* ex_q = dynamic_cast<const fs::ExistentiallyQuantifiedFormula*>(formula);
 
 	if (conjunction) { // Wrap out the conjuncts
 		for (const auto& a:conjunction->getSubformulae()) {
@@ -35,9 +34,9 @@ UnsatisfiedGoalAtomsCounter::extract_goal_conjunction(const Problem& problem) {
 		}
 	} else if (ex_q) { // If we have an existentially-quantified formula, we'll use
                        // Gecode to evaluate it
-		atoms.push_back(new fs::ComplexExistentialFormula(ex_q, problem.get_tuple_index()));
+		atoms.push_back(new fs::ComplexExistentialFormula(ex_q, atomidx));
 	} else {
-		atoms.push_back(goal->clone());
+		atoms.push_back(formula->clone());
 	}
 
 	return atoms;

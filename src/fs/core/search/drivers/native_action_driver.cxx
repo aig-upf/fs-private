@@ -33,7 +33,7 @@ NativeActionDriver<gecode::NativeRPG>::configure_heuristic(const Problem& proble
 template <>
 UnsatisfiedGoalAtomsCounter*
 NativeActionDriver<UnsatisfiedGoalAtomsCounter>::configure_heuristic(const Problem& problem, const Config& config) {
-    return new UnsatisfiedGoalAtomsCounter(problem);
+    return new UnsatisfiedGoalAtomsCounter(problem.getGoalConditions(), problem.get_tuple_index());
 }
 
 
