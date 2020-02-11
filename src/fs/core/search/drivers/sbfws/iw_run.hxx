@@ -198,11 +198,12 @@ public:
         _stats(stats),
         _verbose(verbose)
     {
-        if (true) {
+        if (false) {
             using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
             _evaluator = std::make_unique<SimEvaluatorT>(featureset, evaluator);
         } else {
-
+            using SimEvaluatorT = AchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
+            _evaluator = std::make_unique<SimEvaluatorT>(_model.getTask(), featureset);
         }
     }
 
