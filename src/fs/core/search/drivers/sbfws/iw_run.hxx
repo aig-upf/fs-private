@@ -11,6 +11,7 @@
 #include <fs/core/search/drivers/sbfws/base.hxx>
 #include <fs/core/search/drivers/sbfws/iw_run_config.hxx>
 #include <fs/core/search/drivers/sbfws/stats.hxx>
+#include <fs/core/search/drivers/sbfws/simulation_evaluators.hxx>
 
 #include <fs/core/search/drivers/sbfws/relevant_atomset.hxx>
 #include <utility>
@@ -119,47 +120,6 @@ public:
 };
 
 
-template <typename NodeT, typename FeatureSetT, typename NoveltyEvaluatorT>
-class SimulationEvaluator {
-protected:
-	//! The set of features used to compute the novelty
-	const FeatureSetT& _features;
-
-	//! A single novelty evaluator will be in charge of evaluating all nodes
-	std::unique_ptr<NoveltyEvaluatorT> _evaluator;
-
-public:
-	SimulationEvaluator(const FeatureSetT& features, NoveltyEvaluatorT* evaluator) :
-		_features(features),
-		_evaluator(evaluator)
-	{}
-
-	~SimulationEvaluator() = default;
-
-	//! Returns false iff we want to prune this node during the search
-	unsigned evaluate(NodeT& node) {
-		if (node.parent) {
-			// Important: the novel-based computation works only when the parent has the same novelty type and thus goes against the same novelty tables!!!
-			node._w = _evaluator->evaluate(_features.evaluate(node.state), _features.evaluate(node.parent->state));
-		} else {
-			node._w = _evaluator->evaluate(_features.evaluate(node.state));
-		}
-
-		return node._w;
-	}
-
-	std::vector<bool> reached_atoms() const {
-		std::vector<bool> atoms;
-		_evaluator->mark_atoms_in_novelty1_table(atoms);
-		return atoms;
-	}
-
-	void reset() {
-		_evaluator->reset();
-	}
-
-};
-
 //! A single IW run (with parametrized max. width) that runs until (independent)
 //! satisfaction of each of the provided goal atoms, and computes the set
 //! of atoms R that is relevant for the achievement of at least one atom.
@@ -180,8 +140,6 @@ public:
 
 	using ActionIdT = typename StateModel::ActionType::IdType;
 	using NodePT = std::shared_ptr<NodeT>;
-
-	using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
 
 	using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
 
@@ -205,7 +163,7 @@ protected:
 	std::vector<bool> _in_seed;
 
 	//! A single novelty evaluator will be in charge of evaluating all nodes
-	SimEvaluatorT _evaluator;
+    std::unique_ptr<SimulationEvaluatorI<NodeT>> _evaluator;
 
 	//! Some node counts
 	uint32_t _generated;
@@ -230,7 +188,7 @@ public:
 		_optimal_paths(model.num_subgoals()),
 		_unreached(),
 		_in_seed(),
-		_evaluator(featureset, evaluator),
+		_evaluator(),
 		_generated(1),
 		_w1_nodes_expanded(0),
 		_w2_nodes_expanded(0),
@@ -240,6 +198,12 @@ public:
 		_stats(stats),
 		_verbose(verbose)
 	{
+	    if (true) {
+            using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
+            _evaluator = std::make_unique<SimEvaluatorT>(featureset, evaluator);
+	    } else {
+
+	    }
 	}
 
 	void reset() {
@@ -251,7 +215,7 @@ public:
 		_w1_nodes_generated = 0;
 		_w2_nodes_generated = 0;
 		_w_gt2_nodes_generated = 0;
-		_evaluator.reset();
+		_evaluator->reset();
 	}
 
 	~IWRun() = default;
@@ -431,7 +395,7 @@ public:
 	}
 
 	std::vector<bool> extract_R_1() {
-		std::vector<bool> R = _evaluator.reached_atoms();
+		std::vector<bool> R = _evaluator->reached_atoms();
 		LPT_INFO("search", "Simulation - IW(" << _config._max_width << ") run reached " << _model.num_subgoals() - _unreached.size() << " goals");
 		if (_verbose) {
 			unsigned c = std::count(R.begin(), R.end(), true);
@@ -625,7 +589,7 @@ public:
 		NodePT root = std::make_shared<NodeT>(seed, _generated++);
 		mark_seed_subgoals(root);
 
-		auto nov =_evaluator.evaluate(*root);
+		auto nov =_evaluator->evaluate(*root);
 		assert(nov==1);
 		update_novelty_counters_on_generation(nov);
 
@@ -649,7 +613,7 @@ public:
 					StateT s_a = _model.next( current->state, a );
 					NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
 
-					unsigned char novelty = _evaluator.evaluate(*successor);
+					unsigned char novelty = _evaluator->evaluate(*successor);
 					update_novelty_counters_on_generation(novelty);
 
 					// LPT_INFO("cout", "Simulation - Node generated: " << *successor);
