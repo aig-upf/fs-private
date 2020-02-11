@@ -6,7 +6,7 @@
 #include <fs/core/state.hxx>
 
 
-namespace fs0 { namespace bfws {
+namespace fs0::bfws {
 
  //! A helper object to reduce the memory footprint of RelevantAtomSets
 class AtomsetHelper {
@@ -33,15 +33,15 @@ public:
 class RelevantAtomSet {
 public:
 	//! A RelevantAtomSet is always constructed with all atoms being marked as IRRELEVANT
-	RelevantAtomSet(const AtomsetHelper& helper) :
+	explicit RelevantAtomSet(const AtomsetHelper& helper) :
 		_helper(helper), _num_reached(0), _bool_reached(helper.size(), false) //, _updated(false)
 	{}
 
 	~RelevantAtomSet() = default;
 	RelevantAtomSet(const RelevantAtomSet&) = default;
 	RelevantAtomSet(RelevantAtomSet&&) = default;
-	RelevantAtomSet& operator=(const RelevantAtomSet&) = default;
-	RelevantAtomSet& operator=(RelevantAtomSet&&) = default;
+	RelevantAtomSet& operator=(const RelevantAtomSet&) = delete;
+	RelevantAtomSet& operator=(RelevantAtomSet&&) = delete;
 
 
 	unsigned num_reached() const { return _num_reached; }
@@ -77,7 +77,7 @@ public:
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const RelevantAtomSet& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const {
-		if (_helper._relevant.size() == 0 )
+		if (_helper._relevant.empty())
 			return os << "{ }";
 
 		const AtomIndex& atomidx = _helper._atomidx;
@@ -111,4 +111,4 @@ protected:
 
 
 
-} } // namespaces
+} // namespaces

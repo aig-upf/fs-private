@@ -41,11 +41,11 @@ protected:
 
 
 //!
-template <typename ModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
+template <typename ModelT, typename NodeT, typename NoveltyEvaluatorT, typename FeatureSetT>
 class SimulationBasedRelevantAtomsCounter : public RelevantAtomsCounterI<NodeT> {
 public:
 	using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
-	
+
 	SimulationBasedRelevantAtomsCounter(const ModelT& model, const SBFWSConfig& config, const FeatureSetT& features)  :
 			_model(model),
 			_problem(model.getTask()),
@@ -54,12 +54,25 @@ public:
 			_sim_novelty_factory(_problem, config.evaluator_t, features.uses_extra_features(), config.simulation_width),
 			_featureset(features)
 	{}
-	~SimulationBasedRelevantAtomsCounter() = default;;
+	~SimulationBasedRelevantAtomsCounter() = default;
 
 	
 	unsigned count(NodeT& node, BFWSStats& stats) const override { 
 		return compute_R(node, stats).num_reached();
-	} 
+	}
+
+    std::vector<bool> throw_simulation(const State& state, BFWSStats& stats, bool verbose) const {
+        // Throw a simulation from the node, and compute a set R of relevant atoms from there.
+        auto evaluator = _sim_novelty_factory.create_compound_evaluator(_config.simulation_width);
+        if (_config.simulation_width==2) { stats.sim_table_created(1); stats.sim_table_created(2); }
+        else  { assert(_config.simulation_width); stats.sim_table_created(1); }
+
+
+        using IWNodeT = IWRunNode<State, typename ModelT::ActionType>;
+        using IWRunT = IWRun<IWNodeT, ModelT, NoveltyEvaluatorT, FeatureSetT>;
+        IWRunT simulator(_model, _featureset, evaluator, _simconfig, stats, verbose);
+        return simulator.compute_R(state);
+	}
 	
 
 	//! Compute the RelevantAtomSet that corresponds to the given node, and from which
@@ -74,18 +87,9 @@ public:
 
 		// Otherwise, we compute it anew
 		if (computation_of_R_necessary(node)) {
-
-			// Throw a simulation from the node, and compute a set R[IW1] from there.
-			bool verbose = !node.has_parent(); // Print info only on the s0 simulation
-			auto evaluator = _sim_novelty_factory.create_compound_evaluator(_config.simulation_width);
-			// TODO Fix this horrible hack
-			if (_config.simulation_width==2) { stats.sim_table_created(1); stats.sim_table_created(2); }
-			else  { assert(_config.simulation_width); stats.sim_table_created(1); }
-
-
-			SimulationT simulator(_model, _featureset, evaluator, _simconfig, stats, verbose);
-
-			node._helper = new AtomsetHelper(_problem.get_tuple_index(), simulator.compute_R(node.state));
+            bool verbose = !node.has_parent(); // Print info only on the s0 simulation
+			auto R = throw_simulation(node.state, stats, verbose);
+			node._helper = new AtomsetHelper(_problem.get_tuple_index(), R);
 			node._relevant_atoms = new RelevantAtomSet(*node._helper);
 
 			//! MRJ: over states
@@ -147,10 +151,9 @@ protected:
 //! achieved atoms depdengin on the command-line configuration
 class RelevantAtomsCounterFactory {
 public:
-    template <typename StateModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
+    template <typename StateModelT, typename NodeT, typename NoveltyEvaluatorT, typename FeatureSetT>
     static RelevantAtomsCounterI<NodeT>* build(const StateModelT& model, const SBFWSConfig& config, const FeatureSetT& features)
 	{
-
 		if (config.relevant_set_type == SBFWSConfig::RelevantSetType::None) {
 			return new NullRelevantAtomsCounter<NodeT>();
 		}
@@ -159,7 +162,7 @@ public:
 			return new L0RelevantAtomsCounter<NodeT>(model.getTask());
 		}
 
-		return new SimulationBasedRelevantAtomsCounter<StateModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>(model, config, features);
+		return new SimulationBasedRelevantAtomsCounter<StateModelT, NodeT, NoveltyEvaluatorT, FeatureSetT>(model, config, features);
 	}
 };
 

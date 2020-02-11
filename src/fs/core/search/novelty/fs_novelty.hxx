@@ -12,7 +12,7 @@ namespace fs0 {
 	class AtomIndex;
 }
 
-namespace fs0 { namespace bfws {
+namespace fs0::bfws {
 
 //! An auxiliary class to inject into novelty evaluators in order to convert 
 //! atoms into atom indexes. Good to keep the evaluators agnostic wrt the data
@@ -21,7 +21,7 @@ namespace fs0 { namespace bfws {
 //! represent the value of some state variable
 class FSAtomValuationIndexer {
 public:
-	FSAtomValuationIndexer(const AtomIndex& atom_index) : 
+	explicit FSAtomValuationIndexer(const AtomIndex& atom_index) :
 		_atom_index(atom_index)
 	{}
 	
@@ -44,4 +44,4 @@ using BoolNoveltyEvaluatorI = lapkt::novelty::NoveltyEvaluatorI<bool>;
 using IntNoveltyEvaluatorI = lapkt::novelty::NoveltyEvaluatorI<int>;
 
 
-} } // namespaces
+} // namespaces
