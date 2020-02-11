@@ -16,7 +16,7 @@
 #include <fs/core/constraints/gecode/handlers/monotonicity_csp.hxx>
 
 
-namespace fs0 { namespace bfws {
+namespace fs0::bfws {
 
 using Novelty = lapkt::novelty::Novelty;
 
@@ -134,24 +134,13 @@ public:
 
 
 
-template <typename StateModelT,
-          typename NoveltyIndexerT,
-          typename FeatureSetT,
-          typename NoveltyEvaluatorT,
-		  typename NodeT,
-          template <class N, class S, class NE, class FS> class SimulatorT,
-          template <class S, class A> class SimNodeT
->
+template <typename StateModelT, typename NoveltyIndexerT, typename FeatureSetT, typename NoveltyEvaluatorT, typename NodeT>
 class SBFWSHeuristic {
 public:
 	using NoveltyEvaluatorMapT = std::unordered_map<long, NoveltyEvaluatorT*>;
 	using ActionT = typename StateModelT::ActionType;
-	using IWNodeT =  SimNodeT<State, ActionT>;
-	using SimulationT =  SimulatorT<IWNodeT, StateModelT, NoveltyEvaluatorT, FeatureSetT>;
-
-
-	// Novelty evaluator pointer type
-	using NoveltyEvaluatorPT = std::unique_ptr<NoveltyEvaluatorT>;
+    using IWNodeT = IWRunNode<State, ActionT>;
+    using SimulationT = IWRun<IWNodeT, StateModelT, NoveltyEvaluatorT, FeatureSetT>;
 	using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
 
 
@@ -277,11 +266,7 @@ protected:
 
 //! A specialized BFWS search schema with multiple queues to implement
 //! effectively lazy novelty evaluation.
-template <typename StateModelT,
-          typename FeatureSetT,
-          typename NoveltyEvaluatorT,
-          template <class N, class S, class NE, class FS> class SimulatorT,
-          template <class S, class A> class SimNodeT>
+template <typename StateModelT, typename FeatureSetT, typename NoveltyEvaluatorT>
 class SBFWS {
 public:
 	using StateT = typename StateModelT::StateT;
@@ -291,7 +276,7 @@ public:
 	using PlanT =  std::vector<ActionIdT>;
 	using NodePT = std::shared_ptr<NodeT>;
 	using ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>;
-	using HeuristicT = SBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer, FeatureSetT, NoveltyEvaluatorT, NodeT, SimulatorT, SimNodeT>;
+    using HeuristicT = SBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer, FeatureSetT, NoveltyEvaluatorT, NodeT>;
 	using SimulationNodeT = typename HeuristicT::IWNodeT;
 
 
@@ -614,4 +599,4 @@ protected:
 };
 
 
-} } // namespaces
+} // namespaces

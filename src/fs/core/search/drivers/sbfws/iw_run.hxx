@@ -13,6 +13,7 @@
 #include <fs/core/search/drivers/sbfws/stats.hxx>
 
 #include <fs/core/search/drivers/sbfws/relevant_atomset.hxx>
+#include <utility>
 #include <fs/core/utils/printers/vector.hxx>
 #include <fs/core/utils/printers/actions.hxx>
 #include <lapkt/search/components/open_lists.hxx>
@@ -223,9 +224,9 @@ protected:
 public:
 
 	//! Constructor
-	IWRun(const StateModel& model, const FeatureSetT& featureset, NoveltyEvaluatorT* evaluator, const IWRunConfig& config, BFWSStats& stats, bool verbose) :
+	IWRun(const StateModel& model, const FeatureSetT& featureset, NoveltyEvaluatorT* evaluator, IWRunConfig config, BFWSStats& stats, bool verbose) :
 		_model(model),
-		_config(config),
+		_config(std::move(config)),
 		_optimal_paths(model.num_subgoals()),
 		_unreached(),
 		_in_seed(),
