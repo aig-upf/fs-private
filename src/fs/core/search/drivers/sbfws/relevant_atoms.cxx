@@ -3,7 +3,7 @@
 #include <fs/core/search/drivers/sbfws/relevant_atoms.hxx>
 #include <fs/core/search/drivers/sbfws/sbfws.hxx>
 
-namespace fs0 { namespace bfws {
+namespace fs0::bfws {
 
 /****** L0-BASED #R COUNTER *****/
 template <typename NodeT>
@@ -25,4 +25,4 @@ unsigned L0RelevantAtomsCounter<NodeT>::count(NodeT& node, BFWSStats& stats) con
 template class L0RelevantAtomsCounter<fs0::bfws::SBFWSNode<fs0::State, fs0::GroundAction>>;
 template class L0RelevantAtomsCounter<fs0::bfws::SBFWSNode<fs0::State, fs0::LiftedActionID>>;
 
-} } // namespaces
+} // namespaces
