@@ -5,10 +5,10 @@
 
 
 namespace fs0 { class Problem; class L0Heuristic; }
-namespace fs0 { namespace bfws { struct SBFWSConfig; class RelevantAtomSet; class BFWSStats; } }
+namespace fs0::bfws { struct SBFWSConfig; class RelevantAtomSet; class BFWSStats; }
 
 	
-namespace fs0 { namespace bfws {
+namespace fs0::bfws {
 
 
 //! 
@@ -31,7 +31,7 @@ public:
 template <typename NodeT>
 class L0RelevantAtomsCounter : public RelevantAtomsCounterI<NodeT> {
 public:
-	L0RelevantAtomsCounter(const Problem& problem);
+	explicit L0RelevantAtomsCounter(const Problem& problem);
 	~L0RelevantAtomsCounter();
 	unsigned count(NodeT& node, BFWSStats& stats) const override;
 	
@@ -54,15 +54,14 @@ public:
 			_sim_novelty_factory(_problem, config.evaluator_t, features.uses_extra_features(), config.simulation_width),
 			_featureset(features)
 	{}
-	~SimulationBasedRelevantAtomsCounter() {};
+	~SimulationBasedRelevantAtomsCounter() = default;;
 
 	
 	unsigned count(NodeT& node, BFWSStats& stats) const override { 
 		return compute_R(node, stats).num_reached();
 	} 
 	
-	
-	
+
 	//! Compute the RelevantAtomSet that corresponds to the given node, and from which
 	//! the counter #r(node) can be obtained. This implements a lazy version which
 	//! can recursively compute the parent RelevantAtomSet.
@@ -144,9 +143,8 @@ protected:
 
 
 
-
-
-//! 
+//! Choose how we're going to count #r values that track the number of relevant
+//! achieved atoms depdengin on the command-line configuration
 class RelevantAtomsCounterFactory {
 public:
     template <typename StateModelT, typename NodeT, typename SimulationT, typename NoveltyEvaluatorT, typename FeatureSetT>
@@ -166,4 +164,4 @@ public:
 };
 
 
-} } // namespaces
+} // namespaces
