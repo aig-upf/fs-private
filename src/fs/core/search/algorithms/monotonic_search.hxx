@@ -37,10 +37,11 @@ public:
 	//! (3) the closed list object to be used in the search
 
 	MonotonicSearch(const StateModel& model, fs0::gecode::MonotonicityCSP* monot_manager) :
-		_model(model), _goalcounter(model.getTask()), _open(), _closed(), _generated(0), _monotonicity_csp_manager(monot_manager), _num_pruned(0), _num_deadends(0)
+		_model(model), _goalcounter(model.getTask().getGoalConditions(), model.getTask().get_tuple_index()),
+		_open(), _closed(), _generated(0), _monotonicity_csp_manager(monot_manager), _num_pruned(0), _num_deadends(0)
 	{}
 
-	virtual ~MonotonicSearch() {}
+	virtual ~MonotonicSearch() = default;
 	
 	// Disallow copy, but allow move
 	MonotonicSearch(const MonotonicSearch& other) = delete;
