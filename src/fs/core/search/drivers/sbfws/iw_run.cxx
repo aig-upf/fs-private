@@ -1,7 +1,5 @@
 
+namespace fs0::bfws {
 
 
-namespace fs0 { namespace bfws {
-
-
-} } // namespaces
+} // namespaces

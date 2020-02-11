@@ -6,17 +6,15 @@
 #include <fs/core/search/drivers/sbfws/sbfws.hxx>
 #include <fs/core/search/utils.hxx>
 
-namespace fs0 { namespace bfws {
+namespace fs0::bfws {
 
 
 //! Factory method
-template <	typename StateModelT, typename FeatureEvaluatorT, typename NoveltyEvaluatorT,
-			template <class N, class S, class NE, class FS> class SimulatorT,
-			template <class S, class A> class SimNodeT>
-std::unique_ptr<SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, SimulatorT, SimNodeT>>
+template <typename StateModelT, typename FeatureEvaluatorT, typename NoveltyEvaluatorT>
+std::unique_ptr<SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>>
 create(FeatureEvaluatorT&& featureset, SBFWSConfig& config, const StateModelT& model, BFWSStats& stats) {
-	using EngineT = SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, SimulatorT, SimNodeT>;
-	return std::unique_ptr<EngineT>(new EngineT(model, std::move(featureset), stats, config));
+	using EngineT = SBFWS<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>;
+	return std::unique_ptr<EngineT>(new EngineT(model, std::forward<FeatureEvaluatorT>(featureset), stats, config));
 }
 
 template <>
@@ -90,8 +88,9 @@ SBFWSDriver<StateModelT>::do_search1(const StateModelT& model, FeatureEvaluatorT
     bool actionless = model.getTask().getPartiallyGroundedActions().empty() &&
             model.getTask().getGroundActions().empty();
 
-	auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT, IWRun, IWRunNode>(std::move(featureset), bfws_config, model, _stats);
-	return drivers::Utils::SearchExecution<StateModelT>(model).do_search(*engine, options, start_time, _stats, actionless);
+    auto engine = create<StateModelT, FeatureEvaluatorT, NoveltyEvaluatorT>(std::forward<FeatureEvaluatorT>(featureset), bfws_config, model, _stats);
+
+    return drivers::Utils::SearchExecution<StateModelT>(model).do_search(*engine, options, start_time, _stats, actionless);
 }
 
-} } // namespaces
+} // namespaces
