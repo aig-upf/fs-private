@@ -2,6 +2,7 @@
 
 #include <fs/core/search/drivers/sbfws/relevant_atoms.hxx>
 #include <fs/core/search/drivers/sbfws/sbfws.hxx>
+#include <fs/core/heuristics/l0.hxx>
 
 namespace fs0::bfws {
 

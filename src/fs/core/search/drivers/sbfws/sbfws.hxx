@@ -1,19 +1,17 @@
 
 #pragma once
 
-#include <fs/core/search/drivers/sbfws/iw_run.hxx>
 #include <fs/core/search/drivers/registry.hxx>
 #include <fs/core/search/drivers/setups.hxx>
 #include <fs/core/search/drivers/sbfws/base.hxx>
 #include <fs/core/heuristics/unsat_goal_atoms.hxx>
-#include <fs/core/heuristics/l0.hxx>
-#include <lapkt/tools/resources_control.hxx>
-#include <lapkt/search/components/open_lists.hxx>
-#include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
-
 #include <fs/core/search/drivers/sbfws/stats.hxx>
 #include <fs/core/search/drivers/sbfws/relevant_atoms.hxx>
 #include <fs/core/constraints/gecode/handlers/monotonicity_csp.hxx>
+
+#include <lapkt/tools/resources_control.hxx>
+#include <lapkt/search/components/open_lists.hxx>
+#include <lapkt/search/components/stl_unordered_map_closed_list.hxx>
 
 
 namespace fs0::bfws {
@@ -139,8 +137,6 @@ class SBFWSHeuristic {
 public:
 	using NoveltyEvaluatorMapT = std::unordered_map<long, NoveltyEvaluatorT*>;
 	using ActionT = typename StateModelT::ActionType;
-    using IWNodeT = IWRunNode<State, ActionT>;
-    using SimulationT = IWRun<IWNodeT, StateModelT, NoveltyEvaluatorT, FeatureSetT>;
 	using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
 
 
@@ -181,7 +177,7 @@ public:
 		_mark_negative_propositions(config.mark_negative_propositions),
         _stats(stats),
         _sbfwsconfig(config),
-        _r_counter(RelevantAtomsCounterFactory::build<StateModelT, NodeT, SimulationT, NoveltyEvaluatorT, FeatureSetT>(model, config, features))
+        _r_counter(RelevantAtomsCounterFactory::build<StateModelT, NodeT, NoveltyEvaluatorT, FeatureSetT>(model, config, features))
     {
     }
 
@@ -277,7 +273,6 @@ public:
 	using NodePT = std::shared_ptr<NodeT>;
 	using ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>;
     using HeuristicT = SBFWSHeuristic<StateModelT, SBFWSNoveltyIndexer, FeatureSetT, NoveltyEvaluatorT, NodeT>;
-	using SimulationNodeT = typename HeuristicT::IWNodeT;
 
 
 protected:

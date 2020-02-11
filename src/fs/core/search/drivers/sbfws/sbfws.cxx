@@ -52,7 +52,7 @@ SBFWSDriver<StateModelT>::do_search(const StateModelT& model, const Config& conf
 		FeatureSelector<StateT> selector(ProblemInfo::getInstance());
 
 		if (selector.has_extra_features()) {
-			LPT_INFO("search", "FEATURE EVALUATION: Extra Features were found!  Using a GenericFeatureSetEvaluator");
+			LPT_INFO("search", "FEATURE EVALUATION: Extra Features were found! Using a GenericFeatureSetEvaluator");
 			using FeatureEvaluatorT = lapkt::novelty::GenericFeatureSetEvaluator<StateT>;
 			return do_search1<IntNoveltyEvaluatorI, FeatureEvaluatorT>(model, selector.select(), config, options, start_time);
 		}
