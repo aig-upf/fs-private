@@ -647,7 +647,7 @@ public:
         NodePT root = std::make_shared<NodeT>(seed, _generated++);
         mark_seed_subgoals(root);
 
-        auto nov =_evaluator.evaluate(*root);
+        auto nov =_evaluator->evaluate(*root);
         assert(nov==1);
         update_novelty_counters_on_generation(nov);
 
@@ -667,7 +667,7 @@ public:
                 StateT s_a = _model.next(current->state, a);
                 NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
 
-                unsigned novelty = _evaluator.evaluate(*successor);
+                unsigned novelty = _evaluator->evaluate(*successor);
                 update_novelty_counters_on_generation(novelty);
 
                 // LPT_INFO("cout", "Simulation - Node generated: " << *successor);
