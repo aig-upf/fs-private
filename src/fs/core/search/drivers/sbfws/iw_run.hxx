@@ -677,7 +677,7 @@ public:
                     return true;
                 }
 
-                if (novelty <= _config._max_width) {
+                if (novelty <= max_width) {
                     open.insert(successor);
                 }
             }
