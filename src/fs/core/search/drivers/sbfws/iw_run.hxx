@@ -199,8 +199,13 @@ public:
         _verbose(verbose)
     {
         if (_config._use_achiever_evaluator) {
+            const auto& actions = _model.getTask().getGroundActions();
+            std::vector<PlainOperator> operators;
+            operators.reserve(actions.size());
+            for (const auto& a:actions) operators.emplace_back(compile_action_to_plan_operator(*a));
+
             using SimEvaluatorT = AchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
-            _evaluator = std::make_unique<SimEvaluatorT>(_model.getTask(), featureset);
+            _evaluator = std::make_unique<SimEvaluatorT>(_model.getTask(), featureset, operators);
         } else {
             using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
             _evaluator = std::make_unique<SimEvaluatorT>(featureset, evaluator);
@@ -230,7 +235,7 @@ public:
 
     //! Mark all atoms in the path to some goal. 'seed_nodes' contains all nodes satisfying some subgoal.
     void mark_atoms_in_path_to_subgoal(const std::vector<NodePT>& seed_nodes, std::vector<bool>& atoms) const {
-        const AtomIndex& index = Problem::getInstance().get_tuple_index();
+        const AtomIndex& index = _model.getTask().get_tuple_index();
         std::unordered_set<NodePT> all_visited;
         assert(atoms.size() == index.size());
 
@@ -293,7 +298,7 @@ public:
     }
 
     std::vector<bool> mark_all_atoms_in_path_to_subgoal(const std::vector<NodePT>& seed_nodes) const {
-        const AtomIndex& index = Problem::getInstance().get_tuple_index();
+        const AtomIndex& index = _model.getTask().get_tuple_index();
         std::vector<bool> atoms(index.size(), false);
         std::unordered_set<NodePT> all_visited;
         assert(atoms.size() == index.size());
@@ -329,7 +334,7 @@ public:
     }
 
     std::vector<bool> compute_R_all() {
-        const AtomIndex& index = Problem::getInstance().get_tuple_index();
+        const AtomIndex& index = _model.getTask().get_tuple_index();
         _stats.r_type(1);
         std::vector<bool> all(index.size(), false);
         for (unsigned i = 0; i < all.size(); ++i) {
@@ -433,7 +438,7 @@ public:
         }
 
         if (_config._gr_actions_cutoff < std::numeric_limits<unsigned>::max()) {
-            unsigned num_actions = Problem::getInstance().getGroundActions().size();
+            unsigned num_actions =  _model.getTask().getGroundActions().size();
             if (num_actions > _config._gr_actions_cutoff) { // Too many actions to compute IW(2)
                 LPT_INFO("cout", "Simulation - Number of actions (" << num_actions << " > " << _config._gr_actions_cutoff << ") considered too high to run IW(2).");
                 return compute_R_all();
@@ -464,7 +469,7 @@ public:
 
     //! Extracts the goal-oriented set of relevant atoms after a simulation run
     std::vector<bool> extract_R_G(bool r_all_fallback) {
-        const AtomIndex& index = Problem::getInstance().get_tuple_index();
+        const AtomIndex& index = _model.getTask().get_tuple_index();
         /*
         for (unsigned subgoal_idx = 0; subgoal_idx < _all_paths.size(); ++subgoal_idx) {
             const std::vector<NodePT>& paths = _all_paths[subgoal_idx];
@@ -620,8 +625,8 @@ public:
                 StateT s_a = _model.next(current->state, a);
                 NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
 
-                unsigned novelty = _evaluator->evaluate(*successor);
-                update_novelty_counters_on_generation(novelty);
+                successor->_w = _evaluator->evaluate(*successor);
+                update_novelty_counters_on_generation(successor->_w);
 
                 // LPT_INFO("cout", "Simulation - Node generated: " << *successor);
 
@@ -630,13 +635,13 @@ public:
                     return true;
                 }
 
-                if (novelty <= max_width) {
+                if (successor->_w <= max_width) {
                     open.insert(successor);
                 }
 
-                if (_generated % 100 == 0) {
-                    report("Simulation ongoing...", max_width);
-                }
+//                if (_generated % 100 == 0) {
+//                    report("Simulation ongoing...", max_width);
+//                }
             }
         }
 
@@ -660,6 +665,7 @@ public:
         if (!_verbose) return;
         float perc_reached_subgoals = float(_model.num_subgoals() - _unreached.size()) / _model.num_subgoals();
         LPT_INFO("cout", "Simulation - Finished IW(" << max_width << ") Simulation. Fraction reached subgoals: " << std::fixed << std::setprecision(2) << perc_reached_subgoals);
+        LPT_INFO("cout", "Simulation - " << result);
         LPT_INFO("cout", "Simulation - Reached " << (_model.num_subgoals() - _unreached.size()) << " / " << _model.num_subgoals() << " subgoals");
         LPT_INFO("cout", "Simulation - Expanded nodes with w=1 " << _w1_nodes_expanded);
         LPT_INFO("cout", "Simulation - Expanded nodes with w=2 " << _w2_nodes_expanded);

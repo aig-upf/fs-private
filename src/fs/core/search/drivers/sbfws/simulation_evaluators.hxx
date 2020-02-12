@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <utility>
+#include <utility>
 #include <vector>
 #include <memory>
 
@@ -74,28 +76,22 @@ public:
     using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
 
 public:
-    AchieverNoveltyEvaluator(const Problem& problem, const FeatureSetT& features) :
+    AchieverNoveltyEvaluator(const Problem& problem, const FeatureSetT& features, std::vector<PlainOperator> operators) :
             _featureset(features),
+            operators_(std::move(std::move(operators))),
             _search_novelty_factory(problem, SBFWSConfig::NoveltyEvaluatorType::Adaptive,
                     _featureset.uses_extra_features(), 1)
     {
         const auto& info = ProblemInfo::getInstance();
-        const auto& actions = problem.getGroundActions();
         achievers_.resize(info.getNumVariables());
 
-        for (std::size_t actionidx = 0, n = actions.size(); actionidx < n; ++actionidx) {
-            const auto& action = actions[actionidx];
+        for (std::size_t actionidx = 0, n = operators_.size(); actionidx < n; ++actionidx) {
+            const auto& op = operators_[actionidx];
 
-            // create a counter of the # of achieved preconditions for the action
-            prec_counters_.emplace_back(action->getPrecondition(), problem.get_tuple_index());
-
-
-            for (const auto& eff:action->getEffects()) {
-                if (!eff->is_add()) continue;
-                auto sv = dynamic_cast<const fs::StateVariable*>(eff->lhs());
-                assert(sv);
-                auto var = sv->getValue();
-                achievers_[var].push_back(actionidx);
+            for (const auto& eff:op.effects_) {
+                if (eff.second == object_id::TRUE) {
+                    achievers_[eff.first].push_back(actionidx);
+                }
             }
         }
     }
@@ -111,7 +107,8 @@ public:
         for (unsigned q = 0; q < state.numAtoms(); ++q) {
             unsigned k = compute_achiever_satisfaction_factor(node.state, q);
             auto& table = novelty_table(q, k);
-            min_nov = std::min(min_nov, table.evaluate(_featureset.evaluate(node.state), 1));
+            auto nov = table.evaluate(_featureset.evaluate(node.state), 1);
+            min_nov = std::min(min_nov, nov);
         }
 
         return min_nov;
@@ -121,9 +118,15 @@ public:
     unsigned compute_achiever_satisfaction_factor(const State& state, unsigned var) const {
         unsigned max_precs_achieved = 0;
         for (const auto& actionidx:achievers_[var]) {
-            unsigned achieved = prec_counters_.at(actionidx).evaluate(state);
+            unsigned achieved = 0;
+            for (const auto& pre:operators_[actionidx].precondition_) {
+                if (state.getValue(pre.first) == pre.second) {
+                    achieved++;
+                }
+            }
             max_precs_achieved = std::max(max_precs_achieved, achieved);
         }
+//        std::cout << "k=" << max_precs_achieved << "; " << state << std::endl;
 
         return max_precs_achieved;
     }
@@ -152,14 +155,14 @@ public:
 protected:
     const FeatureSetT& _featureset;
 
+    std::vector<PlainOperator> operators_;
+
     const NoveltyFactory<FeatureValueT> _search_novelty_factory;
 
     using TableKeyT = std::pair<unsigned, unsigned>;
     std::unordered_map<TableKeyT, NoveltyEvaluatorT*, boost::hash<TableKeyT>> tables_;
 
     std::vector<std::vector<unsigned>> achievers_;
-
-    std::vector<UnsatisfiedGoalAtomsCounter> prec_counters_;
 };
 
 } // namespaces
