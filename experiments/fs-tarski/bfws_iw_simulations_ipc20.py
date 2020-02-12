@@ -22,7 +22,7 @@ SUITE = [
     'termes-sat18-strips',
 ]
 REVISIONS = [
-    "65243bf3",  # New version with "pure" IW simulations
+    "069f46b9",  # New version with "pure" IW simulations
     "8edfffab",  # Previous version with double-open-list optimization
 ]
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
