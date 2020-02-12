@@ -565,7 +565,7 @@ public:
 
                 // LPT_INFO("cout", "Simulation - Node generated: " << *successor);
 
-//                _model.goal(state, i)
+                if (_model.goal(successor->state)) LPT_INFO("cout", "Simulation - Goal state reached during simulation");
 
                 if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
                     report("All subgoals reached", max_width);
