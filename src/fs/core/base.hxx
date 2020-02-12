@@ -60,9 +60,8 @@ type_id type(const object_id& o) {
 class object_id {
 public:
 	const static object_id INVALID;
-	// Not sure we need these two at the moment:
-// 	const static object_id FALSE; // For the sake of performance?
-// 	const static object_id TRUE;
+	const static object_id FALSE;
+ 	const static object_id TRUE;
 
     using value_t = uint32_t;
 
