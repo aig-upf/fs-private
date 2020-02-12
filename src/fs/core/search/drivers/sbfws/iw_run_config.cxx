@@ -7,8 +7,7 @@
 namespace fs0::bfws {
 
 
-IWRunConfig::IWRunConfig(bool complete, unsigned max_width, const fs0::Config& global_config) :
-        _complete(complete),
+IWRunConfig::IWRunConfig(unsigned max_width, const fs0::Config& global_config) :
         _max_width(max_width),
         _global_config(global_config),
         _goal_directed(global_config.getOption<bool>("goal_directed", false)),

@@ -372,8 +372,6 @@ public:
 
     std::vector<bool> compute_plain_RG2(const StateT& seed) {
         assert(_config._max_width == 2);
-
-        _config._complete = false;
         auto simt0 = aptk::time_used();
         run(seed, _config._max_width);
         report_simulation_stats(simt0);
@@ -385,7 +383,6 @@ public:
 
     std::vector<bool> compute_plain_R1(const StateT& seed) {
         assert(_config._max_width == 1);
-        _config._complete = false;
 
         auto simt0 = aptk::time_used();
         run(seed, _config._max_width);
@@ -412,9 +409,6 @@ public:
     }
 
     std::vector<bool> compute_R_g_prime(const StateT& seed) {
-        _config._complete = false;
-
-
 		auto simt0 = aptk::time_used();
 //  		run(seed, 1);
         run_true_iw(seed, 1);
@@ -630,6 +624,8 @@ public:
 
                 // LPT_INFO("cout", "Simulation - Node generated: " << *successor);
 
+//                _model.goal(state, i)
+
                 if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
                     report("All subgoals reached", max_width);
                     return true;
@@ -678,8 +674,6 @@ protected:
 
     //! Returns true iff all goal atoms have been reached in the IW search
     bool process_node(NodePT& node) {
-        if (_config._complete) return process_node_complete(node);
-
         const StateT& state = node->state;
 
         // We iterate through the indexes of all those goal atoms that have not yet been reached in the IW search
@@ -698,21 +692,6 @@ protected:
         }
         // As soon as all nodes have been processed, we return true so that we can stop the search
         return _unreached.empty();
-    }
-
-    //! Returns true iff all goal atoms have been reached in the IW search
-    bool process_node_complete(NodePT& node) {
-        const StateT& state = node->state;
-
-        for (unsigned i = 0; i < _model.num_subgoals(); ++i) {
-            if (!_in_seed[i] && _model.goal(state, i)) {
-// 				node->satisfies_subgoal = true;
-                if (!_optimal_paths[i]) _optimal_paths[i] = node;
-                _unreached.erase(i);
-            }
-        }
-        return _unreached.empty();
-        //return false; // return false so we don't interrupt the processing
     }
 
     void mark_seed_subgoals(const NodePT& node) {

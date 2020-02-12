@@ -50,7 +50,7 @@ public:
             _model(model),
             _problem(model.getTask()),
             _config(config),
-            iwconfig_(config.complete_simulation, config.simulation_width, config._global_config),
+            iwconfig_(config.simulation_width, config._global_config),
             _sim_novelty_factory(_problem, config.evaluator_t, features.uses_extra_features(), config.simulation_width),
             _featureset(features)
     {}

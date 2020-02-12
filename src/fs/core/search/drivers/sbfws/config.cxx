@@ -9,7 +9,6 @@ SBFWSConfig::SBFWSConfig(const Config& config) :
     search_width(config.getOption<int>("width.search", 2)),
     simulation_width(config.getOption<int>("width.simulation", 1)),
     mark_negative_propositions(config.getOption<bool>("simulation.neg_prop", false)),
-    complete_simulation(config.getOption<bool>("simulation.complete", true)),
     using_feature_set(config.getOption<bool>("bfws.using_feature_set", false)),
     _global_config(config)
 {

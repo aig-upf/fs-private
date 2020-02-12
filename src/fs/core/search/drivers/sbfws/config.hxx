@@ -18,7 +18,6 @@ struct SBFWSConfig {
     const unsigned search_width;
     const unsigned simulation_width;
     const bool mark_negative_propositions;
-    const bool complete_simulation;
     const bool using_feature_set;
 
     enum class NoveltyEvaluatorType {Adaptive, Generic};
