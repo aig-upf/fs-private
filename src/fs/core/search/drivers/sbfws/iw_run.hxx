@@ -410,8 +410,7 @@ public:
 
     std::vector<bool> compute_R_g_prime(const StateT& seed) {
 		auto simt0 = aptk::time_used();
-//  		run(seed, 1);
-        run_true_iw(seed, 1);
+        run(seed, 1);
 		report_simulation_stats(simt0);
 
         if (_unreached.size() == 0) {
@@ -442,8 +441,7 @@ public:
         }
         LPT_INFO("cout", "Simulation - Throwing IW(2) simulation");
 		reset();
-//		run(seed, 2);
-        run_true_iw(seed, 2);
+        run(seed, 2);
 		report_simulation_stats(simt0);
 		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
 
@@ -536,64 +534,7 @@ public:
         return R_G;
     }
 
-
     bool run(const StateT& seed, unsigned max_width) {
-        if (_verbose) LPT_INFO("cout", "Simulation - Starting IW(" << max_width << ") Simulation");
-
-        NodePT root = std::make_shared<NodeT>(seed, _generated++);
-        mark_seed_subgoals(root);
-
-        auto nov =_evaluator->evaluate(*root);
-        assert(nov==1);
-        update_novelty_counters_on_generation(nov);
-
-// 		LPT_DEBUG("cout", "Simulation - Seed node: " << *root);
-
-        assert(max_width <= 2); // The current swapping-queues method works only for up to width 2, but is trivial to generalize if necessary
-
-        OpenListT open_w1, open_w2;
-        OpenListT open_w1_next, open_w2_next; // The queues for the next depth level.
-
-        open_w1.insert(root);
-
-        while (true) {
-            while (!open_w1.empty() || !open_w2.empty()) {
-                NodePT current = open_w1.empty() ? open_w2.next() : open_w1.next();
-
-                // Expand the node
-                update_novelty_counters_on_expansion(current->_w);
-
-                for (const auto& a : _model.applicable_actions(current->state, true)) {
-                    StateT s_a = _model.next( current->state, a );
-                    NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
-
-                    unsigned char novelty = _evaluator->evaluate(*successor);
-                    update_novelty_counters_on_generation(novelty);
-
-                    // LPT_INFO("cout", "Simulation - Node generated: " << *successor);
-
-                    if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
-                        report("All subgoals reached", max_width);
-                        return true;
-                    }
-
-                    if (novelty <= max_width && novelty == 1) open_w1_next.insert(successor);
-                    else if (novelty <= max_width && novelty == 2) open_w2_next.insert(successor);
-                }
-
-            }
-            // We've processed all nodes in the current depth level.
-            open_w1.swap(open_w1_next);
-            open_w2.swap(open_w2_next);
-
-            if (open_w1.empty() && open_w2.empty()) break;
-        }
-
-        report("State space exhausted", max_width);
-        return false;
-    }
-
-    bool run_true_iw(const StateT& seed, unsigned max_width) {
         if (_verbose) LPT_INFO("cout", "Simulation - Starting IW(" << max_width << ") Simulation");
 
         NodePT root = std::make_shared<NodeT>(seed, _generated++);
