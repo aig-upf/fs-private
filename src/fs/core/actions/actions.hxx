@@ -6,7 +6,7 @@
 #include <fs/core/applicability/action_managers.hxx>
 #include <fs/core/languages/fstrips/axioms.hxx>
 
-namespace fs0 { namespace language { namespace fstrips {  class Term; class Formula; class ActionEffect; class ProceduralEffect; } }}
+namespace fs0::language::fstrips {  class Term; class Formula; class ActionEffect; class ProceduralEffect; }
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
@@ -133,10 +133,10 @@ public:
 class PartiallyGroundedAction : public ActionBase {
 public:
 	PartiallyGroundedAction(const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
-	~PartiallyGroundedAction() = default;
+	~PartiallyGroundedAction() override = default;
 	PartiallyGroundedAction(const PartiallyGroundedAction&) = default;
 
-    virtual void apply( const State& s, std::vector<Atom>& atoms ) const override;
+    void apply( const State& s, std::vector<Atom>& atoms ) const override;
 };
 
 
@@ -154,11 +154,11 @@ public:
 	static const ActionIdx invalid_action_id;
 
 	GroundAction(unsigned id, const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
-	~GroundAction() = default;
+	~GroundAction() override = default;
 	GroundAction(const GroundAction&) = default;
 
 	unsigned getId() const { return _id; }
-    virtual void apply( const State& s, std::vector<Atom>& atoms ) const override;
+    void apply( const State& s, std::vector<Atom>& atoms ) const override;
 
 };
 
@@ -171,9 +171,9 @@ public:
     ProceduralAction( unsigned id, const ActionData& action_data, const Binding& binding, const fs::Formula* precondition, const std::vector<const fs::ActionEffect*>& effects);
     ProceduralAction( unsigned id, const ActionData& action_data, const Binding& binding);
 
-    virtual void apply( const State& s, std::vector<Atom>& atoms ) const override;
+    void apply( const State& s, std::vector<Atom>& atoms ) const override;
 
-    virtual ~ProceduralAction();
+    ~ProceduralAction() override;
 };
 
 } // namespaces

@@ -108,8 +108,7 @@ ProceduralAction::ProceduralAction( unsigned id, const ActionData& action_data, 
 }
 
 ProceduralAction::~ProceduralAction() {
-	if ( _proc_effect != nullptr )
-		delete _proc_effect;
+    delete _proc_effect;
 }
 
 void
