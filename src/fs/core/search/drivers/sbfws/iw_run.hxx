@@ -198,12 +198,12 @@ public:
         _stats(stats),
         _verbose(verbose)
     {
-        if (false) {
-            using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
-            _evaluator = std::make_unique<SimEvaluatorT>(featureset, evaluator);
-        } else {
+        if (_config._use_achiever_evaluator) {
             using SimEvaluatorT = AchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
             _evaluator = std::make_unique<SimEvaluatorT>(_model.getTask(), featureset);
+        } else {
+            using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
+            _evaluator = std::make_unique<SimEvaluatorT>(featureset, evaluator);
         }
     }
 
@@ -538,54 +538,6 @@ public:
     }
 
 
-
-// 	std::vector<AtomIdx> _compute_R(const StateT& seed) {
-
-// 		_config._complete = false;
-//
-// 		float simt0 = aptk::time_used();
-//  		run(seed);
-// 		_stats.simulation();
-// 		_stats.sim_add_time(aptk::time_used() - simt0);
-// 		_stats.sim_add_expanded_nodes(_w1_nodes_expanded+_w2_nodes_expanded);
-// 		_stats.sim_add_generated_nodes(_w1_nodes_generated+_w2_nodes_generated+_w_gt2_nodes_generated);
-// 		_stats.reachable_subgoals(_model.num_subgoals() - _unreached.size());
-
-// 		std::vector<NodePT> w1_goal_reaching_nodes;
-// 		std::vector<NodePT> w2_goal_reaching_nodes;
-// 		std::vector<NodePT> wgt2_goal_reaching_nodes;
-
-
-        /*
-        LPT_INFO("cout", "Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
-        LPT_INFO("cout", "Simulation - Number of novelty=1 nodes expanded in the simulation: " << _w1_nodes_expanded);
-        LPT_INFO("cout", "Simulation - Number of novelty=2 nodes expanded in the simulation: " << _w2_nodes_expanded);
-        LPT_INFO("cout", "Simulation - Number of novelty=1 nodes generated in the simulation: " << _w1_nodes_generated);
-        LPT_INFO("cout", "Simulation - Number of novelty=2 nodes generated in the simulation: " << _w2_nodes_generated);
-        LPT_INFO("cout", "Simulation - Number of novelty>2 nodes generated in the simulation: " << _w_gt2_nodes_generated);
-        LPT_INFO("cout", "Simulation - Total number of generated nodes (incl. pruned): " << _generated);
-        LPT_INFO("cout", "Simulation - Number of seed novelty-1 nodes: " << w1_seed_nodes.size());
-        */
-
-// 		auto relevant_w2_nodes = compute_relevant_w2_nodes();
-// 		LPT_INFO("cout", "Simulation - Number of relevant novelty-2 nodes: " << relevant_w2_nodes.size());
-
-// 		auto su = compute_union(relevant_w2_nodes); // Order matters!
-// 		auto hs = compute_hitting_set(relevant_w2_nodes);
-
-// 		LPT_INFO("cout", "Simulation - union-based R (|R|=" << su.size() << ")");
-// 		_print_atomset(su);
-
-// 		LPT_INFO("cout", "Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
-// 		_print_atomset(hs);
-
-        //std::vector<AtomIdx> relevant(hs.begin(), hs.end());
-// 		std::vector<AtomIdx> relevant(su.begin(), su.end());
-// 		std::sort(relevant.begin(), relevant.end());
-// 		return relevant;
-// 		return {};
-// 	}
-
     bool run(const StateT& seed, unsigned max_width) {
         if (_verbose) LPT_INFO("cout", "Simulation - Starting IW(" << max_width << ") Simulation");
 
@@ -680,6 +632,10 @@ public:
 
                 if (novelty <= max_width) {
                     open.insert(successor);
+                }
+
+                if (_generated % 100 == 0) {
+                    report("Simulation ongoing...", max_width);
                 }
             }
         }

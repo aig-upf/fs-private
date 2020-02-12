@@ -50,7 +50,7 @@ public:
             _model(model),
             _problem(model.getTask()),
             _config(config),
-            _simconfig(config.complete_simulation, config.mark_negative_propositions, config.simulation_width, config._global_config),
+            iwconfig_(config.complete_simulation, config.simulation_width, config._global_config),
             _sim_novelty_factory(_problem, config.evaluator_t, features.uses_extra_features(), config.simulation_width),
             _featureset(features)
     {}
@@ -70,7 +70,7 @@ public:
 
         using IWNodeT = IWRunNode<State, typename ModelT::ActionType>;
         using IWRunT = IWRun<IWNodeT, ModelT, NoveltyEvaluatorT, FeatureSetT>;
-        IWRunT simulator(_model, _featureset, evaluator, _simconfig, stats, verbose);
+        IWRunT simulator(_model, _featureset, evaluator, iwconfig_, stats, verbose);
         return simulator.compute_R(state);
     }
 
@@ -138,7 +138,7 @@ protected:
 
     const SBFWSConfig& _config;
 
-    const IWRunConfig _simconfig;
+    const IWRunConfig iwconfig_;
 
     const NoveltyFactory<FeatureValueT> _sim_novelty_factory;
 

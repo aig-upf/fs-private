@@ -21,29 +21,25 @@ unsigned UnsatisfiedGoalAtomsCounter::evaluate(const State& state) const {
 }
 
 
-std::vector<const fs::Formula*>
+std::vector<std::shared_ptr<const fs::Formula>>
 extract_formula_components(const fs::Formula* formula, const AtomIndex& atomidx) {
-	std::vector<const fs::Formula*> atoms;
+	std::vector<std::shared_ptr<const fs::Formula>> atoms;
 
 	const auto* conjunction = dynamic_cast<const fs::Conjunction*>(formula);
 	const auto* ex_q = dynamic_cast<const fs::ExistentiallyQuantifiedFormula*>(formula);
 
 	if (conjunction) { // Wrap out the conjuncts
 		for (const auto& a:conjunction->getSubformulae()) {
-			atoms.push_back(a->clone());
+			atoms.push_back(std::shared_ptr<const fs::Formula>(a->clone()));
 		}
 	} else if (ex_q) { // If we have an existentially-quantified formula, we'll use
                        // Gecode to evaluate it
-		atoms.push_back(new fs::ComplexExistentialFormula(ex_q, atomidx));
+		atoms.push_back(std::shared_ptr<const fs::Formula>(new fs::ComplexExistentialFormula(ex_q, atomidx)));
 	} else {
-		atoms.push_back(formula->clone());
+		atoms.push_back(std::shared_ptr<const fs::Formula>(formula->clone()));
 	}
 
 	return atoms;
-}
-
-UnsatisfiedGoalAtomsCounter::~UnsatisfiedGoalAtomsCounter() {
-	for (auto a:_formula_atoms) delete a;
 }
 
 } // namespaces

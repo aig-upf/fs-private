@@ -11,9 +11,6 @@ struct IWRunConfig {
     //! Whether to perform a complete run or a partial one, i.e. up until (independent) satisfaction of all goal atoms.
     bool _complete;
 
-    //! Whether to take into account negative propositions or not
-    bool _mark_negative;
-
     //! The maximum levels of novelty to be considered
     unsigned _max_width;
 
@@ -35,16 +32,13 @@ struct IWRunConfig {
     //! Enforce state constraints
     bool _enforce_state_constraints;
 
-    //! Load R set from file
-    std::string _R_file;
-
-    //! Goal Ball filtering
-    bool _filter_R_set;
-
     //! Log search
     bool _log_search;
 
-    IWRunConfig(bool complete, bool mark_negative, unsigned max_width, const fs0::Config& global_config);
+    //! Use an "action achiever" novelty evaluator type
+    bool _use_achiever_evaluator;
+
+    IWRunConfig(bool complete, unsigned max_width, const fs0::Config& global_config);
 };
 
 } // namespaces

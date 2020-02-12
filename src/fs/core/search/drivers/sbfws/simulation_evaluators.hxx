@@ -5,6 +5,13 @@
 #include <memory>
 
 #include <fs/core/search/drivers/sbfws/config.hxx>
+#include <fs/core/languages/fstrips/effects.hxx>
+#include <fs/core/state.hxx>
+#include <fs/core/heuristics/unsat_goal_atoms.hxx>
+#include <fs/core/actions/actions.hxx>
+#include <fs/core/languages/fstrips/terms.hxx>
+#include <fs/core/problem_info.hxx>
+
 
 namespace fs0::bfws {
 
@@ -66,41 +73,31 @@ class AchieverNoveltyEvaluator : public SimulationEvaluatorI<NodeT> {
 public:
     using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
 
-
-protected:
-    const FeatureSetT& _featureset;
-
-    const NoveltyFactory<FeatureValueT> _search_novelty_factory;
-
-//    //! A counter to count the number of unsatisfied goals
-//    UnsatisfiedGoalAtomsCounter _unsat_goal_atoms_heuristic;
-
-
-
 public:
     AchieverNoveltyEvaluator(const Problem& problem, const FeatureSetT& features) :
             _featureset(features),
             _search_novelty_factory(problem, SBFWSConfig::NoveltyEvaluatorType::Adaptive,
                     _featureset.uses_extra_features(), 1)
-//            _unsat_goal_atoms_heuristic(problem)
     {
-        const AtomIndex& atomidx = problem.get_tuple_index();
-        for (const auto& action:problem.getGroundActions()) {
+        const auto& info = ProblemInfo::getInstance();
+        const auto& actions = problem.getGroundActions();
+        achievers_.resize(info.getNumVariables());
+
+        for (std::size_t actionidx = 0, n = actions.size(); actionidx < n; ++actionidx) {
+            const auto& action = actions[actionidx];
+
+            // create a counter of the # of achieved preconditions for the action
+            prec_counters_.emplace_back(action->getPrecondition(), problem.get_tuple_index());
+
+
             for (const auto& eff:action->getEffects()) {
                 if (!eff->is_add()) continue;
                 auto sv = dynamic_cast<const fs::StateVariable*>(eff->lhs());
                 assert(sv);
-                sv->getValue();
-
+                auto var = sv->getValue();
+                achievers_[var].push_back(actionidx);
             }
         }
-
-        num_atoms_ = atomidx.size();
-        for (unsigned atom = 0; atom < num_atoms_; ++atom) {
-
-
-        }
-
     }
 
     ~AchieverNoveltyEvaluator() {
@@ -109,8 +106,9 @@ public:
 
 
     unsigned evaluate(NodeT& node) override {
+        const State& state = node.state;
         unsigned min_nov = std::numeric_limits<unsigned>::max();
-        for (unsigned q = 0; q < num_atoms_; ++q) {
+        for (unsigned q = 0; q < state.numAtoms(); ++q) {
             unsigned k = compute_achiever_satisfaction_factor(node.state, q);
             auto& table = novelty_table(q, k);
             min_nov = std::min(min_nov, table.evaluate(_featureset.evaluate(node.state), 1));
@@ -121,15 +119,11 @@ public:
 
     //!
     unsigned compute_achiever_satisfaction_factor(const State& state, unsigned var) const {
-        assert(0);
-
         unsigned max_precs_achieved = 0;
-        for (const auto& a:achievers_[var]) {
-            unsigned achieved = 0;
-            for ()
+        for (const auto& actionidx:achievers_[var]) {
+            unsigned achieved = prec_counters_.at(actionidx).evaluate(state);
             max_precs_achieved = std::max(max_precs_achieved, achieved);
         }
-
 
         return max_precs_achieved;
     }
@@ -151,18 +145,21 @@ public:
     }
 
     void reset() override {
-        throw std::runtime_error("Unimplemented");
+        for (auto& elem:tables_) delete elem.second;
+        tables_.clear();
     }
 
 protected:
-    unsigned num_atoms_;
+    const FeatureSetT& _featureset;
+
+    const NoveltyFactory<FeatureValueT> _search_novelty_factory;
 
     using TableKeyT = std::pair<unsigned, unsigned>;
     std::unordered_map<TableKeyT, NoveltyEvaluatorT*, boost::hash<TableKeyT>> tables_;
 
     std::vector<std::vector<unsigned>> achievers_;
 
-
+    std::vector<UnsatisfiedGoalAtomsCounter> prec_counters_;
 };
 
 } // namespaces

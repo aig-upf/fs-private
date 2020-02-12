@@ -9,19 +9,19 @@ namespace fs0 {
 
 class Problem;
 
-std::vector<const fs::Formula*> extract_formula_components(const fs::Formula* formula, const AtomIndex&);
+std::vector<std::shared_ptr<const fs::Formula>> extract_formula_components(const fs::Formula* formula, const AtomIndex&);
 
 //! The heuristic value of any given state is the number of unsatisfied goal conditions (atoms) on that state
 class UnsatisfiedGoalAtomsCounter {
 public:
 	explicit UnsatisfiedGoalAtomsCounter(const fs::Formula* formula, const AtomIndex&);
-	~UnsatisfiedGoalAtomsCounter();
+	~UnsatisfiedGoalAtomsCounter() = default;
 
 	//! The actual evaluation of the heuristic value for any given non-relaxed state s.
 	unsigned evaluate(const State& state) const;
 
 protected:
-	const std::vector<const fs::Formula*> _formula_atoms;
+	const std::vector<std::shared_ptr<const fs::Formula>> _formula_atoms;
 };
 
 } // namespaces
