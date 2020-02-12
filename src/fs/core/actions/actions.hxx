@@ -5,6 +5,7 @@
 #include <fs/core/utils/binding.hxx>
 #include <fs/core/applicability/action_managers.hxx>
 #include <fs/core/languages/fstrips/axioms.hxx>
+#include <utility>
 
 namespace fs0::language::fstrips {  class Term; class Formula; class ActionEffect; class ProceduralEffect; }
 namespace fs = fs0::language::fstrips;
@@ -175,5 +176,19 @@ public:
 
     ~ProceduralAction() override;
 };
+
+class PlainOperator {
+public:
+    PlainOperator(std::vector<std::pair<VariableIdx, object_id>> precondition,
+                  std::vector<std::pair<VariableIdx, object_id>> effects) :
+            precondition_(std::move(precondition)), effects_(std::move(effects))
+    {}
+
+    std::vector<std::pair<VariableIdx, object_id>> precondition_;
+    std::vector<std::pair<VariableIdx, object_id>> effects_;
+};
+
+PlainOperator compile_action_to_plan_operator(const GroundAction& action);
+
 
 } // namespaces
