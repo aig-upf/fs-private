@@ -22,7 +22,7 @@ SUITE = [
     'termes-sat18-strips',
 ]
 REVISIONS = [
-    "3169f0e2",
+    "3b4c71f1",
 ]
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
