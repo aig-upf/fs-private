@@ -204,8 +204,11 @@ public:
             operators.reserve(actions.size());
             for (const auto& a:actions) operators.emplace_back(compile_action_to_plan_operator(*a));
 
-            using SimEvaluatorT = AchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
-            _evaluator = std::make_unique<SimEvaluatorT>(_model.getTask(), featureset, operators);
+            auto maxsize = _config.global.template getOption<unsigned long>("sim.max_table_size", 9999999);
+            _evaluator = create_achiever_evaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>(
+                    _model.getTask(), featureset, operators, maxsize
+            );
+
         } else {
             using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
             _evaluator = std::make_unique<SimEvaluatorT>(featureset, evaluator);
@@ -548,6 +551,11 @@ public:
         OpenListT open;
 
         open.insert(root);
+        unsigned generated = 0;
+        auto simt0 = aptk::time_used();
+
+//        std::cout << "Novelty of root node: " << _evaluator->evaluate(*root) << std::endl;
+
 
         // Note that we don't used any closed list / duplicate detection of any kind, but let the novelty engine take care of that
         while (!open.empty()) {
@@ -561,14 +569,24 @@ public:
                 NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
 
                 successor->_w = _evaluator->evaluate(*successor);
+//                std::cout << "Novelty of generated state: " << (unsigned) successor->_w << std::endl;
                 update_novelty_counters_on_generation(successor->_w);
+                ++generated;
 
                 // LPT_INFO("cout", "Simulation - Node generated: " << *successor);
+
+                if (generated % 1000 == 0) {
+                    auto rate = generated*1.0 / (aptk::time_used() - simt0);
+                    LPT_INFO("cout", "IW run: Node generation rate after " << generated / 1000 << "K generations (nodes/sec.): " << rate);
+                    _evaluator->info();
+
+                }
 
                 if (_model.goal(successor->state)) LPT_INFO("cout", "Simulation - Goal state reached during simulation");
 
                 if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
                     report("All subgoals reached", max_width);
+                    _evaluator->info();
                     return true;
                 }
 
@@ -583,6 +601,7 @@ public:
         }
 
         report("State space exhausted", max_width);
+        _evaluator->info();
         return false;
     }
 

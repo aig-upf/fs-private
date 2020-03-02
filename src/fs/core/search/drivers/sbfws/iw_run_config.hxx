@@ -12,7 +12,7 @@ struct IWRunConfig {
     unsigned _max_width;
 
     //!
-    const fs0::Config& _global_config;
+    const fs0::Config& global;
 
     //! Whether to extract goal-informed relevant sets R
     bool _goal_directed;
