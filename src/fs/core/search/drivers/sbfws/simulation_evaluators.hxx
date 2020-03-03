@@ -18,10 +18,6 @@
 namespace fs0::bfws {
 
 
-inline uint32_t _combine_indexes(uint32_t k, uint32_t q, uint32_t p, uint32_t Q) {
-    return k*Q*Q + q*Q + p;
-}
-
 
 template<typename NodeT>
 class SimulationEvaluatorI {
@@ -74,6 +70,19 @@ public:
 };
 
 
+struct AchieverNoveltyConfiguration {
+    AchieverNoveltyConfiguration(
+            unsigned long max_table_size,
+            bool break_on_first_novel) :
+        max_table_size_(max_table_size),
+        break_on_first_novel_(break_on_first_novel)
+    {}
+
+    unsigned long max_table_size_;
+    bool break_on_first_novel_;
+};
+
+
 template<
         typename NodeT,
         typename FeatureSetT,
@@ -84,15 +93,18 @@ public:
     using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
 
 public:
-    AchieverNoveltyEvaluator(const Problem& problem,
+    AchieverNoveltyEvaluator(
+            const Problem& problem,
             const FeatureSetT& features,
             const std::vector<PlainOperator>& operators,
-            const std::vector<std::vector<unsigned>>& achievers) :
+            const std::vector<std::vector<unsigned>>& achievers,
+            const AchieverNoveltyConfiguration& config) :
             _featureset(features),
             operators_(operators),
             achievers_(achievers),
             _search_novelty_factory(problem, SBFWSConfig::NoveltyEvaluatorType::Adaptive,
-                    _featureset.uses_extra_features(), 1)
+                    _featureset.uses_extra_features(), 1),
+            config_(config)
     {
     }
 
@@ -121,22 +133,22 @@ public:
     }
 
     //! Return the "achiever satisfaction factor" #q(s) for the given state s and atom q,
-    //! which is the max. k such that there is a ground action that achieves q and has
-    //! k satisfied preconditions in state s
+    //! which is the min k such that there is a ground action that achieves q and has
+    //! k unsatisfied preconditions in state s
     unsigned compute_achiever_satisfaction_factor(const State& state, unsigned var) const {
-        unsigned max_precs_achieved = 0;
+        unsigned min_unach_precs = std::numeric_limits<unsigned>::max();
         for (const auto& actionidx:achievers_[var]) {
-            unsigned achieved = 0;
+            unsigned unachieved = 0;
             for (const auto& pre:operators_[actionidx].precondition_) {
-                if (state.getValue(pre.first) == pre.second) {
-                    achieved++;
+                if (state.getValue(pre.first) != pre.second) {
+                    unachieved++;
                 }
             }
-            max_precs_achieved = std::max(max_precs_achieved, achieved);
+            min_unach_precs = std::min(min_unach_precs, unachieved);
         }
-//        std::cout << "k=" << max_precs_achieved << "; " << state << std::endl;
+//        std::cout << "k=" << min_unach_precs << "; " << state << std::endl;
 
-        return max_precs_achieved;
+        return min_unach_precs;
     }
 
     //! Return the novelty table that corresponds to given atom and max. achiever satisfaction factor.
@@ -172,7 +184,30 @@ protected:
     using TableKeyT = std::pair<unsigned, unsigned>;
     std::unordered_map<TableKeyT, NoveltyEvaluatorT*, boost::hash<TableKeyT>> tables_;
 
+    const AchieverNoveltyConfiguration& config_;
+
 };
+
+template <typename T>
+inline unsigned get_action_id(const T& o) { throw std::runtime_error("Unimplemented"); }
+
+template <>
+inline unsigned get_action_id<unsigned>(const unsigned& o) { return o; }
+
+
+template <typename T>
+inline const std::vector<bool>& get_valuation(const T& o) { throw std::runtime_error("Unimplemented"); }
+
+template <>
+inline const std::vector<bool>& get_valuation<std::vector<bool>>(const std::vector<bool>& o) { return o; }
+
+// A helper. Combine indexes in ranges
+// k \in [0..k] ("number of preconditions to go")
+// q, p \in [0..Q-1]  ("atom indexes")
+inline uint32_t _combine_indexes(uint32_t k, uint32_t q, uint32_t p, uint32_t Q) {
+    return k*Q*Q + q*Q + p;
+}
+
 
 template<
         typename NodeT,
@@ -184,51 +219,86 @@ class BitvectorAchieverNoveltyEvaluator : public AchieverNoveltyEvaluator<NodeT,
 public:
     using BaseT = AchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
 
-    BitvectorAchieverNoveltyEvaluator(const Problem& problem,
+    BitvectorAchieverNoveltyEvaluator(
+            const Problem& problem,
             const FeatureSetT& features,
             const std::vector<PlainOperator>& operators,
             const std::vector<std::vector<unsigned>>& achievers,
             unsigned max_precondition_size,
-            unsigned nvars) :
-            BaseT(problem, features, operators, achievers),
-            max_precondition_size_(max_precondition_size),
-            nvars_(nvars),
-            seen_(nvars*nvars*(max_precondition_size+1), false)
-//            reached_(nvars, false)
+            unsigned nvars,
+            const AchieverNoveltyConfiguration& config) :
+        BaseT(problem, features, operators, achievers, config),
+        max_precondition_size_(max_precondition_size),
+        nvars_(nvars),
+        reached_(nvars, false),
+        seen_(table_size(), false)
     {
+    }
 
+    std::size_t table_size() const {
+        return nvars_*nvars_*(max_precondition_size_+1);
+    }
+
+    void reset() override {
+//        seen_.swap(std::vector<bool>(table_size(), false));
+//        reached_.swap(std::vector<bool>(nvars_, false));
+        reached_.clear();
+        seen_.clear();
     }
 
     unsigned evaluate(NodeT& node) override {
         const State& state = node.state;
 
-        const auto& valuation = this->_featureset.evaluate(state);
+        const auto& valuation = get_valuation(this->_featureset.evaluate(state));
         assert(state.numAtoms() == nvars_);
         assert(valuation.size() == nvars_);
 
         bool is_novel = false;
 
-        for (unsigned q = 0; q < nvars_; ++q) {
-            unsigned k = this->compute_achiever_satisfaction_factor(node.state, q);
-
-            bool exists_novel_tuple = false;
-            for (unsigned var_index = 0; var_index < nvars_; ++var_index) {
-                const auto& value = valuation[var_index];
-                if (value == 0) continue; // ignore negative atoms
-
-                unsigned atom_index = _combine_indexes(k, q, var_index, nvars_);
-                std::vector<bool>::reference ref = seen_.at(atom_index);
-                if (!ref) { // The tuple is new
-                    ref = true;
-                    exists_novel_tuple = true;
-                }
+        unsigned action_id = get_action_id(node.action);
+        if (action_id != std::numeric_limits<unsigned>::max()) {
+            const auto& op = this->operators_.at(action_id);
+            for (const auto& eff:op.effects_) {
+                unsigned q = eff.first;
+                is_novel |= process_q(node.state, valuation, q);
             }
-
-            is_novel |= exists_novel_tuple;
-//            std::cout << "Novelty in table for q=" << q << ": " << nov << std::endl;
+        } else {
+            for (unsigned q = 0; q < nvars_; ++q) {
+                is_novel |= process_q(node.state, valuation, q);
+            }
         }
 
         return is_novel ? 1 : std::numeric_limits<unsigned>::max();
+    }
+
+    bool process_q(const State& state, const std::vector<bool>& valuation, unsigned q) {
+        if (reached_[q]) return false;
+
+        unsigned k = this->compute_achiever_satisfaction_factor(state, q);
+
+        bool exists_novel_tuple = false;
+        for (unsigned p = 0; p < nvars_; ++p) {
+            const auto& value = valuation[p];
+            if (value == 0) continue; // ignore negative atoms
+
+            reached_[p] = true;
+
+            unsigned atom_index = _combine_indexes(k, q, p, nvars_);
+            assert(atom_index < seen_.size());
+            auto ref = seen_[atom_index];
+            if (!ref) { // The tuple is new
+                ref = true;
+
+                if (this->config_.break_on_first_novel_) {
+                    return true;
+                }
+
+                exists_novel_tuple = true;
+            }
+        }
+
+//            std::cout << "Novelty in table for q=" << q << ": " << nov << std::endl;
+        return exists_novel_tuple;
     }
 
 
@@ -239,7 +309,8 @@ protected:
     std::vector<bool> seen_;
 };
 
-//! Factory method
+//! Factory method: create an specialized achiever-evaluator based on the potential
+//! size of the novelty tables
 template<
         typename NodeT,
         typename FeatureSetT,
@@ -249,7 +320,7 @@ std::unique_ptr<AchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>>
 create_achiever_evaluator(const Problem& problem,
         const FeatureSetT& features,
         const std::vector<PlainOperator>& operators,
-        unsigned long max_table_size) {
+        const AchieverNoveltyConfiguration& config) {
 
     const auto& info = ProblemInfo::getInstance();
     unsigned nvars = info.getNumVariables();
@@ -273,10 +344,10 @@ create_achiever_evaluator(const Problem& problem,
 
     LPT_INFO("cout", "Max. precondition size: " << max_precondition_size);
     LPT_INFO("cout", "Num. state variables: " << nvars);
-    LPT_INFO("cout", "Expected table size: " << expected_table_size_in_kb << "KB (entries: " << expected_table_entries << ", max. size: " << max_table_size <<")");
+    LPT_INFO("cout", "Expected table size: " << expected_table_size_in_kb << "KB (entries: " << expected_table_entries << ", max. size: " << config.max_table_size_ <<")");
 
     using ET = BitvectorAchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
-    return std::make_unique<ET>(problem, features, operators, achievers, max_precondition_size, nvars);
+    return std::make_unique<ET>(problem, features, operators, achievers, max_precondition_size, nvars, config);
 }
 
 } // namespaces

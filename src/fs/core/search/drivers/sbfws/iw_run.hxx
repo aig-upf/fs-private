@@ -204,9 +204,12 @@ public:
             operators.reserve(actions.size());
             for (const auto& a:actions) operators.emplace_back(compile_action_to_plan_operator(*a));
 
-            auto maxsize = _config.global.template getOption<unsigned long>("sim.max_table_size", 9999999);
+            AchieverNoveltyConfiguration ach_config(
+                _config.global.template getOption<unsigned long>("sim.max_table_size", 9999999),
+                _config.global.template getOption<bool>("sim.early_break", false)
+            );
             _evaluator = create_achiever_evaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>(
-                    _model.getTask(), featureset, operators, maxsize
+                    _model.getTask(), featureset, operators, ach_config
             );
 
         } else {
@@ -578,7 +581,7 @@ public:
                 if (generated % 1000 == 0) {
                     auto rate = generated*1.0 / (aptk::time_used() - simt0);
                     LPT_INFO("cout", "IW run: Node generation rate after " << generated / 1000 << "K generations (nodes/sec.): " << rate);
-                    _evaluator->info();
+//                    _evaluator->info();
 
                 }
 
@@ -586,7 +589,7 @@ public:
 
                 if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
                     report("All subgoals reached", max_width);
-                    _evaluator->info();
+//                    _evaluator->info();
                     return true;
                 }
 
