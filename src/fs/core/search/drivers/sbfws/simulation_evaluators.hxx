@@ -262,18 +262,19 @@ public:
             if (reached_[q]) continue;
 
             unsigned k = this->compute_achiever_satisfaction_factor(state, q);
+            if (k == std::numeric_limits<unsigned>::max()) continue;  // Atom q has no possible achiever.
 
             if (op) {
                 for (const auto& eff:op->effects_) {
                     auto p = eff.first;
-                    if (process_p(node.state, valuation, k, q, p)) {
+                    if (process_p(state, valuation, k, q, p)) {
                         is_novel = true;
                         if (this->config_.break_on_first_novel_) return 1;
                     }
                 }
             } else {
                 for (unsigned p = 0; p < nvars_; ++p) {
-                    if (process_p(node.state, valuation, k, q, p)) {
+                    if (process_p(state, valuation, k, q, p)) {
                         is_novel = true;
                         if (this->config_.break_on_first_novel_) return 1;
                     }
