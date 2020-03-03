@@ -256,49 +256,51 @@ public:
         bool is_novel = false;
 
         unsigned action_id = get_action_id(node.action);
-        if (action_id != std::numeric_limits<unsigned>::max()) {
-            const auto& op = this->operators_.at(action_id);
-            for (const auto& eff:op.effects_) {
-                unsigned q = eff.first;
-                is_novel |= process_q(node.state, valuation, q);
+        const PlainOperator* op = (action_id != std::numeric_limits<unsigned>::max()) ? &this->operators_.at(action_id) : nullptr;
+
+        for (unsigned q = 0; q < nvars_; ++q) {
+            if (reached_[q]) continue;
+
+            unsigned k = this->compute_achiever_satisfaction_factor(state, q);
+
+            if (op) {
+                for (const auto& eff:op->effects_) {
+                    auto p = eff.first;
+                    if (process_p(node.state, valuation, k, q, p)) {
+                        is_novel = true;
+                        if (this->config_.break_on_first_novel_) return 1;
+                    }
+                }
+            } else {
+                for (unsigned p = 0; p < nvars_; ++p) {
+                    if (process_p(node.state, valuation, k, q, p)) {
+                        is_novel = true;
+                        if (this->config_.break_on_first_novel_) return 1;
+                    }
+                }
             }
-        } else {
-            for (unsigned q = 0; q < nvars_; ++q) {
-                is_novel |= process_q(node.state, valuation, q);
-            }
+
         }
 
         return is_novel ? 1 : std::numeric_limits<unsigned>::max();
     }
 
-    bool process_q(const State& state, const std::vector<bool>& valuation, unsigned q) {
-        if (reached_[q]) return false;
 
-        unsigned k = this->compute_achiever_satisfaction_factor(state, q);
+    bool process_p(const State& state, const std::vector<bool>& valuation, unsigned k, unsigned q, unsigned p) {
+        const auto& value = valuation[p];
+        if (value == 0) return false; // ignore negative atoms
 
-        bool exists_novel_tuple = false;
-        for (unsigned p = 0; p < nvars_; ++p) {
-            const auto& value = valuation[p];
-            if (value == 0) continue; // ignore negative atoms
+        reached_[p] = true;
 
-            reached_[p] = true;
-
-            unsigned atom_index = _combine_indexes(k, q, p, nvars_);
-            assert(atom_index < seen_.size());
-            auto ref = seen_[atom_index];
-            if (!ref) { // The tuple is new
-                ref = true;
-
-                if (this->config_.break_on_first_novel_) {
-                    return true;
-                }
-
-                exists_novel_tuple = true;
-            }
+        unsigned atom_index = _combine_indexes(k, q, p, nvars_);
+        assert(atom_index < seen_.size());
+        auto ref = seen_[atom_index];
+        if (!ref) { // The tuple is new
+            ref = true;
+            return true;
         }
 
-//            std::cout << "Novelty in table for q=" << q << ": " << nov << std::endl;
-        return exists_novel_tuple;
+        return false;
     }
 
 
