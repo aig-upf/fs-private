@@ -46,7 +46,7 @@ SUITE = [
 ]
 
 REVISIONS = [
-    "70ae02de",
+    "6e829308",
 ]
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
