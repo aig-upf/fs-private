@@ -554,11 +554,9 @@ public:
         OpenListT open;
 
         open.insert(root);
-        unsigned generated = 0;
         auto simt0 = aptk::time_used();
 
 //        std::cout << "Novelty of root node: " << _evaluator->evaluate(*root) << std::endl;
-
 
         // Note that we don't used any closed list / duplicate detection of any kind, but let the novelty engine take care of that
         while (!open.empty()) {
@@ -574,16 +572,8 @@ public:
                 successor->_w = _evaluator->evaluate(*successor);
 //                std::cout << "Novelty of generated state: " << (unsigned) successor->_w << std::endl;
                 update_novelty_counters_on_generation(successor->_w);
-                ++generated;
 
                 // LPT_INFO("cout", "Simulation - Node generated: " << *successor);
-
-                if (generated % 1000 == 0) {
-                    auto rate = generated*1.0 / (aptk::time_used() - simt0);
-                    LPT_INFO("cout", "IW run: Node generation rate after " << generated / 1000 << "K generations (nodes/sec.): " << rate);
-//                    _evaluator->info();
-
-                }
 
                 if (_model.goal(successor->state)) LPT_INFO("cout", "Simulation - Goal state reached during simulation");
 
@@ -597,9 +587,11 @@ public:
                     open.insert(successor);
                 }
 
-//                if (_generated % 100 == 0) {
-//                    report("Simulation ongoing...", max_width);
-//                }
+                if (_generated % 1000 == 0) {
+                    auto rate = _generated*1.0 / (aptk::time_used() - simt0);
+                    LPT_INFO("cout", "IW run: Node generation rate after " << _generated / 1000 << "K generations (nodes/sec.): " << rate);
+//                    _evaluator->info();
+                }
             }
         }
 

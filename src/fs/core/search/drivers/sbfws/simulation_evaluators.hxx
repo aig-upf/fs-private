@@ -99,6 +99,7 @@ public:
             const std::vector<PlainOperator>& operators,
             const std::vector<std::vector<unsigned>>& achievers,
             const AchieverNoveltyConfiguration& config) :
+            atom_idx_(problem.get_tuple_index()),
             _featureset(features),
             operators_(operators),
             achievers_(achievers),
@@ -173,6 +174,8 @@ public:
     }
 
 protected:
+    const AtomIndex& atom_idx_;
+
     const FeatureSetT& _featureset;
 
     std::vector<PlainOperator> operators_;
@@ -230,13 +233,13 @@ public:
         BaseT(problem, features, operators, achievers, config),
         max_precondition_size_(max_precondition_size),
         nvars_(nvars),
-        reached_(nvars, false),
+        reached_(this->atom_idx_.size(), false),
         seen_(table_size(), false)
     {
     }
 
     std::size_t table_size() const {
-        return nvars_*nvars_*(max_precondition_size_+1);
+        return this->atom_idx_.size()*this->atom_idx_.size()*(max_precondition_size_+1);
     }
 
     void reset() override {
@@ -257,28 +260,34 @@ public:
 
         unsigned action_id = get_action_id(node.action);
         const PlainOperator* op = (action_id != std::numeric_limits<unsigned>::max()) ? &this->operators_.at(action_id) : nullptr;
+//        op = nullptr;
 
         for (unsigned q = 0; q < nvars_; ++q) {
-            if (reached_[q]) continue;
+            unsigned qidx = this->atom_idx_.to_index(q, make_object((bool)valuation[q]));
+//            if (reached_[qidx]) continue;
 
             unsigned k = this->compute_achiever_satisfaction_factor(state, q);
-            if (k == std::numeric_limits<unsigned>::max()) continue;  // Atom q has no possible achiever.
+//            if (k == std::numeric_limits<unsigned>::max()) continue;  // Atom q has no possible achiever.
+            if (k == std::numeric_limits<unsigned>::max()) k = 0;
+//            unsigned k = 0;
+
 
             if (op) {
                 for (const auto& eff:op->effects_) {
                     auto p = eff.first;
-                    if (process_p(state, valuation, k, q, p)) {
+                    if (process_p(state, valuation, k, qidx, p)) {
                         is_novel = true;
                         if (this->config_.break_on_first_novel_) return 1;
                     }
                 }
             } else {
                 for (unsigned p = 0; p < nvars_; ++p) {
-                    if (process_p(state, valuation, k, q, p)) {
+                    if (process_p(state, valuation, k, qidx, p)) {
                         is_novel = true;
                         if (this->config_.break_on_first_novel_) return 1;
                     }
                 }
+
             }
 
         }
@@ -287,13 +296,16 @@ public:
     }
 
 
-    bool process_p(const State& state, const std::vector<bool>& valuation, unsigned k, unsigned q, unsigned p) {
-        const auto& value = valuation[p];
-        if (value == 0) return false; // ignore negative atoms
+    bool process_p(const State& state, const std::vector<bool>& valuation, unsigned k, unsigned qidx, unsigned p) {
 
-        reached_[p] = true;
+        unsigned pidx = this->atom_idx_.to_index(p, make_object((bool)valuation[p]));
 
-        unsigned atom_index = _combine_indexes(k, q, p, nvars_);
+//        const auto& value = valuation[p];
+//        if (value == 0) return false; // ignore negative atoms
+
+        reached_[pidx] = true;
+
+        unsigned atom_index = _combine_indexes(k, qidx, pidx, this->atom_idx_.size());
         assert(atom_index < seen_.size());
         auto ref = seen_[atom_index];
         if (!ref) { // The tuple is new
