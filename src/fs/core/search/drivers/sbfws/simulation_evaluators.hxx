@@ -83,114 +83,6 @@ struct AchieverNoveltyConfiguration {
 };
 
 
-template<
-        typename NodeT,
-        typename FeatureSetT,
-        typename NoveltyEvaluatorT
->
-class AchieverNoveltyEvaluator : public SimulationEvaluatorI<NodeT> {
-public:
-    using FeatureValueT = typename NoveltyEvaluatorT::FeatureValueT;
-
-public:
-    AchieverNoveltyEvaluator(
-            const Problem& problem,
-            const FeatureSetT& features,
-            const std::vector<PlainOperator>& operators,
-            const std::vector<std::vector<unsigned>>& achievers,
-            const AchieverNoveltyConfiguration& config) :
-            atom_idx_(problem.get_tuple_index()),
-            _featureset(features),
-            operators_(operators),
-            achievers_(achievers),
-            _search_novelty_factory(problem, SBFWSConfig::NoveltyEvaluatorType::Adaptive,
-                    _featureset.uses_extra_features(), 1),
-            config_(config)
-    {
-    }
-
-    ~AchieverNoveltyEvaluator() {
-        for (auto& elem:tables_) delete elem.second;
-    };
-
-    void info() const override {
-        LPT_INFO("cout", "Simulation - Total num. novelty tables created: " << tables_.size());
-    }
-
-
-
-    unsigned evaluate(NodeT& node) override {
-        const State& state = node.state;
-        unsigned min_nov = std::numeric_limits<unsigned>::max();
-        for (unsigned q = 0; q < state.numAtoms(); ++q) {
-            unsigned k = compute_achiever_satisfaction_factor(node.state, q);
-            auto& table = novelty_table(q, k);
-            auto nov = table.evaluate(_featureset.evaluate(node.state), 1);
-//            std::cout << "Novelty in table for q=" << q << ": " << nov << std::endl;
-            min_nov = std::min(min_nov, nov);
-        }
-
-        return min_nov;
-    }
-
-    //! Return the "achiever satisfaction factor" #q(s) for the given state s and atom q,
-    //! which is the min k such that there is a ground action that achieves q and has
-    //! k unsatisfied preconditions in state s
-    unsigned compute_achiever_satisfaction_factor(const State& state, unsigned var) const {
-        unsigned min_unach_precs = std::numeric_limits<unsigned>::max();
-        for (const auto& actionidx:achievers_[var]) {
-            unsigned unachieved = 0;
-            for (const auto& pre:operators_[actionidx].precondition_) {
-                if (state.getValue(pre.first) != pre.second) {
-                    unachieved++;
-                }
-            }
-            min_unach_precs = std::min(min_unach_precs, unachieved);
-        }
-//        std::cout << "k=" << min_unach_precs << "; " << state << std::endl;
-
-        return min_unach_precs;
-    }
-
-    //! Return the novelty table that corresponds to given atom and max. achiever satisfaction factor.
-    //! If that table had not yet been created, create it and return it.
-    NoveltyEvaluatorT& novelty_table(unsigned atom, unsigned k) {
-        const auto& key = std::make_pair(atom, k);
-        auto it = tables_.find(key);
-        if (it == tables_.end()) {
-            auto inserted = tables_.insert(std::make_pair(key, _search_novelty_factory.create_evaluator(1)));
-            it = inserted.first;
-        }
-        return *(it->second);
-    }
-
-    std::vector<bool> reached_atoms() const override {
-        throw std::runtime_error("Unimplemented");
-    }
-
-    void reset() override {
-        for (auto& elem:tables_) delete elem.second;
-        tables_.clear();
-    }
-
-protected:
-    const AtomIndex& atom_idx_;
-
-    const FeatureSetT& _featureset;
-
-    std::vector<PlainOperator> operators_;
-
-    std::vector<std::vector<unsigned>> achievers_;
-
-    const NoveltyFactory<FeatureValueT> _search_novelty_factory;
-
-    using TableKeyT = std::pair<unsigned, unsigned>;
-    std::unordered_map<TableKeyT, NoveltyEvaluatorT*, boost::hash<TableKeyT>> tables_;
-
-    const AchieverNoveltyConfiguration& config_;
-
-};
-
 template <typename T>
 inline unsigned get_action_id(const T& o) { throw std::runtime_error("Unimplemented"); }
 
@@ -217,11 +109,9 @@ template<
         typename FeatureSetT,
         typename NoveltyEvaluatorT
 >
-class BitvectorAchieverNoveltyEvaluator : public AchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT> {
+class BitvectorAchieverNoveltyEvaluator : public SimulationEvaluatorI<NodeT> {
 
 public:
-    using BaseT = AchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
-
     BitvectorAchieverNoveltyEvaluator(
             const Problem& problem,
             const FeatureSetT& features,
@@ -230,7 +120,11 @@ public:
             unsigned max_precondition_size,
             unsigned nvars,
             const AchieverNoveltyConfiguration& config) :
-        BaseT(problem, features, operators, achievers, config),
+        atom_idx_(problem.get_tuple_index()),
+        _featureset(features),
+        operators_(operators),
+        achievers_(achievers),
+        config_(config),
         max_precondition_size_(max_precondition_size),
         nvars_(nvars),
         reached_(this->atom_idx_.size(), false),
@@ -255,6 +149,29 @@ public:
 
     std::size_t table_size() const {
         return this->atom_idx_.size()*this->atom_idx_.size()*(max_precondition_size_+1+1);
+    }
+
+    //! Return the "achiever satisfaction factor" #q(s) for the given state s and atom q,
+    //! which is the min k such that there is a ground action that achieves q and has
+    //! k unsatisfied preconditions in state s
+    unsigned compute_achiever_satisfaction_factor(const State& state, unsigned var) const {
+        unsigned min_unach_precs = std::numeric_limits<unsigned>::max();
+        for (const auto& actionidx:achievers_[var]) {
+            unsigned unachieved = 0;
+            for (const auto& pre:operators_[actionidx].precondition_) {
+                if (state.getValue(pre.first) != pre.second) {
+                    unachieved++;
+                }
+            }
+            min_unach_precs = std::min(min_unach_precs, unachieved);
+        }
+//        std::cout << "k=" << min_unach_precs << "; " << state << std::endl;
+
+        return min_unach_precs;
+    }
+
+    std::vector<bool> reached_atoms() const override {
+        throw std::runtime_error("Unimplemented");
     }
 
     void reset() override {
@@ -338,6 +255,15 @@ public:
 
 
 protected:
+    const AtomIndex& atom_idx_;
+
+    const FeatureSetT& _featureset;
+
+    std::vector<PlainOperator> operators_;
+
+    std::vector<std::vector<unsigned>> achievers_;
+
+    const AchieverNoveltyConfiguration& config_;
     unsigned max_precondition_size_;
     unsigned nvars_;
     std::vector<bool> reached_;
@@ -351,7 +277,7 @@ template<
         typename FeatureSetT,
         typename NoveltyEvaluatorT
 >
-std::unique_ptr<AchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>>
+std::unique_ptr<BitvectorAchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>>
 create_achiever_evaluator(const Problem& problem,
         const FeatureSetT& features,
         const std::vector<PlainOperator>& operators,
