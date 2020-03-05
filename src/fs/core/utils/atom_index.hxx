@@ -46,11 +46,11 @@ protected:
 	
 public:
 	//! Constructs a full tuple index
-	AtomIndex(const ProblemInfo& info, bool index_negated_literals = true);
+	explicit AtomIndex(const ProblemInfo& info, bool index_negated_literals = true);
 	AtomIndex(const AtomIndex&) = default;
 	AtomIndex(AtomIndex&&) = default;
-	AtomIndex& operator=(const AtomIndex& other) = default;
-	AtomIndex& operator=(AtomIndex&& other) = default;
+	AtomIndex& operator=(const AtomIndex& other) = delete;
+	AtomIndex& operator=(AtomIndex&& other) = delete;
 	
 	//! Return the number of tuples of the index
 	unsigned size() const { return _tuple_index.size(); }
@@ -80,6 +80,8 @@ public:
 
 	
 	const std::vector<AtomIdx>& all_variable_atoms(VariableIdx variable) const { return _variable_to_atom_index[variable]; }
+
+	inline bool indexes_negated_literals() const { return _indexes_negated_literals; }
 	
 protected:
 	//! Add a new element to the index.

@@ -236,10 +236,25 @@ public:
         reached_(this->atom_idx_.size(), false),
         seen_(table_size(), false)
     {
+//        std::unordered_set<unsigned> idxs;
+//        for (unsigned q = 0; q < this->atom_idx_.size(); ++q) {
+//            for (unsigned p = 0; p < this->atom_idx_.size(); ++p) {
+//                for (unsigned k = 0; k <= max_precondition_size_+1; ++k) {
+//                    auto idx = _combine_indexes(k, q, p, this->atom_idx_.size());
+//                    std::cout << " " << k << " " << q << " " << p << ": " << idx << std::endl;
+//                    auto it = idxs.insert(idx);
+//                    if (!it.second) throw std::runtime_error("WHAT!");
+//                    if (idx >= seen_.size()) throw std::runtime_error("WHAT2!");
+//                }
+//            }
+//        }
+//        std::cout << "Theoretical size: " << table_size() << std::endl;
+//        std::cout << "Actual size: " << idxs.size() << std::endl;
+//        throw std::runtime_error("NICE");
     }
 
     std::size_t table_size() const {
-        return this->atom_idx_.size()*this->atom_idx_.size()*(max_precondition_size_+1);
+        return this->atom_idx_.size()*this->atom_idx_.size()*(max_precondition_size_+1+1);
     }
 
     void reset() override {
@@ -263,13 +278,20 @@ public:
 //        op = nullptr;
 
         for (unsigned q = 0; q < nvars_; ++q) {
-            unsigned qidx = this->atom_idx_.to_index(q, make_object((bool)valuation[q]));
-//            if (reached_[qidx]) continue;
+            bool qval = valuation[q];
+            if (!qval && !this->atom_idx_.indexes_negated_literals()) continue;  // Not interested in negative literals
+            unsigned qidx = this->atom_idx_.to_index(q, make_object(qval));
 
-            unsigned k = this->compute_achiever_satisfaction_factor(state, q);
+            unsigned k = 0;
+            if (reached_[qidx]) {
+                // We just consider a new context where q is reached
+                k = max_precondition_size_+1;
+
+            } else {
+                k = this->compute_achiever_satisfaction_factor(state, q);
 //            if (k == std::numeric_limits<unsigned>::max()) continue;  // Atom q has no possible achiever.
-            if (k == std::numeric_limits<unsigned>::max()) k = 0;
-//            unsigned k = 0;
+                if (k == std::numeric_limits<unsigned>::max()) k = 0;
+            }
 
 
             if (op) {
@@ -287,9 +309,7 @@ public:
                         if (this->config_.break_on_first_novel_) return 1;
                     }
                 }
-
             }
-
         }
 
         return is_novel ? 1 : std::numeric_limits<unsigned>::max();
@@ -298,10 +318,10 @@ public:
 
     bool process_p(const State& state, const std::vector<bool>& valuation, unsigned k, unsigned qidx, unsigned p) {
 
-        unsigned pidx = this->atom_idx_.to_index(p, make_object((bool)valuation[p]));
+        bool pval = valuation[p];
+        if (!pval && !this->atom_idx_.indexes_negated_literals()) return false;  // Not interested in negative literals
 
-//        const auto& value = valuation[p];
-//        if (value == 0) return false; // ignore negative atoms
+        unsigned pidx = this->atom_idx_.to_index(p, make_object(pval));
 
         reached_[pidx] = true;
 

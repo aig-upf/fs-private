@@ -570,10 +570,9 @@ public:
                 NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
 
                 successor->_w = _evaluator->evaluate(*successor);
-//                std::cout << "Novelty of generated state: " << (unsigned) successor->_w << std::endl;
                 update_novelty_counters_on_generation(successor->_w);
 
-                // LPT_INFO("cout", "Simulation - Node generated: " << *successor);
+//                 LPT_INFO("cout", "Simulation - Node generated with w=" << (unsigned) successor->_w << ": "  << std::endl<< *successor << std::endl);
 
                 if (_model.goal(successor->state)) LPT_INFO("cout", "Simulation - Goal state reached during simulation");
 
