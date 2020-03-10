@@ -22,7 +22,7 @@ SUITE = [
     'citycar-sat14-adl',
     ##'elevators-sat11-strips',
     # 'floortile-sat11-strips',
-    'floortile-sat14-strips',
+    ##'floortile-sat14-strips',
     ##'ged-sat14-strips',
     'hiking-sat14-strips',
     ##'maintenance-sat14-adl',
@@ -32,7 +32,7 @@ SUITE = [
     ##'parcprinter-sat11-strips',
     # 'parking-sat11-strips',
     ##'parking-sat14-strips',
-    'pegsol-sat11-strips',
+    ##'pegsol-sat11-strips',
     ##'scanalyzer-sat11-strips',
     'sokoban-sat11-strips',
     ##'tetris-sat14-strips',
@@ -46,7 +46,9 @@ SUITE = [
 ]
 
 REVISIONS = [
-    "37e32cbc"
+    "7f852b09",  # delta only
+    "37e32cbc",  # #r, then delta
+    "bdaa7622",  # #r, if not novel, then delta
 ]
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
