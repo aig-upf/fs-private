@@ -227,6 +227,8 @@ public:
             }
         }
 
+        if (is_novel) return 1;
+
         // Check <q, delta(q)> contexts
         for (unsigned q = 0; q < nvars_; ++q) {
             bool qval = valuation[q];
