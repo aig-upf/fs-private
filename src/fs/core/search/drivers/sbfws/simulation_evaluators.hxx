@@ -103,6 +103,10 @@ inline uint32_t _combine_indexes(uint32_t k, uint32_t q, uint32_t p, uint32_t Q)
     return k*Q*Q + q*Q + p;
 }
 
+inline uint32_t _combine_rcontext_indexes(uint32_t p, uint32_t num_true_atoms, uint32_t Q) {
+    return num_true_atoms*Q + p;
+}
+
 
 template<
         typename NodeT,
@@ -121,20 +125,22 @@ public:
             unsigned nvars,
             const AchieverNoveltyConfiguration& config) :
         atom_idx_(problem.get_tuple_index()),
+        n_(atom_idx_.size()),
         _featureset(features),
         operators_(operators),
         achievers_(achievers),
         config_(config),
         max_precondition_size_(max_precondition_size),
         nvars_(nvars),
-        reached_(this->atom_idx_.size(), false),
-        seen_(table_size(), false)
+        reached_(n_, false),
+        seen_(delta_table_size(), false),
+        r_tables_(r_table_size(), false)
     {
 //        std::unordered_set<unsigned> idxs;
-//        for (unsigned q = 0; q < this->atom_idx_.size(); ++q) {
-//            for (unsigned p = 0; p < this->atom_idx_.size(); ++p) {
+//        for (unsigned q = 0; q < n_; ++q) {
+//            for (unsigned p = 0; p < n_; ++p) {
 //                for (unsigned k = 0; k <= max_precondition_size_+1; ++k) {
-//                    auto idx = _combine_indexes(k, q, p, this->atom_idx_.size());
+//                    auto idx = _combine_indexes(k, q, p, n_);
 //                    std::cout << " " << k << " " << q << " " << p << ": " << idx << std::endl;
 //                    auto it = idxs.insert(idx);
 //                    if (!it.second) throw std::runtime_error("WHAT!");
@@ -142,13 +148,17 @@ public:
 //                }
 //            }
 //        }
-//        std::cout << "Theoretical size: " << table_size() << std::endl;
+//        std::cout << "Theoretical size: " << delta_table_size() << std::endl;
 //        std::cout << "Actual size: " << idxs.size() << std::endl;
 //        throw std::runtime_error("NICE");
     }
 
-    std::size_t table_size() const {
-        return this->atom_idx_.size()*this->atom_idx_.size()*(max_precondition_size_+1+1);
+    std::size_t r_table_size() const {
+        return n_*n_-1;
+    }
+
+    std::size_t delta_table_size() const {
+        return n_*n_*(max_precondition_size_+1+1);
     }
 
     //! Return the "achiever satisfaction factor" #q(s) for the given state s and atom q,
@@ -175,10 +185,11 @@ public:
     }
 
     void reset() override {
-//        seen_.swap(std::vector<bool>(table_size(), false));
+//        seen_.swap(std::vector<bool>(delta_table_size(), false));
 //        reached_.swap(std::vector<bool>(nvars_, false));
         reached_.clear();
         seen_.clear();
+        r_tables_.clear();
     }
 
     unsigned evaluate(NodeT& node) override {
@@ -194,10 +205,35 @@ public:
         const PlainOperator* op = (action_id != std::numeric_limits<unsigned>::max()) ? &this->operators_.at(action_id) : nullptr;
 //        op = nullptr;
 
+        unsigned num_atoms_true = 0;
+        for (unsigned q = 0; q < nvars_; ++q) {
+            if (valuation[q]) num_atoms_true++;
+        }
+
+
+        // Check context #r
+        if (op) {
+            for (const auto& eff:op->effects_) {
+                auto p = eff.first;
+                if (process_p_for_context_r(valuation, p, num_atoms_true)) {
+                    is_novel = true;
+                }
+            }
+        } else {
+            for (unsigned p = 0; p < nvars_; ++p) {
+                if (process_p_for_context_r(valuation, p, num_atoms_true)) {
+                    is_novel = true;
+                }
+            }
+        }
+
+        // Check <q, delta(q)> contexts
         for (unsigned q = 0; q < nvars_; ++q) {
             bool qval = valuation[q];
-            if (!qval && !this->atom_idx_.indexes_negated_literals()) continue;  // Not interested in negative literals
-            unsigned qidx = this->atom_idx_.to_index(q, make_object(qval));
+            if (!qval && !atom_idx_.indexes_negated_literals()) continue;  // Not interested in negative literals
+            unsigned qidx = atom_idx_.to_index(q, make_object(qval));
+
+
 
             unsigned k = 0;
             if (reached_[qidx]) {
@@ -214,14 +250,14 @@ public:
             if (op) {
                 for (const auto& eff:op->effects_) {
                     auto p = eff.first;
-                    if (process_p(state, valuation, k, qidx, p)) {
+                    if (process_p(valuation, k, qidx, p)) {
                         is_novel = true;
                         if (this->config_.break_on_first_novel_) return 1;
                     }
                 }
             } else {
                 for (unsigned p = 0; p < nvars_; ++p) {
-                    if (process_p(state, valuation, k, qidx, p)) {
+                    if (process_p(valuation, k, qidx, p)) {
                         is_novel = true;
                         if (this->config_.break_on_first_novel_) return 1;
                     }
@@ -233,12 +269,11 @@ public:
     }
 
 
-    bool process_p(const State& state, const std::vector<bool>& valuation, unsigned k, unsigned qidx, unsigned p) {
-
+    bool process_p(const std::vector<bool>& valuation, unsigned k, unsigned qidx, unsigned p) {
         bool pval = valuation[p];
-        if (!pval && !this->atom_idx_.indexes_negated_literals()) return false;  // Not interested in negative literals
+        if (!pval && !atom_idx_.indexes_negated_literals()) return false;  // Not interested in negative literals
 
-        unsigned pidx = this->atom_idx_.to_index(p, make_object(pval));
+        unsigned pidx = atom_idx_.to_index(p, make_object(pval));
 
         reached_[pidx] = true;
 
@@ -253,9 +288,29 @@ public:
         return false;
     }
 
+    bool process_p_for_context_r(const std::vector<bool>& valuation, unsigned p, unsigned num_atoms_true) {
+        bool pval = valuation[p];
+        if (!pval && !atom_idx_.indexes_negated_literals()) return false;  // Not interested in negative literals
+
+        unsigned pidx = atom_idx_.to_index(p, make_object(pval));
+        reached_[pidx] = true;
+
+        auto rindex = _combine_rcontext_indexes(num_atoms_true, pidx, n_);
+        assert(rindex < r_tables_.size());
+        auto ref = r_tables_[rindex];
+        if (!ref) { // The tuple is new
+            ref = true;
+            return true;
+        }
+
+        return false;
+    }
+
 
 protected:
     const AtomIndex& atom_idx_;
+
+    unsigned n_;
 
     const FeatureSetT& _featureset;
 
@@ -268,6 +323,7 @@ protected:
     unsigned nvars_;
     std::vector<bool> reached_;
     std::vector<bool> seen_;
+    std::vector<bool> r_tables_;
 };
 
 //! Factory method: create an specialized achiever-evaluator based on the potential
@@ -301,11 +357,11 @@ create_achiever_evaluator(const Problem& problem,
     }
 
     unsigned long expected_table_entries = nvars*nvars*(max_precondition_size+1);
-    unsigned long expected_table_size_in_kb = expected_table_entries / (8 * 1024); // size in kilobytes
+    unsigned long expected_delta_table_size_in_kb = expected_table_entries / (8 * 1024); // size in kilobytes
 
     LPT_INFO("cout", "Max. precondition size: " << max_precondition_size);
     LPT_INFO("cout", "Num. state variables: " << nvars);
-    LPT_INFO("cout", "Expected table size: " << expected_table_size_in_kb << "KB (entries: " << expected_table_entries << ", max. size: " << config.max_table_size_ <<")");
+    LPT_INFO("cout", "Expected table size: " << expected_delta_table_size_in_kb << "KB (entries: " << expected_table_entries << ", max. size: " << config.max_table_size_ <<")");
 
     using ET = BitvectorAchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
     return std::make_unique<ET>(problem, features, operators, achievers, max_precondition_size, nvars, config);
