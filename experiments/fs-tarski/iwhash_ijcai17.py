@@ -43,13 +43,14 @@ SUITE = [
     # 'visitall-sat11-strips',
     ##'visitall-sat14-strips',
     ##'woodworking-sat11-strips',
-]
+] + [f'spanner-ipc11-learning:pfile01-00{x}.pddl' for x in range(1, 10)]
 
 REVISIONS = [
     # "7f852b09",  # delta only
     # "37e32cbc",  # #r, then delta
     # "bdaa7622",  # #r, if not novel, then delta
     '873139eb',  # #r, if not novel, then delta, but w/o neg. precs
+    'ad976573',  # #r*delta, w/o neg. precs
 ]
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
