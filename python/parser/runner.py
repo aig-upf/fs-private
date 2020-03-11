@@ -17,6 +17,7 @@ from .. import utils, FS_PATH, FS_WORKSPACE, FS_BUILD
 from .templates import tplManager
 from .tarski_serialization import generate_tarski_problem, serialize_representation, Serializer, print_groundings
 from tarski.syntax.transform import compile_universal_effects_away
+from tarski.fstrips.representation import compile_negated_preconditions_away
 from tarski.io import FstripsReader, find_domain_filename
 from tarski.utils import resources
 from tarski.grounding import LPGroundingStrategy, NaiveGroundingStrategy
@@ -35,6 +36,11 @@ def parse_arguments(args):
 
     parser.add_argument('--debug', action='store_true', help="Compile in debug mode.")
     parser.add_argument('--edebug', action='store_true', help="Compile in _extreme_ debug mode.")
+
+    parser.add_argument("--safe", action='store_true',
+                        help='Run in "safe mode", meaning: do no assume a standard IPC / propositional encoding, but '
+                             'make room for the possibility of having functions and other advanced features')
+
     parser.add_argument('-p', '--parse-only', action='store_true', help="Parse the problem and compile the generated"
                                                                         " code, if any, but don't run the solver yet.")
 
@@ -298,7 +304,13 @@ def run(args):
 
     with resources.timing(f"Preprocessing problem", newline=True):
         # Both the LP reachability analysis and the backend expect a problem without universally-quantified effects
-        problem = compile_universal_effects_away(problem)
+        with resources.timing(f"Compiling universal effects away", newline=False):
+            problem = compile_universal_effects_away(problem)
+
+        # Note that we might want to compile negated preconditions away after reachability analysis?
+        if not args.safe:
+            with resources.timing(f"Compiling negated preconditions away", newline=False):
+                problem = compile_negated_preconditions_away(problem, inplace=False)
 
     do_reachability = args.reachability != 'none' and not args.sdd  # SDD not compatible with reachability
     if not do_reachability and args.reachability_includes_variable_inequalities:
@@ -306,15 +318,14 @@ def run(args):
 
     action_groundings = None  # Schemas will be ground in the backend
     if do_reachability:
-        ground_actions = args.reachability == 'full'
-        msg = "Computing reachable groundings " + ("(actions+vars)" if ground_actions else "(vars only)")
+        do_ground_actions = args.reachability == 'full'
+        msg = "Computing reachable groundings " + ("(actions+vars)" if do_ground_actions else "(vars only)")
         with resources.timing(msg, newline=True):
-            grounding = LPGroundingStrategy(problem,
-                                            ground_actions=ground_actions,
-                                            include_variable_inequalities=
-                                            args.reachability_includes_variable_inequalities)
+            grounding = LPGroundingStrategy(
+                problem, ground_actions=do_ground_actions,
+                include_variable_inequalities=args.reachability_includes_variable_inequalities)
             ground_variables = grounding.ground_state_variables()
-            if ground_actions:
+            if do_ground_actions:
                 action_groundings = grounding.ground_actions()
     else:
         with resources.timing(f"Computing naive groundings", newline=True):
