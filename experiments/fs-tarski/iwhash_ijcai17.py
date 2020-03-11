@@ -17,9 +17,9 @@ MEMORY_LIMIT = 8000
 SUITE = [
     # 'barman-sat11-strips',
     'barman-sat14-strips',
-    'cavediving-14-adl',
+    'cavediving-14-adl',  # neg precs
     ##'childsnack-sat14-strips',
-    'citycar-sat14-adl',
+    'citycar-sat14-adl',  # neg precs
     ##'elevators-sat11-strips',
     # 'floortile-sat11-strips',
     ##'floortile-sat14-strips',
@@ -28,7 +28,7 @@ SUITE = [
     ##'maintenance-sat14-adl',
     ##'nomystery-sat11-strips',
     # 'openstacks-sat11-strips',
-    'openstacks-sat14-strips',
+    'openstacks-sat14-strips',  # neg precs
     ##'parcprinter-sat11-strips',
     # 'parking-sat11-strips',
     ##'parking-sat14-strips',
@@ -37,7 +37,7 @@ SUITE = [
     'sokoban-sat11-strips',
     ##'tetris-sat14-strips',
     'thoughtful-sat14-strips',
-    'tidybot-sat11-strips',
+    'tidybot-sat11-strips',  # neg precs
     # 'transport-sat11-strips',
     'transport-sat14-strips',
     # 'visitall-sat11-strips',
@@ -46,9 +46,10 @@ SUITE = [
 ]
 
 REVISIONS = [
-    "7f852b09",  # delta only
-    "37e32cbc",  # #r, then delta
-    "bdaa7622",  # #r, if not novel, then delta
+    # "7f852b09",  # delta only
+    # "37e32cbc",  # #r, then delta
+    # "bdaa7622",  # #r, if not novel, then delta
+    '873139eb',  # #r, if not novel, then delta, but w/o neg. precs
 ]
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
