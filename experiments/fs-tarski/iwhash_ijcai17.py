@@ -43,7 +43,8 @@ SUITE = [
     # 'visitall-sat11-strips',
     ##'visitall-sat14-strips',
     ##'woodworking-sat11-strips',
-] + [f'spanner-ipc11-learning:pfile01-00{x}.pddl' for x in range(1, 10)]
+]
+# ] + [f'spanner-ipc11-learning:pfile01-00{x}.pddl' for x in range(1, 10)]
 
 REVISIONS = [
     # "7f852b09",  # delta only
