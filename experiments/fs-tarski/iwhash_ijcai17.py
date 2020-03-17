@@ -50,7 +50,7 @@ REVISIONS = [
     # "7f852b09",  # delta only
     # "37e32cbc",  # #r, then delta
     # "bdaa7622",  # #r, if not novel, then delta
-    'df7966f1',  # #r, if not novel, then delta, but w/o neg. precs
+    '0bdae151',  # #r, if not novel, then delta, but w/o neg. precs
     '6c1f01d0',  # #r*delta, w/o neg. precs
 ]
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
