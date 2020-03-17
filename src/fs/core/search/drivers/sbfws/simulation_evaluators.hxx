@@ -234,11 +234,9 @@ public:
 
         // Check <q, delta(q)> contexts
         for (unsigned q = 0; q < nvars_; ++q) {
-            bool qval = valuation[q];
-            if (!qval && !atom_idx_.indexes_negated_literals()) continue;  // Not interested in negative literals
-            unsigned qidx = atom_idx_.to_index(q, make_object(qval));
-
-
+            auto qval = make_object(valuation[q]);
+            if (!atom_idx_.is_indexed(q, qval)) return false;
+            unsigned qidx = atom_idx_.to_index(q, qval);
 
             unsigned k = 0;
             if (reached_[qidx]) {
@@ -261,7 +259,7 @@ public:
                     }
                 }
             } else {
-                for (unsigned p = 0; p < nvars_; ++p) {
+                for (VariableIdx p = 0; p < nvars_; ++p) {
                     if (process_p(valuation, k, qidx, p, num_atoms_true)) {
                         is_novel = true;
                         if (this->config_.break_on_first_novel_) return 1;
@@ -274,11 +272,10 @@ public:
     }
 
 
-    bool process_p(const std::vector<bool>& valuation, unsigned k, unsigned qidx, unsigned p, unsigned num_atoms_true) {
-        bool pval = valuation[p];
-        if (!pval && !atom_idx_.indexes_negated_literals()) return false;  // Not interested in negative literals
-
-        unsigned pidx = atom_idx_.to_index(p, make_object(pval));
+    bool process_p(const std::vector<bool>& valuation, unsigned k, unsigned qidx, VariableIdx p, unsigned num_atoms_true) {
+        auto pval = make_object(valuation[p]);
+        if (!atom_idx_.is_indexed(p, pval)) return false;
+        unsigned pidx = atom_idx_.to_index(p, pval);
 
         reached_[pidx] = true;
 
@@ -293,11 +290,11 @@ public:
         return false;
     }
 
-    bool process_p_for_context_r(const std::vector<bool>& valuation, unsigned p, unsigned num_atoms_true) {
-        bool pval = valuation[p];
-        if (!pval && !atom_idx_.indexes_negated_literals()) return false;  // Not interested in negative literals
+    bool process_p_for_context_r(const std::vector<bool>& valuation, VariableIdx p, unsigned num_atoms_true) {
+        auto pval = make_object(valuation[p]);
+        if (!atom_idx_.is_indexed(p, pval)) return false;
+        unsigned pidx = atom_idx_.to_index(p, pval);
 
-        unsigned pidx = atom_idx_.to_index(p, make_object(pval));
         reached_[pidx] = true;
 
         auto rindex = _combine_rcontext_indexes(pidx, num_atoms_true, n_);
@@ -345,8 +342,7 @@ create_achiever_evaluator(const Problem& problem,
         const AchieverNoveltyConfiguration& config) {
 
     const auto& atom_idx = problem.get_tuple_index();
-    const auto& info = ProblemInfo::getInstance();
-    unsigned nvars = info.getNumVariables();
+    unsigned nvars = ProblemInfo::getInstance().getNumVariables();
     std::vector<std::vector<unsigned>> achievers(nvars);
 
     std::size_t max_precondition_size = 0;
