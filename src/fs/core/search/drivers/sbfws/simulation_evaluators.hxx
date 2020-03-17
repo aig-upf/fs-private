@@ -120,6 +120,7 @@ public:
             const AtomIndex& atom_idx,
             const FeatureSetT& features,
             const std::vector<PlainOperator>& operators,
+            const std::vector<std::vector<unsigned>>& op_adds,
             const std::vector<std::vector<unsigned>>& achievers,
             unsigned max_precondition_size,
             unsigned nvars,
@@ -128,6 +129,7 @@ public:
         n_(atom_idx_.size()),
         _featureset(features),
         operators_(operators),
+        op_adds_(op_adds),
         achievers_(achievers),
         config_(config),
         max_precondition_size_(max_precondition_size),
@@ -205,8 +207,8 @@ public:
         bool is_novel = false;
 
         unsigned action_id = get_action_id(node.action);
-        const PlainOperator* op = (action_id != std::numeric_limits<unsigned>::max()) ? &this->operators_.at(action_id) : nullptr;
-//        op = nullptr;
+        bool is_root = (action_id == std::numeric_limits<unsigned>::max());
+//        is_root = true;
 
         unsigned num_atoms_true = 0;
         for (unsigned q = 0; q < nvars_; ++q) {
@@ -250,9 +252,8 @@ public:
             }
 
 
-            if (op) {
-                for (const auto& eff:op->effects_) {
-                    auto p = eff.first;
+            if (!is_root) {
+                for (const auto& p:op_adds_[action_id]) {
                     if (process_p(valuation, k, qidx, p, num_atoms_true)) {
                         is_novel = true;
                         if (this->config_.break_on_first_novel_) return 1;
@@ -318,6 +319,8 @@ protected:
 
     std::vector<PlainOperator> operators_;
 
+    std::vector<std::vector<unsigned>> op_adds_;
+
     std::vector<std::vector<unsigned>> achievers_;
 
     const AchieverNoveltyConfiguration& config_;
@@ -345,6 +348,10 @@ create_achiever_evaluator(const Problem& problem,
     unsigned nvars = ProblemInfo::getInstance().getNumVariables();
     std::vector<std::vector<unsigned>> achievers(nvars);
 
+    // A vector with one element X per operator o; where X is a vector with all variables that _might_
+    // become true on application of o. "Might" stands for the possibility of conditional effects
+    std::vector<std::vector<unsigned>> op_adds(operators.size());
+
     std::size_t max_precondition_size = 0;
     for (std::size_t actionidx = 0, n = operators.size(); actionidx < n; ++actionidx) {
         const auto& op = operators[actionidx];
@@ -354,6 +361,7 @@ create_achiever_evaluator(const Problem& problem,
         for (const auto& eff:op.effects_) {
             if (eff.second == object_id::TRUE) {
                 achievers[eff.first].push_back(actionidx);
+                op_adds[actionidx].push_back(eff.first);
             }
         }
     }
@@ -366,7 +374,7 @@ create_achiever_evaluator(const Problem& problem,
     LPT_INFO("cout", "Expected table size: " << expected_delta_table_size_in_kb << "KB (entries: " << expected_table_entries << ", max. size: " << config.max_table_size_ <<")");
 
     using ET = BitvectorAchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
-    return std::make_unique<ET>(atom_idx, features, operators, achievers, max_precondition_size, nvars, config);
+    return std::make_unique<ET>(atom_idx, features, operators, op_adds, achievers, max_precondition_size, nvars, config);
 }
 
 } // namespaces

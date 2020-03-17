@@ -157,7 +157,7 @@ PlainOperator compile_action_to_plan_operator(const GroundAction& action) {
 
     // Compile effects
     for (const auto& eff:action.getEffects()) {
-        effects.emplace_back(unpack_atom(eff->lhs(), eff->rhs()));
+        effects.emplace_back(unpack_atom(eff->lhs(), eff->rhs())); // Note that we're ignoring conditional effects
     }
 
     return PlainOperator(precondition, effects);
