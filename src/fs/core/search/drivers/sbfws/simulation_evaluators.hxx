@@ -237,7 +237,7 @@ public:
         // Check <q, delta(q)> contexts
         for (unsigned q = 0; q < nvars_; ++q) {
             auto qval = make_object(valuation[q]);
-            if (!atom_idx_.is_indexed(q, qval)) return false;
+            if (!atom_idx_.is_indexed(q, qval)) continue;
             unsigned qidx = atom_idx_.to_index(q, qval);
 
             unsigned k = 0;
