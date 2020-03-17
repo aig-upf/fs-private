@@ -99,7 +99,7 @@ inline const std::vector<bool>& get_valuation<std::vector<bool>>(const std::vect
 // A helper. Combine indexes in ranges
 // k \in [0..k] ("number of preconditions to go")
 // q, p \in [0..Q-1]  ("atom indexes")
-inline std::size_t _combine_indexes(std::size_t k, std::size_t q, std::size_t p, std::size_t num_atoms_true, std::size_t Q) {
+inline std::size_t _combine_indexes(std::size_t k, std::size_t q, std::size_t p, std::size_t Q) {
     return k*Q*Q + q*Q + p;
 }
 
