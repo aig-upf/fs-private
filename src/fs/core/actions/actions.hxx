@@ -177,10 +177,10 @@ public:
     ~ProceduralAction() override;
 };
 
-class PlainOperator {
+class SASPlusOperator {
 public:
-    PlainOperator(std::vector<std::pair<VariableIdx, object_id>> precondition,
-                  std::vector<std::pair<VariableIdx, object_id>> effects) :
+    SASPlusOperator(std::vector<std::pair<VariableIdx, object_id>> precondition,
+                    std::vector<std::pair<VariableIdx, object_id>> effects) :
             precondition_(std::move(precondition)), effects_(std::move(effects))
     {}
 
@@ -188,7 +188,7 @@ public:
     std::vector<std::pair<VariableIdx, object_id>> effects_;
 };
 
-PlainOperator compile_action_to_plan_operator(const GroundAction& action);
+SASPlusOperator compile_action_to_plan_operator(const GroundAction& action);
 
 
 } // namespaces

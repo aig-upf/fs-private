@@ -119,7 +119,7 @@ public:
     BitvectorAchieverNoveltyEvaluator(
             const AtomIndex& atom_idx,
             const FeatureSetT& features,
-            const std::vector<PlainOperator>& operators,
+            const std::vector<SASPlusOperator>& operators,
             const std::vector<std::vector<unsigned>>& op_adds,
             const std::vector<std::vector<unsigned>>& achievers,
             unsigned max_precondition_size,
@@ -317,7 +317,7 @@ protected:
 
     const FeatureSetT& _featureset;
 
-    std::vector<PlainOperator> operators_;
+    std::vector<SASPlusOperator> operators_;
 
     std::vector<std::vector<unsigned>> op_adds_;
 
@@ -341,7 +341,7 @@ template<
 std::unique_ptr<BitvectorAchieverNoveltyEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>>
 create_achiever_evaluator(const Problem& problem,
         const FeatureSetT& features,
-        const std::vector<PlainOperator>& operators,
+        const std::vector<SASPlusOperator>& operators,
         const AchieverNoveltyConfiguration& config) {
 
     const auto& atom_idx = problem.get_tuple_index();

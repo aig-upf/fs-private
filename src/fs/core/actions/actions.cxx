@@ -130,7 +130,7 @@ std::pair<VariableIdx, object_id> unpack_atom(const fs::Term* lhs, const fs::Ter
     return std::make_pair(sv->getValue(), c->getValue());
 }
 
-PlainOperator compile_action_to_plan_operator(const GroundAction& action) {
+SASPlusOperator compile_action_to_plan_operator(const GroundAction& action) {
     std::vector<std::pair<VariableIdx, object_id>> precondition;
     std::vector<std::pair<VariableIdx, object_id>> effects;
 
@@ -160,7 +160,7 @@ PlainOperator compile_action_to_plan_operator(const GroundAction& action) {
         effects.emplace_back(unpack_atom(eff->lhs(), eff->rhs())); // Note that we're ignoring conditional effects
     }
 
-    return PlainOperator(precondition, effects);
+    return SASPlusOperator(precondition, effects);
 }
 
 

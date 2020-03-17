@@ -200,7 +200,7 @@ public:
     {
         if (_config._use_achiever_evaluator) {
             const auto& actions = _model.getTask().getGroundActions();
-            std::vector<PlainOperator> operators;
+            std::vector<SASPlusOperator> operators;
             operators.reserve(actions.size());
             for (const auto& a:actions) operators.emplace_back(compile_action_to_plan_operator(*a));
 
