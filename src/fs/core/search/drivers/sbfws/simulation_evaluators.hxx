@@ -100,10 +100,10 @@ inline const std::vector<bool>& get_valuation<std::vector<bool>>(const std::vect
 // k \in [0..k] ("number of preconditions to go")
 // q, p \in [0..Q-1]  ("atom indexes")
 inline std::size_t _combine_indexes(std::size_t k, std::size_t q, std::size_t p, std::size_t num_atoms_true, std::size_t Q) {
-    return k*Q*Q*Q + q*Q*Q + Q*num_atoms_true + p;
+    return k*Q*Q + q*Q + p;
 }
 
-inline uint32_t _combine_rcontext_indexes(uint32_t p, uint32_t num_true_atoms, uint32_t Q) {
+inline std::size_t _combine_rcontext_indexes(std::size_t p, std::size_t num_true_atoms, std::size_t Q) {
     return num_true_atoms*Q + p;
 }
 
@@ -163,7 +163,7 @@ public:
     }
 
     std::size_t delta_table_size() const {
-        return n_*n_*n_*(max_precondition_size_+1+1);
+        return n_*n_*(max_precondition_size_+1+1);
     }
 
     //! Return the "achiever satisfaction factor" #q(s) for the given state s and atom q,
@@ -217,22 +217,21 @@ public:
 
 
         // Check context #r
-//        if (op) {
-//            for (const auto& eff:op->effects_) {
-//                auto p = eff.first;
-//                if (process_p_for_context_r(valuation, p, num_atoms_true)) {
-//                    is_novel = true;
-//                }
-//            }
-//        } else {
-//            for (unsigned p = 0; p < nvars_; ++p) {
-//                if (process_p_for_context_r(valuation, p, num_atoms_true)) {
-//                    is_novel = true;
-//                }
-//            }
-//        }
+        if (!is_root) {
+            for (const auto& p:op_adds_[action_id]) {
+                if (process_p_for_context_r(valuation, p, num_atoms_true)) {
+                    is_novel = true;
+                }
+            }
+        } else {
+            for (unsigned p = 0; p < nvars_; ++p) {
+                if (process_p_for_context_r(valuation, p, num_atoms_true)) {
+                    is_novel = true;
+                }
+            }
+        }
 
-//        if (is_novel) return 1;
+        if (is_novel) return 1;
 
         // Check <q, delta(q)> contexts
         for (unsigned q = 0; q < nvars_; ++q) {
@@ -254,14 +253,14 @@ public:
 
             if (!is_root) {
                 for (const auto& p:op_adds_[action_id]) {
-                    if (process_p(valuation, k, qidx, p, num_atoms_true)) {
+                    if (process_p(valuation, k, qidx, p)) {
                         is_novel = true;
                         if (this->config_.break_on_first_novel_) return 1;
                     }
                 }
             } else {
                 for (VariableIdx p = 0; p < nvars_; ++p) {
-                    if (process_p(valuation, k, qidx, p, num_atoms_true)) {
+                    if (process_p(valuation, k, qidx, p)) {
                         is_novel = true;
                         if (this->config_.break_on_first_novel_) return 1;
                     }
@@ -273,14 +272,14 @@ public:
     }
 
 
-    bool process_p(const std::vector<bool>& valuation, unsigned k, unsigned qidx, VariableIdx p, unsigned num_atoms_true) {
+    bool process_p(const std::vector<bool>& valuation, unsigned k, unsigned qidx, unsigned p) {
         auto pval = make_object(valuation[p]);
         if (!atom_idx_.is_indexed(p, pval)) return false;
         unsigned pidx = atom_idx_.to_index(p, pval);
 
         reached_[pidx] = true;
 
-        unsigned atom_index = _combine_indexes(k, qidx, pidx, num_atoms_true, this->atom_idx_.size());
+        unsigned atom_index = _combine_indexes(k, qidx, pidx, this->atom_idx_.size());
         assert(atom_index < seen_.size());
         auto ref = seen_[atom_index];
         if (!ref) { // The tuple is new
@@ -366,7 +365,7 @@ create_achiever_evaluator(const Problem& problem,
         }
     }
 
-    unsigned long expected_table_entries = nvars*nvars*nvars*(max_precondition_size+1+1);
+    unsigned long expected_table_entries = nvars*nvars*(max_precondition_size+1);
     unsigned long expected_delta_table_size_in_kb = expected_table_entries / (8 * 1024); // size in kilobytes
 
     LPT_INFO("cout", "Max. precondition size: " << max_precondition_size);
