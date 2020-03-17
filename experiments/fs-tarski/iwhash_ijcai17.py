@@ -18,22 +18,22 @@ SUITE = [
     # 'barman-sat11-strips',
     'barman-sat14-strips',
     'cavediving-14-adl',  # neg precs
-    ##'childsnack-sat14-strips',
+    'childsnack-sat14-strips',
     'citycar-sat14-adl',  # neg precs
-    ##'elevators-sat11-strips',
+    'elevators-sat11-strips',
     # 'floortile-sat11-strips',
-    ##'floortile-sat14-strips',
+    'floortile-sat14-strips',
     ##'ged-sat14-strips',
     'hiking-sat14-strips',
     ##'maintenance-sat14-adl',
     ##'nomystery-sat11-strips',
     # 'openstacks-sat11-strips',
     'openstacks-sat14-strips',  # neg precs
-    ##'parcprinter-sat11-strips',
+    'parcprinter-sat11-strips',
     # 'parking-sat11-strips',
-    ##'parking-sat14-strips',
-    ##'pegsol-sat11-strips',
-    ##'scanalyzer-sat11-strips',
+    'parking-sat14-strips',
+    'pegsol-sat11-strips',
+    'scanalyzer-sat11-strips',
     'sokoban-sat11-strips',
     ##'tetris-sat14-strips',
     'thoughtful-sat14-strips',
@@ -41,7 +41,7 @@ SUITE = [
     # 'transport-sat11-strips',
     'transport-sat14-strips',
     # 'visitall-sat11-strips',
-    ##'visitall-sat14-strips',
+    'visitall-sat14-strips',
     ##'woodworking-sat11-strips',
 ]
 # ] + [f'spanner-ipc11-learning:pfile01-00{x}.pddl' for x in range(1, 10)]
@@ -50,8 +50,8 @@ REVISIONS = [
     # "7f852b09",  # delta only
     # "37e32cbc",  # #r, then delta
     # "bdaa7622",  # #r, if not novel, then delta
-    '873139eb',  # #r, if not novel, then delta, but w/o neg. precs
-    'ad976573',  # #r*delta, w/o neg. precs
+    'df7966f1',  # #r, if not novel, then delta, but w/o neg. precs
+    '6c1f01d0',  # #r*delta, w/o neg. precs
 ]
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
