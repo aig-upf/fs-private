@@ -37,6 +37,10 @@ def parse_arguments(args):
     parser.add_argument('--debug', action='store_true', help="Compile in debug mode.")
     parser.add_argument('--edebug', action='store_true', help="Compile in _extreme_ debug mode.")
 
+    parser.add_argument("--fd", action='store_true',
+                        help='Run in "SAS+ mode", assuming a standard IPC/propositional encoding, and using Fast '
+                             'Downward\'s preprocessor to generate a SAS file from the PDDL')
+
     parser.add_argument("--safe", action='store_true',
                         help='Run in "safe mode", meaning: do no assume a standard IPC / propositional encoding, but '
                              'make room for the possibility of having functions and other advanced features')
@@ -207,6 +211,9 @@ def run_solver(translation_dir, args, dry_run):
     if args.planfile:
         command += ["--planfile", args.planfile]
 
+    if args.fd:
+        command += ["--fd"]
+
     arguments = command[1:]
     if dry_run:  # Simply return without running anything
         return arguments
@@ -282,7 +289,6 @@ def sort_state_variables(ground_variables):
 
 
 def run(args):
-    t0 = resources.Timer()
     is_debug_run = args.edebug or args.debug
     # Determine the proper domain and instance filenames
     if args.domain is None:
@@ -299,9 +305,33 @@ def run(args):
     print(f'Problem instance: "{instance_name}" ({os.path.realpath(args.instance)})')
     print(f'Workspace: {os.path.realpath(workdir)}')
 
+    if args.fd:
+        from .fd import parse_with_fd_translator
+        parse_with_fd_translator(args.domain, args.instance, workdir)
+    else:
+        preprocess_with_tarski(args, is_debug_run, workdir)
+
+    use_vanilla = True
+    move_files(args, workdir, use_vanilla)
+    if not args.parse_only:
+        compile_translation(workdir, use_vanilla, args)
+    if is_debug_run:  # If debugging, we perform a dry-run to get the call arguments and generate debugging scripts
+        planner_arguments = run_solver(workdir, args, True)
+        generate_debug_scripts(workdir, planner_arguments)
+
+    # Invoke the planner:
+    translation_dir = run_solver(workdir, args, args.parse_only)
+
+    # Validate the resulting plan:
+    is_plan_valid = validate(args.domain, args.instance, os.path.join(translation_dir, 'first.plan'))
+
+    return is_plan_valid
+
+
+def preprocess_with_tarski(args, is_debug_run, workdir):
+    t0 = resources.Timer()
     with resources.timing(f"Parsing problem", newline=True):
         problem = parse_problem_with_tarski(args.domain, args.instance)
-
     with resources.timing(f"Preprocessing problem", newline=True):
         # Both the LP reachability analysis and the backend expect a problem without universally-quantified effects
         with resources.timing(f"Compiling universal effects away", newline=False):
@@ -311,11 +341,9 @@ def run(args):
         if not args.safe:
             with resources.timing(f"Compiling negated preconditions away", newline=False):
                 problem = compile_negated_preconditions_away(problem, inplace=False)
-
     do_reachability = args.reachability != 'none' and not args.sdd  # SDD not compatible with reachability
     if not do_reachability and args.reachability_includes_variable_inequalities:
         raise RuntimeError("Cannot do reachability analysis with inequalities if reachability=none is specified.")
-
     action_groundings = None  # Schemas will be ground in the backend
     if do_reachability:
         do_ground_actions = args.reachability == 'full'
@@ -331,9 +359,7 @@ def run(args):
         with resources.timing(f"Computing naive groundings", newline=True):
             grounding = NaiveGroundingStrategy(problem, ignore_symbols={'total-cost'})
             ground_variables = grounding.ground_state_variables()
-
     statics, fluents = grounding.static_symbols, grounding.fluent_symbols
-
     if args.sdd:
         from tarski.sdd.sdd import process_problem
         sdddir = os.path.join(workdir, 'data', 'sdd')
@@ -342,7 +368,6 @@ def run(args):
                         sdd_minimization_time=None, graphs_directory=None,
                         var_ordering=args.var_ordering, reachable_vars=ground_variables,
                         sdd_incr_minimization_time=args.sdd_incr_minimization_time)
-
     if action_groundings:
         # Prune those action schemas that have no grounding at all
         reachable_schemas = OrderedDict()
@@ -350,34 +375,15 @@ def run(args):
             if action_groundings[name]:
                 reachable_schemas[name] = act
         problem.actions = reachable_schemas
-
     if is_debug_run:
         ground_variables = sort_state_variables(ground_variables)
-
     data, init_atoms, obj_idx = generate_tarski_problem(problem, fluents, statics, variables=ground_variables)
     serializer = Serializer(os.path.join(workdir, 'data'))
     serialize_representation(data, init_atoms, serializer, debug=is_debug_run)
     # Print the reachable action groundings if available;
     # if not, erase grounding files that might exist from previous runs.
     print_groundings(data['action_schemata'], action_groundings, obj_idx, serializer)
-    use_vanilla = True
-
-    move_files(args, workdir, use_vanilla)
-    if not args.parse_only:
-        compile_translation(workdir, use_vanilla, args)
-
-    if is_debug_run:  # If debugging, we perform a dry-run to get the call arguments and generate debugging scripts
-        planner_arguments = run_solver(workdir, args, True)
-        generate_debug_scripts(workdir, planner_arguments)
-
     print(f"Python parser and preprocessing: {t0}")
-    # Invoke the planner:
-    translation_dir = run_solver(workdir, args, args.parse_only)
-
-    # Validate the resulting plan:
-    is_plan_valid = validate(args.domain, args.instance, os.path.join(translation_dir, 'first.plan'))
-
-    return is_plan_valid
 
 
 def validate(domain_name, instance_name, planfile):
