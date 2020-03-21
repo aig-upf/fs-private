@@ -614,7 +614,14 @@ public:
     void report(const std::string& result, unsigned max_width) const {
         if (!_verbose) return;
         float perc_reached_subgoals = float(_model.num_subgoals() - _unreached.size()) / _model.num_subgoals();
+        auto reachedv = _evaluator->reached_atoms();
+        const auto& atom_idx = Problem::getInstance().get_tuple_index();
+        unsigned reached = std::accumulate(reachedv.begin(), reachedv.end(), 0);
+        unsigned total_atoms = atom_idx.size();
+        float perc_reached_atoms = reached / (float) total_atoms;
+
         LPT_INFO("cout", "Simulation - Finished IW(" << max_width << ") Simulation. Fraction reached subgoals: " << std::fixed << std::setprecision(2) << perc_reached_subgoals);
+        LPT_INFO("cout", "Simulation - Reached atoms: " << reached << "/" << total_atoms << " (" << perc_reached_atoms << ")");
         LPT_INFO("cout", "Simulation - " << result);
         LPT_INFO("cout", "Simulation - Reached " << (_model.num_subgoals() - _unreached.size()) << " / " << _model.num_subgoals() << " subgoals");
         LPT_INFO("cout", "Simulation - Expanded nodes with w=1 " << _w1_nodes_expanded);
