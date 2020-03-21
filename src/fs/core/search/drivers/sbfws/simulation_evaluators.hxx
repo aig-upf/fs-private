@@ -186,7 +186,7 @@ public:
     }
 
     std::vector<bool> reached_atoms() const override {
-        throw std::runtime_error("Unimplemented");
+        return reached_;
     }
 
     void reset() override {
@@ -281,7 +281,7 @@ public:
 
         unsigned atom_index = _combine_indexes(k, qidx, pidx, this->atom_idx_.size());
         assert(atom_index < seen_.size());
-        auto ref = seen_[atom_index];
+        auto&& ref = seen_[atom_index];
         if (!ref) { // The tuple is new
             ref = true;
             return true;
@@ -299,7 +299,7 @@ public:
 
         auto rindex = _combine_rcontext_indexes(pidx, num_atoms_true, n_);
         assert(rindex < r_tables_.size());
-        auto ref = r_tables_[rindex];
+        auto&& ref = r_tables_[rindex];
         if (!ref) { // The tuple is new
             ref = true;
             return true;
