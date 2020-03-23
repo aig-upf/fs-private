@@ -4,6 +4,7 @@
 #include <fs/core/atom.hxx>
 #include <fs/core/actions/action_id.hxx>
 #include <fs/core/actions/csp_action_iterator.hxx>
+#include <fs/core/actions/simple_lifted_operators.hxx>
 
 
 namespace fs0::gecode { class LiftedActionCSP; }
@@ -54,9 +55,11 @@ public:
 
 	//! Returns the state resulting from applying the given action action on the given state
 	State next(const State& state, const ActionType& aid) const;
+    State next2(const State& state, const ActionType& aid) const;
 
 	const Problem& getTask() const { return _task; }
-	void set_handlers(std::vector<std::shared_ptr<gecode::LiftedActionCSP>>&& handlers) { _handlers = std::move(handlers); }
+	void set_handlers(std::vector<std::shared_ptr<gecode::LiftedActionCSP>> handlers) { _handlers = std::move(handlers); }
+    void set_operators(std::vector<SimpleLiftedOperator> handlers) { lifted_operators_ = std::move(handlers); }
 
 	//! Returns the number of subgoals into which the goal can be decomposed
 	unsigned num_subgoals() const { return _subgoals.size(); }
@@ -73,6 +76,8 @@ protected:
 	const Problem& _task;
 
 	std::vector<std::shared_ptr<gecode::LiftedActionCSP>> _handlers;
+
+	std::vector<SimpleLiftedOperator> lifted_operators_;
 
 	const std::vector<const fs::Formula*> _subgoals;
 

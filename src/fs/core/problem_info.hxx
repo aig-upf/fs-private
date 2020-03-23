@@ -89,8 +89,9 @@ protected:
 	//! A map from state variable name to state variable ID
 	std::unordered_map<std::string, VariableIdx> variableIds;
 
-	//! A map from the actual data "f(t1, t2, ..., tn)" to the assigned variable ID
-	std::map<std::pair<unsigned, std::vector<object_id>>, VariableIdx> variableDataToId;
+    //! A map from the actual data "f(t1, t2, ..., tn)" to the assigned variable ID
+    using varidx_t = std::pair<unsigned, std::vector<object_id>>;
+	std::unordered_map<varidx_t, VariableIdx, boost::hash<varidx_t>> variableDataToId;
 	std::vector<std::pair<unsigned, std::vector<object_id>>> variableIdToData;
 
 	//! Mapping from state variable index to the type associated to the state variable

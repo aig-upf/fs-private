@@ -79,6 +79,7 @@ public:
     //! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os) const override;
 
+    const Binding& get_binding() const { return _binding; }
 	Binding get_full_binding() const;
 };
 

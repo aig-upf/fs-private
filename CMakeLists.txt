@@ -13,6 +13,7 @@ set(SOURCE_FILES
         src/fs/core/actions/action_id.hxx
         src/fs/core/actions/actions.cxx
         src/fs/core/actions/actions.hxx
+        src/fs/core/actions/simple_lifted_operators
         src/fs/core/actions/checker.cxx
         src/fs/core/actions/checker.hxx
         src/fs/core/actions/grounding.cxx

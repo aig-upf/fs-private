@@ -66,7 +66,13 @@ public:
 		if (!binds(variable)) throw std::runtime_error("Attempted to access unset binding position");
 		return _values.at(variable);
 	}
-	
+
+	const object_id& operator[](unsigned variable) const {
+	    assert(binds(variable) && variable < _values.size());
+	    return _values[variable];
+	}
+
+
 	//! Sets the given position of the binding to the given value; if necessary, resizes the binding.
 	void set(unsigned variable, const object_id& value) {
 		unsigned min_size = variable + 1;
