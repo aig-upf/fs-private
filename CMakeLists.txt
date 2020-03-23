@@ -165,8 +165,6 @@ set(SOURCE_FILES
         src/fs/core/search/drivers/sbfws/stats.hxx
         src/fs/core/search/drivers/breadth_first_search.cxx
         src/fs/core/search/drivers/breadth_first_search.hxx
-        src/fs/core/search/drivers/fully_lifted_driver.cxx
-        src/fs/core/search/drivers/fully_lifted_driver.hxx
         src/fs/core/search/drivers/iterated_width.cxx
         src/fs/core/search/drivers/iterated_width.hxx
         src/fs/core/search/drivers/registry.cxx

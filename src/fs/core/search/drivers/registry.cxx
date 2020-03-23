@@ -10,14 +10,14 @@
 #include <fs/core/heuristics/unsat_goal_atoms.hxx>
 #include <fs/core/search/drivers/smart_effect_driver.hxx>
 #include <fs/core/search/drivers/smart_lifted_driver.hxx>
-#include <fs/core/search/drivers/fully_lifted_driver.hxx>
+#include <fs/core/search/drivers/__fully_lifted_driver.hxx__>
 #include <fs/core/actions/grounding.hxx>
 #include "native_action_driver.hxx"
 
 
 // using namespace fs0::gecode;
 
-namespace fs0 { namespace drivers {
+namespace fs0::drivers {
 
 
 
@@ -72,4 +72,4 @@ Driver* EngineRegistry::get(const std::string& engine_name) {
 }
 
 
-} } // namespaces
+} // namespaces
