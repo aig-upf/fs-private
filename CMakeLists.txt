@@ -253,7 +253,8 @@ set(SOURCE_FILES
         src/fs/core/state.hxx
         src/fs/core/monotonicity
         src/fs/core/validator.cxx
-        src/fs/core/validator.hxx src/fs/core/search/drivers/sbfws/simulation_evaluators.hxx)
+        src/fs/core/validator.hxx
+        src/fs/core/search/drivers/sbfws/simulation_evaluators.hxx)
 
 #add_executable(fs_private ${SOURCE_FILES})
 add_library(fs SHARED ${SOURCE_FILES})

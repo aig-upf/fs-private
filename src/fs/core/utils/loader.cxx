@@ -131,11 +131,12 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 
 	//! Set the global singleton Problem instance
 	bool has_negated_preconditions = _check_negated_preconditions(action_data);
-	LPT_INFO("main", "Quick Negated-Precondition Test: Does the problem have negated preconditions? " << has_negated_preconditions);
-	LPT_INFO("main", "Atom Index: Indexing negative literals? " << has_negated_preconditions);
+	if (has_negated_preconditions) throw std::runtime_error("Negated preconditions should have been compiled away at"
+                                                         " preprocessing. Check code, there must be some bug.");
+
 	// We will index the negative literals if either the problem has neg. precs, or the user explicitly wants _not_ to ignore them on novelty computations.
-	bool index_negative_literals = has_negated_preconditions || !(config.getOption<bool>("ignore_neg_literals", true));
-	Problem* problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info, index_negative_literals), transitions);
+	bool index_negative_literals = !(config.getOption<bool>("ignore_neg_literals", true));
+	auto problem = new Problem(init, indexer, action_data, axiom_idx, goal, sc_idx, metric, AtomIndex(info, index_negative_literals), transitions);
 	Problem::setInstance(std::unique_ptr<Problem>(problem));
 
 	// ATM support for axioms is very buggy and we should better not rely on it

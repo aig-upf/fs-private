@@ -6,15 +6,14 @@ from common import ALL_ATTRIBUTES, BaseReport
 def main():
 
     # Use the path where the combined results will be left:
-    exp = Experiment('/homedtic/gfrances/projects/code/fs-sdd/experiments/data/combined')
+    exp = Experiment('/homedtic/gfrances/projects/code/fs-sdd/experiments/fs-tarski/data/combined')
 
     # Use the paths where the results of the different experiments to be combined are:
-    exp.add_fetcher('/homedtic/gfrances/projects/code/fs-sdd/experiments/fs-tarski/data/fs-tarski-sat-eval')
-    exp.add_fetcher('/homedtic/gfrances/projects/code/fs-sdd/experiments/fs-tarski/data/fs-tarski-sat_r-eval')
-
     # Use the filter_algorithm parameter if you only need some algos in the table, e.g.
-    # algos=['brfs-naive', 'brfs-sdd-asp', 'brfs-sdd-vo-asp']
-    # exp.add_fetcher('/homedtic/gfrances/projects/code/fs-sdd/experiments/fs-tarski/data/fs-tarski-sat-eval', filter_algorithm=algos)
+    exp.add_fetcher('/homedtic/gfrances/projects/code/fs-sdd/experiments/fs-tarski/data/s-tarski-iw_achiever_ijcai17-eval',
+                    filter=lambda run: 'bfws-rg-std' in run['algorithm'])
+    exp.add_fetcher('/homedtic/gfrances/projects/code/fs-sdd/experiments/fs-tarski/data/s-tarski-iw_achiever_ijcai17_tests-eval',
+                    filter=lambda run: '7f852b09-bfws-rg-ach' == run['algorithm'])
 
     attributes = [att for name, att in ALL_ATTRIBUTES.items() if not name.startswith('sdd')]
     exp.add_report(

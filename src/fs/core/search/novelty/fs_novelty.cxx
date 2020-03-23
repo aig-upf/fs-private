@@ -4,7 +4,7 @@
 #include <fs/core/problem_info.hxx>
 #include <fs/core/utils/atom_index.hxx>
 
-namespace fs0 { namespace bfws {
+namespace fs0::bfws {
 
 unsigned FSAtomValuationIndexer::num_indexes() const {
 	return _atom_index.size();
@@ -26,4 +26,4 @@ const Atom& FSAtomValuationIndexer::to_atom(unsigned index) const {
 template unsigned FSAtomValuationIndexer::to_index<int>(unsigned variable, const int& value) const;
 template unsigned FSAtomValuationIndexer::to_index<bool>(unsigned variable, const bool& value) const;
 
-} } // namespaces
+} // namespaces

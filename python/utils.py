@@ -2,7 +2,6 @@
 import os
 import sys
 import errno
-import logging
 
 
 def fix_seed_and_possibly_rerun(verbose=False):

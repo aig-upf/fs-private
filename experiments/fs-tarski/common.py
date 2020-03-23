@@ -73,6 +73,8 @@ ALL_ATTRIBUTES = {
     'sim_rall_because_too_many_actions': Attribute('sim_rall_because_too_many_actions', min_wins=False),
     'sim_iw2_successful': Attribute('sim_iw2_successful', min_wins=False),
     'sim_rall_because_iw2_unsuccessful': Attribute('sim_rall_because_iw2_unsuccessful', min_wins=False),
+    'sim_goal_reached': 'sim_goal_reached',
+    'sim_nodes_expanded': 'sim_nodes_expanded',
 
     'iw1_finished': 'iw1_finished',
     'iw2_finished': 'iw2_finished',

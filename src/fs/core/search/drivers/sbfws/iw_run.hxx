@@ -198,11 +198,23 @@ public:
         _stats(stats),
         _verbose(verbose)
     {
-        if (true) {
+        if (_config._use_achiever_evaluator) {
+            const auto& actions = _model.getTask().getGroundActions();
+            std::vector<SASPlusOperator> operators;
+            operators.reserve(actions.size());
+            for (const auto& a:actions) operators.emplace_back(compile_action_to_plan_operator(*a));
+
+            AchieverNoveltyConfiguration ach_config(
+                _config.global.template getOption<unsigned long>("sim.max_table_size", 9999999),
+                _config.global.template getOption<bool>("sim.early_break", false)
+            );
+            _evaluator = create_achiever_evaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>(
+                    _model.getTask(), featureset, operators, ach_config
+            );
+
+        } else {
             using SimEvaluatorT = SimulationEvaluator<NodeT, FeatureSetT, NoveltyEvaluatorT>;
             _evaluator = std::make_unique<SimEvaluatorT>(featureset, evaluator);
-        } else {
-
         }
     }
 
@@ -229,7 +241,7 @@ public:
 
     //! Mark all atoms in the path to some goal. 'seed_nodes' contains all nodes satisfying some subgoal.
     void mark_atoms_in_path_to_subgoal(const std::vector<NodePT>& seed_nodes, std::vector<bool>& atoms) const {
-        const AtomIndex& index = Problem::getInstance().get_tuple_index();
+        const AtomIndex& index = _model.getTask().get_tuple_index();
         std::unordered_set<NodePT> all_visited;
         assert(atoms.size() == index.size());
 
@@ -292,7 +304,7 @@ public:
     }
 
     std::vector<bool> mark_all_atoms_in_path_to_subgoal(const std::vector<NodePT>& seed_nodes) const {
-        const AtomIndex& index = Problem::getInstance().get_tuple_index();
+        const AtomIndex& index = _model.getTask().get_tuple_index();
         std::vector<bool> atoms(index.size(), false);
         std::unordered_set<NodePT> all_visited;
         assert(atoms.size() == index.size());
@@ -328,7 +340,7 @@ public:
     }
 
     std::vector<bool> compute_R_all() {
-        const AtomIndex& index = Problem::getInstance().get_tuple_index();
+        const AtomIndex& index = _model.getTask().get_tuple_index();
         _stats.r_type(1);
         std::vector<bool> all(index.size(), false);
         for (unsigned i = 0; i < all.size(); ++i) {
@@ -366,8 +378,6 @@ public:
 
     std::vector<bool> compute_plain_RG2(const StateT& seed) {
         assert(_config._max_width == 2);
-
-        _config._complete = false;
         auto simt0 = aptk::time_used();
         run(seed, _config._max_width);
         report_simulation_stats(simt0);
@@ -379,7 +389,6 @@ public:
 
     std::vector<bool> compute_plain_R1(const StateT& seed) {
         assert(_config._max_width == 1);
-        _config._complete = false;
 
         auto simt0 = aptk::time_used();
         run(seed, _config._max_width);
@@ -406,12 +415,9 @@ public:
     }
 
     std::vector<bool> compute_R_g_prime(const StateT& seed) {
-        _config._complete = false;
-
-
-        auto simt0 = aptk::time_used();
+		auto simt0 = aptk::time_used();
         run(seed, 1);
-        report_simulation_stats(simt0);
+		report_simulation_stats(simt0);
 
         if (_unreached.size() == 0) {
             std::vector<NodePT> seed_nodes = extract_seed_nodes();
@@ -431,7 +437,7 @@ public:
         }
 
         if (_config._gr_actions_cutoff < std::numeric_limits<unsigned>::max()) {
-            unsigned num_actions = Problem::getInstance().getGroundActions().size();
+            unsigned num_actions =  _model.getTask().getGroundActions().size();
             if (num_actions > _config._gr_actions_cutoff) { // Too many actions to compute IW(2)
                 LPT_INFO("cout", "Simulation - Number of actions (" << num_actions << " > " << _config._gr_actions_cutoff << ") considered too high to run IW(2).");
                 return compute_R_all();
@@ -440,10 +446,10 @@ public:
             }
         }
         LPT_INFO("cout", "Simulation - Throwing IW(2) simulation");
-        reset();
+		reset();
         run(seed, 2);
-        report_simulation_stats(simt0);
-        _stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
+		report_simulation_stats(simt0);
+		_stats.reachable_subgoals( _model.num_subgoals() - _unreached.size());
 
         if (_unreached.size() == 0) {
             std::vector<NodePT> seed_nodes = extract_seed_nodes();
@@ -461,7 +467,7 @@ public:
 
     //! Extracts the goal-oriented set of relevant atoms after a simulation run
     std::vector<bool> extract_R_G(bool r_all_fallback) {
-        const AtomIndex& index = Problem::getInstance().get_tuple_index();
+        const AtomIndex& index = _model.getTask().get_tuple_index();
         /*
         for (unsigned subgoal_idx = 0; subgoal_idx < _all_paths.size(); ++subgoal_idx) {
             const std::vector<NodePT>& paths = _all_paths[subgoal_idx];
@@ -534,55 +540,6 @@ public:
         return R_G;
     }
 
-
-
-// 	std::vector<AtomIdx> _compute_R(const StateT& seed) {
-
-// 		_config._complete = false;
-//
-// 		float simt0 = aptk::time_used();
-//  		run(seed);
-// 		_stats.simulation();
-// 		_stats.sim_add_time(aptk::time_used() - simt0);
-// 		_stats.sim_add_expanded_nodes(_w1_nodes_expanded+_w2_nodes_expanded);
-// 		_stats.sim_add_generated_nodes(_w1_nodes_generated+_w2_nodes_generated+_w_gt2_nodes_generated);
-// 		_stats.reachable_subgoals(_model.num_subgoals() - _unreached.size());
-
-// 		std::vector<NodePT> w1_goal_reaching_nodes;
-// 		std::vector<NodePT> w2_goal_reaching_nodes;
-// 		std::vector<NodePT> wgt2_goal_reaching_nodes;
-
-
-        /*
-        LPT_INFO("cout", "Simulation - Number of novelty-1 nodes: " << _w1_nodes.size());
-        LPT_INFO("cout", "Simulation - Number of novelty=1 nodes expanded in the simulation: " << _w1_nodes_expanded);
-        LPT_INFO("cout", "Simulation - Number of novelty=2 nodes expanded in the simulation: " << _w2_nodes_expanded);
-        LPT_INFO("cout", "Simulation - Number of novelty=1 nodes generated in the simulation: " << _w1_nodes_generated);
-        LPT_INFO("cout", "Simulation - Number of novelty=2 nodes generated in the simulation: " << _w2_nodes_generated);
-        LPT_INFO("cout", "Simulation - Number of novelty>2 nodes generated in the simulation: " << _w_gt2_nodes_generated);
-        LPT_INFO("cout", "Simulation - Total number of generated nodes (incl. pruned): " << _generated);
-        LPT_INFO("cout", "Simulation - Number of seed novelty-1 nodes: " << w1_seed_nodes.size());
-        */
-
-// 		auto relevant_w2_nodes = compute_relevant_w2_nodes();
-// 		LPT_INFO("cout", "Simulation - Number of relevant novelty-2 nodes: " << relevant_w2_nodes.size());
-
-// 		auto su = compute_union(relevant_w2_nodes); // Order matters!
-// 		auto hs = compute_hitting_set(relevant_w2_nodes);
-
-// 		LPT_INFO("cout", "Simulation - union-based R (|R|=" << su.size() << ")");
-// 		_print_atomset(su);
-
-// 		LPT_INFO("cout", "Simulation - hitting-set-based-based R (|R|=" << hs.size() << ")");
-// 		_print_atomset(hs);
-
-        //std::vector<AtomIdx> relevant(hs.begin(), hs.end());
-// 		std::vector<AtomIdx> relevant(su.begin(), su.end());
-// 		std::sort(relevant.begin(), relevant.end());
-// 		return relevant;
-// 		return {};
-// 	}
-
     bool run(const StateT& seed, unsigned max_width) {
         if (_verbose) LPT_INFO("cout", "Simulation - Starting IW(" << max_width << ") Simulation");
 
@@ -594,55 +551,59 @@ public:
         update_novelty_counters_on_generation(nov);
 
 // 		LPT_DEBUG("cout", "Simulation - Seed node: " << *root);
+        OpenListT open;
 
-        assert(max_width <= 2); // The current swapping-queues method works only for up to width 2, but is trivial to generalize if necessary
+        open.insert(root);
+        auto simt0 = aptk::time_used();
 
-        OpenListT open_w1, open_w2;
-        OpenListT open_w1_next, open_w2_next; // The queues for the next depth level.
+//        std::cout << "Novelty of root node: " << _evaluator->evaluate(*root) << std::endl;
 
-        open_w1.insert(root);
+        // Note that we don't used any closed list / duplicate detection of any kind, but let the novelty engine take care of that
+        while (!open.empty()) {
+            NodePT current = open.next();
 
-        while (true) {
-            while (!open_w1.empty() || !open_w2.empty()) {
-                NodePT current = open_w1.empty() ? open_w2.next() : open_w1.next();
+            // Expand the node
+            update_novelty_counters_on_expansion(current->_w);
 
-                // Expand the node
-                update_novelty_counters_on_expansion(current->_w);
+            for (const auto& a : _model.applicable_actions(current->state)) {
+                StateT s_a = _model.next(current->state, a);
+                NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
 
-                for (const auto& a : _model.applicable_actions(current->state, true)) {
-                    StateT s_a = _model.next( current->state, a );
-                    NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, _generated++);
+                successor->_w = _evaluator->evaluate(*successor);
+                update_novelty_counters_on_generation(successor->_w);
 
-                    unsigned char novelty = _evaluator->evaluate(*successor);
-                    update_novelty_counters_on_generation(novelty);
+//                 LPT_INFO("cout", "Simulation - Node generated with w=" << (unsigned) successor->_w << ": "  << std::endl<< *successor << std::endl);
 
-                    // LPT_INFO("cout", "Simulation - Node generated: " << *successor);
+                if (_model.goal(successor->state)) LPT_INFO("cout", "Simulation - Goal state reached during simulation");
 
-                    if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
-                        report("All subgoals reached", max_width);
-                        return true;
-                    }
-
-                    if (novelty <= max_width && novelty == 1) open_w1_next.insert(successor);
-                    else if (novelty <= max_width && novelty == 2) open_w2_next.insert(successor);
+                if (process_node(successor)) {  // i.e. all subgoals have been reached before reaching the bound
+                    report("All subgoals reached", max_width);
+//                    _evaluator->info();
+                    return true;
                 }
 
-            }
-            // We've processed all nodes in the current depth level.
-            open_w1.swap(open_w1_next);
-            open_w2.swap(open_w2_next);
+                if (successor->_w <= max_width) {
+                    open.insert(successor);
+                }
 
-            if (open_w1.empty() && open_w2.empty()) break;
+                if (_generated % 1000 == 0) {
+                    auto rate = _generated*1.0 / (aptk::time_used() - simt0);
+                    LPT_INFO("cout", "IW run: Node generation rate after " << _generated / 1000 << "K generations (nodes/sec.): " << rate);
+//                    _evaluator->info();
+                }
+            }
         }
 
         report("State space exhausted", max_width);
+        _evaluator->info();
         return false;
     }
 
-    void update_novelty_counters_on_expansion(unsigned char novelty) {
-        if (novelty == 1) ++_w1_nodes_expanded;
-        else if (novelty== 2) ++_w2_nodes_expanded;
-    }
+
+	void update_novelty_counters_on_expansion(unsigned char novelty) {
+		if (novelty == 1) ++_w1_nodes_expanded;
+		else if (novelty== 2) ++_w2_nodes_expanded;
+	}
 
     void update_novelty_counters_on_generation(unsigned char novelty) {
         if (novelty==1) ++_w1_nodes_generated;
@@ -653,7 +614,15 @@ public:
     void report(const std::string& result, unsigned max_width) const {
         if (!_verbose) return;
         float perc_reached_subgoals = float(_model.num_subgoals() - _unreached.size()) / _model.num_subgoals();
+        auto reachedv = _evaluator->reached_atoms();
+        const auto& atom_idx = Problem::getInstance().get_tuple_index();
+        unsigned reached = std::accumulate(reachedv.begin(), reachedv.end(), 0);
+        unsigned total_atoms = atom_idx.size();
+        float perc_reached_atoms = reached / (float) total_atoms;
+
         LPT_INFO("cout", "Simulation - Finished IW(" << max_width << ") Simulation. Fraction reached subgoals: " << std::fixed << std::setprecision(2) << perc_reached_subgoals);
+        LPT_INFO("cout", "Simulation - Reached atoms: " << reached << "/" << total_atoms << " (" << perc_reached_atoms << ")");
+        LPT_INFO("cout", "Simulation - " << result);
         LPT_INFO("cout", "Simulation - Reached " << (_model.num_subgoals() - _unreached.size()) << " / " << _model.num_subgoals() << " subgoals");
         LPT_INFO("cout", "Simulation - Expanded nodes with w=1 " << _w1_nodes_expanded);
         LPT_INFO("cout", "Simulation - Expanded nodes with w=2 " << _w2_nodes_expanded);
@@ -666,8 +635,6 @@ protected:
 
     //! Returns true iff all goal atoms have been reached in the IW search
     bool process_node(NodePT& node) {
-        if (_config._complete) return process_node_complete(node);
-
         const StateT& state = node->state;
 
         // We iterate through the indexes of all those goal atoms that have not yet been reached in the IW search
@@ -686,21 +653,6 @@ protected:
         }
         // As soon as all nodes have been processed, we return true so that we can stop the search
         return _unreached.empty();
-    }
-
-    //! Returns true iff all goal atoms have been reached in the IW search
-    bool process_node_complete(NodePT& node) {
-        const StateT& state = node->state;
-
-        for (unsigned i = 0; i < _model.num_subgoals(); ++i) {
-            if (!_in_seed[i] && _model.goal(state, i)) {
-// 				node->satisfies_subgoal = true;
-                if (!_optimal_paths[i]) _optimal_paths[i] = node;
-                _unreached.erase(i);
-            }
-        }
-        return _unreached.empty();
-        //return false; // return false so we don't interrupt the processing
     }
 
     void mark_seed_subgoals(const NodePT& node) {

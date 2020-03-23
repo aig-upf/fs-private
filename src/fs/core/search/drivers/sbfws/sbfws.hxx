@@ -157,7 +157,6 @@ protected:
     UnsatisfiedGoalAtomsCounter _unsat_goal_atoms_heuristic;
 
     NoveltyIndexerT _indexer;
-    bool _mark_negative_propositions;
 
     BFWSStats& _stats;
 
@@ -174,7 +173,6 @@ public:
         _search_novelty_factory(_problem, config.evaluator_t, _featureset.uses_extra_features(), config.search_width),
         _wgr_novelty_evaluators(3), // We'll only care about novelties 1 and, at most, 2.
         _unsat_goal_atoms_heuristic(_problem.getGoalConditions(), _problem.get_tuple_index()),
-        _mark_negative_propositions(config.mark_negative_propositions),
         _stats(stats),
         _sbfwsconfig(config),
         _r_counter(RelevantAtomsCounterFactory::build<StateModelT, NodeT, NoveltyEvaluatorT, FeatureSetT>(model, config, features))

@@ -108,8 +108,7 @@ ProceduralAction::ProceduralAction( unsigned id, const ActionData& action_data, 
 }
 
 ProceduralAction::~ProceduralAction() {
-	if ( _proc_effect != nullptr )
-		delete _proc_effect;
+    delete _proc_effect;
 }
 
 void
@@ -122,5 +121,47 @@ ProceduralAction::apply( const State& s, std::vector<Atom>& atoms ) const {
 	if (_proc_effect->applicable(s))
 		_proc_effect->apply(s, atoms);
 }
+
+std::pair<VariableIdx, object_id> unpack_atom(const fs::Term* lhs, const fs::Term* rhs) {
+    auto sv = dynamic_cast<const fs::StateVariable*>(lhs);
+    if (!sv) throw std::runtime_error("Cannot compile given ground action into plain operator");
+    auto c = dynamic_cast<const fs::Constant*>(rhs);
+    if (!c) throw std::runtime_error("Cannot compile given ground action into plain operator");
+    return std::make_pair(sv->getValue(), c->getValue());
+}
+
+SASPlusOperator compile_action_to_plan_operator(const GroundAction& action) {
+    std::vector<std::pair<VariableIdx, object_id>> precondition;
+    std::vector<std::pair<VariableIdx, object_id>> effects;
+
+    // Compile precondition
+    const auto* conjunction = dynamic_cast<const fs::Conjunction*>(action.getPrecondition());
+    const auto* taut = dynamic_cast<const fs::Tautology*>(action.getPrecondition());
+    const auto* atom = dynamic_cast<const fs::EQAtomicFormula*>(action.getPrecondition());
+
+    if (conjunction) { // Wrap out the conjuncts
+        for (const auto& sub:conjunction->getSubformulae()) {
+            const auto* sub_atom = dynamic_cast<const fs::EQAtomicFormula*>(sub);
+            if (!sub_atom) throw std::runtime_error("Cannot compile given ground action into plain operator");
+            precondition.emplace_back(unpack_atom(sub_atom->lhs(), sub_atom->rhs()));
+        }
+
+    } else if (atom) {
+        precondition.emplace_back(unpack_atom(atom->lhs(), atom->rhs()));
+
+    } else if (taut) {
+        // No need to do anything - the empty vector will be the right precondition
+    } else {
+        throw std::runtime_error("Cannot compile given ground action into plain operator");
+    }
+
+    // Compile effects
+    for (const auto& eff:action.getEffects()) {
+        effects.emplace_back(unpack_atom(eff->lhs(), eff->rhs())); // Note that we're ignoring conditional effects
+    }
+
+    return SASPlusOperator(precondition, effects);
+}
+
 
 } // namespaces
