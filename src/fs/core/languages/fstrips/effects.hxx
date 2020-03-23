@@ -10,7 +10,7 @@ class ProblemInfo;
 class State;
 }
 
-namespace fs0 { namespace language { namespace fstrips {
+namespace fs0::language::fstrips {
 
 class Term;
 class Formula;
@@ -106,4 +106,4 @@ class ProceduralEffect {
 	Binding 	_binding;
 };
 
-} } } // namespaces
+} // namespaces

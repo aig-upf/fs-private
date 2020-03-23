@@ -11,7 +11,6 @@
 #include <fs/core/utils/config.hxx>
 #include <fs/core/utils/binding_iterator.hxx>
 #include <fs/core/utils/utils.hxx>
-#include <fs/core/utils/loader.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
 #include <boost/algorithm/string/join.hpp>
@@ -20,8 +19,8 @@
 namespace fs0 {
 
 
-std::vector<const fs::ActionEffect*>
-_bind_effects(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
+std::vector<const fs::ActionEffect*> ActionGrounder::
+bind_effects(const ActionData& action_data, const Binding& binding, const ProblemInfo& info) {
 	std::vector<const fs::ActionEffect*> effects;
 	for (const fs::ActionEffect* effect:action_data.getEffects()) {
 	    // std::cout << "Binding effect: " << *effect << std::endl;
@@ -30,10 +29,10 @@ _bind_effects(const ActionData& action_data, const Binding& binding, const Probl
 		}
 	}
 
-	if (effects.empty()) {
+	/*if (effects.empty()) {
 		LPT_INFO("grounding", "WARNING - " <<  action_data << " with binding " << binding << " has no applicable effects");
 		LPT_DEBUG("cout", "WARNING - " <<  action_data << " with binding " << binding << " has no applicable effects");
-	}
+	}*/
 	return effects;
 }
 
@@ -45,7 +44,7 @@ _partial_binding(const ActionData& action_data, const Binding& binding, const Pr
 		return nullptr;
 	}
 
-	auto effects = _bind_effects(action_data, binding, info);
+	auto effects = ActionGrounder::bind_effects(action_data, binding, info);
 	if (effects.empty()) {
 		delete precondition;
 		return nullptr;
@@ -68,7 +67,7 @@ _full_binding(unsigned id, const ActionData& action_data, const Binding& binding
 
 	std::vector<const fs::ActionEffect*> effects;
 	if (bind_effects) {
-		effects = _bind_effects(action_data, binding, info);
+		effects = ActionGrounder::bind_effects(action_data, binding, info);
 		if (effects.empty() && !action_data.hasProceduralEffects()) {
 			delete precondition;
 			return nullptr;
@@ -435,7 +434,7 @@ ActionGrounder::process_action_data(const ActionData& action, const ProblemInfo&
 	std::vector<const fs::ActionEffect*> effects;
 
 	if (process_effects) {
-		effects = _bind_effects(action, Binding::EMPTY_BINDING, info);
+		effects = ActionGrounder::bind_effects(action, Binding::EMPTY_BINDING, info);
 		if (effects.empty() && !action.hasProceduralEffects()) {
 			delete precondition;
             LPT_INFO("cout", "Warning: action schema " << action.getName() << " discarded because it has no applicable effects");

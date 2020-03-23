@@ -20,11 +20,11 @@ public:
 	Binding() = default;
 	
 	//! Construct a binding of given size, all variables unset
-	Binding(std::size_t size) : _set(size, false), _values(size) {}
+	explicit Binding(std::size_t size) : _set(size, false), _values(size) {}
 	
 	//! Construct a complete binding from a given vector with all variables set to the values in the vector
-	Binding(const ValueTuple& values) : Binding(ValueTuple(values)) {}
-	Binding(ValueTuple&& values) : _set(values.size(), true), _values(std::move(values)) {}
+	explicit Binding(const ValueTuple& values) : Binding(ValueTuple(values)) {}
+	explicit Binding(ValueTuple&& values) : _set(values.size(), true), _values(std::move(values)) {}
 	
 	//! Construct a complete binding from a given vector, but only taking into account those variables specified in 'set'
 	Binding(const ValueTuple& values, const std::vector<bool>& set) : Binding(ValueTuple(values), std::vector<bool>(set)) {}

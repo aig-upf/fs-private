@@ -46,6 +46,8 @@ public:
 	//! ID that was received, if the grounding was unsuccessful, or a consecutive one, otherwise.
 // 	static unsigned ground(unsigned id, const ActionData* data, const Binding& binding, const ProblemInfo& info, std::vector<const GroundAction*>& grounded);
 	void partial_binding(ActionData getActionData, Binding binding, ProblemInfo info);
+
+	static std::vector<const fs::ActionEffect*> bind_effects(const ActionData& action_data, const Binding& binding, const ProblemInfo& info);
 	
 protected:
 	//! Return the non-constant terms that are present as first-level subterms of the head, i.e.

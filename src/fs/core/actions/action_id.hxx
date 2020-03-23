@@ -10,6 +10,7 @@ namespace fs0 {
 
 class PartiallyGroundedAction;
 class GroundAction;
+class ActionData;
 
 class ActionID {
 public:
@@ -72,11 +73,12 @@ public:
 	
 	//! Generates the ground action actually represented by this lifted ID
 	GroundAction* generate() const;
-	
-	//! Prints a representation of the object to the given stream.
+
+    const ActionData& getActionData() const;
+
+    //! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os) const override;
 
-protected:
 	Binding get_full_binding() const;
 };
 

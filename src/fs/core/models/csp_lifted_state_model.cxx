@@ -8,6 +8,7 @@
 
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/constraints/gecode/handlers/lifted_action_csp.hxx>
+#include <fs/core/actions/grounding.hxx>
 #include "utils.hxx"
 
 
@@ -36,11 +37,12 @@ namespace fs0 {
         return manager.isApplicable(state, action, enforce_state_constraints);
     }
 
-    State CSPLiftedStateModel::next(const State& state, const LiftedActionID& action) const {
-        auto ground = action.generate();
-        NaiveApplicabilityManager::computeEffects(state, *ground, _effects_cache);
+    State CSPLiftedStateModel::next(const State& state, const LiftedActionID& aid) const {
+        auto binding = aid.get_full_binding();
+        auto effects = ActionGrounder::bind_effects(aid.getActionData(), binding, ProblemInfo::getInstance());
+        NaiveApplicabilityManager::computeEffects(state, effects, _effects_cache);
         State s1(state, _effects_cache); // Copy everything into the new state and apply the changeset
-        delete ground;
+        for (const auto pointer:effects) delete pointer;
         return s1;
     }
 

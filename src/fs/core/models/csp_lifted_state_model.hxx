@@ -53,7 +53,7 @@ public:
 	bool is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const;
 
 	//! Returns the state resulting from applying the given action action on the given state
-	State next(const State& state, const ActionType& action) const;
+	State next(const State& state, const ActionType& aid) const;
 
 	const Problem& getTask() const { return _task; }
 	void set_handlers(std::vector<std::shared_ptr<gecode::LiftedActionCSP>>&& handlers) { _handlers = std::move(handlers); }

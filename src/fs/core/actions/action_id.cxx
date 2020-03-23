@@ -8,7 +8,7 @@
 
 namespace fs0 {
 
-const LiftedActionID LiftedActionID::invalid_action_id = LiftedActionID(nullptr, std::vector<object_id>());
+const LiftedActionID LiftedActionID::invalid_action_id = LiftedActionID(nullptr, Binding(Binding::EMPTY_BINDING));
 
 
 LiftedActionID::LiftedActionID(const PartiallyGroundedAction* action, Binding&& binding)
@@ -83,6 +83,10 @@ Binding LiftedActionID::get_full_binding() const {
 	Binding full(_action->getBinding());
 	full.merge_with(_binding);
 	return full;
+}
+
+const ActionData& LiftedActionID::getActionData() const {
+    return _action->getActionData();
 }
 
 } // namespaces
