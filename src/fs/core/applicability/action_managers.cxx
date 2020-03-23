@@ -44,18 +44,23 @@ NaiveApplicabilityManager::computeEffects(const State& state, const GroundAction
 	return atoms;
 }
 
-void
-NaiveApplicabilityManager::computeEffects(const State& state, const GroundAction& action, std::vector<Atom>& atoms) {
-	const auto& effects = action.getEffects();
-	atoms.clear();
-	atoms.reserve(effects.size());
-	for (const fs::ActionEffect* effect:effects) {
-		if (effect->applicable(state)) {
-            atoms.emplace_back(effect->apply(state));
-			assert(ProblemInfo::getInstance().checkValueIsValid(atoms.back().getVariable(), atoms.back().getValue()));  // A safety check - perhaps introduces some overhead
-		}
-	}
+void NaiveApplicabilityManager::
+computeEffects(const State& state, const GroundAction& action, std::vector<Atom>& atoms) {
+    computeEffects(state, action.getEffects(), atoms);
 }
+
+void NaiveApplicabilityManager::
+computeEffects(const State& state, const std::vector<const fs::ActionEffect*>& effects, std::vector<Atom>& atoms) {
+    atoms.clear();
+    atoms.reserve(effects.size());
+    for (const fs::ActionEffect* effect:effects) {
+        if (effect->applicable(state)) {
+            atoms.emplace_back(effect->apply(state));
+            assert(ProblemInfo::getInstance().checkValueIsValid(atoms.back().getVariable(), atoms.back().getValue()));  // A safety check - perhaps introduces some overhead
+        }
+    }
+}
+
 
 bool NaiveApplicabilityManager::checkFormulaHolds(const fs::Formula* formula, const State& state) {
 	return formula->interpret(state);

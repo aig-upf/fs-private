@@ -7,7 +7,7 @@
 #include <fs/core/applicability/base.hxx>
 #include <utility>
 
-namespace fs0::language::fstrips { class Term; class Formula; class AtomicFormula; }
+namespace fs0::language::fstrips { class Term; class Formula; class AtomicFormula; class ActionEffect; }
 namespace fs = fs0::language::fstrips;
 namespace fs0 {
 
@@ -28,6 +28,7 @@ public:
 	//! Note that this might return some repeated atom - and even two contradictory atoms... we don't check that here.
 	static std::vector<Atom> computeEffects(const State& state, const GroundAction& action);
 	static void computeEffects(const State& state, const GroundAction& action, std::vector<Atom>& atoms);
+    static void computeEffects(const State& state, const std::vector<const fs::ActionEffect*>&  effects, std::vector<Atom>& atoms);
 
 	static bool checkFormulaHolds(const fs::Formula* formula, const State& state);
 

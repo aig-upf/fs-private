@@ -37,18 +37,12 @@ namespace fs0 {
     }
 
     State CSPLiftedStateModel::next(const State& state, const LiftedActionID& action) const {
-        auto ground_action = action.generate();
-        auto s1 = next(state, *ground_action);
-        delete ground_action;
+        auto ground = action.generate();
+        NaiveApplicabilityManager::computeEffects(state, *ground, _effects_cache);
+        State s1(state, _effects_cache); // Copy everything into the new state and apply the changeset
+        delete ground;
         return s1;
     }
-
-    State CSPLiftedStateModel::next(const State& state, const GroundAction& action) const {
-//	NaiveApplicabilityManager manager(_task.getStateConstraints()); // UNUSED
-        NaiveApplicabilityManager::computeEffects(state, action, _effects_cache);
-        return State(state, _effects_cache); // Copy everything into the new state and apply the changeset
-    }
-
 
     gecode::CSPActionIterator CSPLiftedStateModel::applicable_actions(const State& state, bool enforce_state_constraints) const {
         if ( enforce_state_constraints )
