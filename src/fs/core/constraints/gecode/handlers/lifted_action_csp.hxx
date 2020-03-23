@@ -15,11 +15,8 @@ namespace fs0::gecode {
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
 class LiftedActionCSP : public BaseActionCSP {
 public:
-    //! Factory method
-    static std::vector<std::shared_ptr<BaseActionCSP>> create(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty);
-
-    //! HACK
-    static std::vector<std::shared_ptr<LiftedActionCSP>> create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty);
+    //! Factory method: create a vector of LiftedActionCSPs from a vector of PartiallyGroundedActions
+    static std::vector<std::shared_ptr<LiftedActionCSP>> create(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty);
 
     LiftedActionCSP(const PartiallyGroundedAction& action, const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions);
     LiftedActionCSP(const PartiallyGroundedAction& action, std::vector<const fs::ActionEffect*>  effects, const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions);

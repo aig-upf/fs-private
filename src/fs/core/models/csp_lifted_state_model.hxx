@@ -60,8 +60,6 @@ public:
 	const Problem& getTask() const { return _task; }
 	void set_handlers(std::vector<std::shared_ptr<gecode::LiftedActionCSP>>&& handlers) { _handlers = std::move(handlers); }
 
-	unsigned get_action_idx(const LiftedActionID& action) const { return 0; }
-
 	//! Returns the number of subgoals into which the goal can be decomposed
 	unsigned num_subgoals() const { return _subgoals.size(); }
 

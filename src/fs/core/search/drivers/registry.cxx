@@ -48,7 +48,7 @@ EngineRegistry::EngineRegistry() {
     add("sbfws-sdd",  new bfws::SBFWSDriver<SDDLiftedStateModel>());
 	
 	add("bfs",  new BreadthFirstSearchDriver<GroundStateModel>());
-	add("lbfs",  new BreadthFirstSearchDriver<CSPLiftedStateModel>());
+	add("bfs-csp",  new BreadthFirstSearchDriver<CSPLiftedStateModel>());
     add("bfs-sdd",  new BreadthFirstSearchDriver<SDDLiftedStateModel>());
 	
 	add("smart",  new SmartEffectDriver());

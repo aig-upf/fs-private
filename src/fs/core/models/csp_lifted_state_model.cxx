@@ -69,7 +69,9 @@ namespace fs0 {
     CSPLiftedStateModel
     CSPLiftedStateModel::build(const Problem& problem) {
         auto model = CSPLiftedStateModel(problem, obtain_goal_atoms(problem.getGoalConditions()));
-        model.set_handlers(gecode::LiftedActionCSP::create_derived(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
+        model.set_handlers(
+                gecode::LiftedActionCSP::create(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false,
+                                                false));
         return model;
     }
 

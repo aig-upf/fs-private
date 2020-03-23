@@ -20,12 +20,15 @@ FullyLiftedDriver::create(const Config& config, CSPLiftedStateModel& model, Sear
 	bool approximate = config.useApproximateActionResolution();
 
 	const std::vector<const PartiallyGroundedAction*>& actions = problem.getPartiallyGroundedActions();
+
+	// We need to create the LiftedActionCSP objects and then upcast them to BaseActionCSP explicitly
 	auto managers = LiftedActionCSP::create(actions, problem.get_tuple_index(), approximate, novelty);
-	
-	const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
+    std::vector<std::shared_ptr<BaseActionCSP>> basemanagers{managers.begin(), managers.end()};
+
+    const auto managed = support::compute_managed_symbols(std::vector<const ActionBase*>(actions.begin(), actions.end()), problem.getGoalConditions(), problem.getStateConstraints());
 	ExtensionHandler extension_handler(problem.get_tuple_index(), managed);
 	
-	_heuristic = std::make_unique<HeuristicT>(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(managers), extension_handler);
+	_heuristic = std::make_unique<HeuristicT>(problem, problem.getGoalConditions(), problem.getStateConstraints(), std::move(basemanagers), extension_handler);
 	auto engine = std::make_unique<EngineT>(model);
 	
 	EventUtils::setup_stats_observer<NodeT>(stats, _handlers, config.getOption<bool>("verbose_stats", false));

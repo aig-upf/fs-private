@@ -59,8 +59,6 @@ public:
 
 	const Problem& getTask() const { return _task; }
 
-	unsigned get_action_idx(const LiftedActionID& action) const { return 0; }
-
 	//! Returns the number of subgoals into which the goal can be decomposed
 	unsigned num_subgoals() const { return _subgoals.size(); }
 

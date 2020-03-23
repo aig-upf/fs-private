@@ -5,10 +5,10 @@
 
 namespace fs0 { class ActionBase; class ActionID; }
 
-namespace fs0 { namespace language { namespace fstrips { class ActionEffect; class Formula; }}}
+namespace fs0::language::fstrips { class ActionEffect; class Formula; }
 
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 class NoveltyConstraint;
 
@@ -17,7 +17,7 @@ class BaseActionCSP : public BaseCSP {
 public:
 	//! Constructor / Destructor
 	BaseActionCSP(const AtomIndex& tuple_index, bool approximate, bool use_effect_conditions);
-	virtual ~BaseActionCSP();
+	~BaseActionCSP() override;
 	BaseActionCSP(const BaseActionCSP&) = delete;
 	BaseActionCSP(BaseActionCSP&&) = delete;
 	BaseActionCSP& operator=(const BaseActionCSP&) = delete;
@@ -116,4 +116,4 @@ protected:
 	void extract_nested_term_support(const GecodeSpace* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<AtomIdx>& support) const;
 };
 
-} } // namespaces
+} // namespaces

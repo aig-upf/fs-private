@@ -7,12 +7,24 @@
 
 namespace fs0::gecode {
 
-CSPActionIterator::CSPActionIterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const std::vector<const fs::Formula*>& state_constraints, const AtomIndex& tuple_index) :
-        _handlers(handlers), _state(state), _state_constraints(state_constraints), _extension_handler(tuple_index, state)
+CSPActionIterator::CSPActionIterator(
+        const State& state,
+        const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers,
+        const std::vector<const fs::Formula*>& state_constraints,
+        const AtomIndex& tuple_index) :
+        _handlers(handlers),
+        _state(state),
+        _state_constraints(state_constraints),
+        _extension_handler(tuple_index, state)
 {
 }
 
-CSPActionIterator::Iterator::Iterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const std::vector<const fs::Formula*>& state_constraints, const StateBasedExtensionHandler& extension_handler, unsigned currentIdx) :
+CSPActionIterator::Iterator::Iterator(
+        const State& state,
+        const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers,
+        const std::vector<const fs::Formula*>& state_constraints,
+        const StateBasedExtensionHandler& extension_handler, unsigned currentIdx) :
+
         _handlers(handlers),
         _state(state),
         _current_handler_idx(currentIdx),

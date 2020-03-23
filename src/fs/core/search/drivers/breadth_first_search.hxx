@@ -12,8 +12,7 @@
 
 namespace fs0 { class Config; }
 
-namespace fs0 { namespace drivers {
-
+namespace fs0::drivers {
 
 
 //! A creator for an standard Breadth-First Search engine
@@ -31,4 +30,4 @@ protected:
 	SearchStats _stats;
 };
 
-} } // namespaces
+} // namespaces

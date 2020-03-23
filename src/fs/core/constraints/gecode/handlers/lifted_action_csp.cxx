@@ -7,18 +7,8 @@
 
 namespace fs0::gecode {
 
-std::vector<std::shared_ptr<BaseActionCSP>>
-LiftedActionCSP::create(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty) {
-    // Simply upcast the shared_ptrs
-    std::vector<std::shared_ptr<BaseActionCSP>> handlers;
-    for (const auto& element:create_derived(schemata, tuple_index, approximate, novelty)) {
-        handlers.push_back(std::static_pointer_cast<BaseActionCSP>(element));
-    }
-    return handlers;
-}
-
 std::vector<std::shared_ptr<LiftedActionCSP>>
-LiftedActionCSP::create_derived(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty) {
+LiftedActionCSP::create(const std::vector<const PartiallyGroundedAction*>& schemata, const AtomIndex& tuple_index, bool approximate, bool novelty) {
     std::vector<std::shared_ptr<LiftedActionCSP>> handlers;
 
     for (auto schema:schemata) {

@@ -8,7 +8,7 @@
 #include <fs/core/search/drivers/setups.hxx>
 
 
-namespace fs0 { namespace drivers {
+namespace fs0::drivers {
 
 template <>
 GroundStateModel
@@ -35,12 +35,11 @@ BreadthFirstSearchDriver<StateModelT>::search(Problem& problem, const Config& co
 	using ActionT = typename StateModelT::ActionType;
 	using NodeT = lapkt::BlindSearchNode<State, ActionT>;
 	using EngineT = lapkt::StlBreadthFirstSearch<NodeT, StateModelT>;
-	using EnginePT = std::unique_ptr<EngineT>;
 
 	auto model = setup(problem);
 
     EventUtils::setup_stats_observer<NodeT>(_stats, _handlers, config.getOption<bool>("verbose_stats", false));
-	auto engine = EnginePT(new EngineT(model));
+	auto engine = std::make_unique<EngineT>(model);
 	lapkt::events::subscribe(*engine, _handlers);
 	
 	return Utils::SearchExecution<StateModelT>(model).do_search(*engine, options, start_time, _stats);
@@ -51,4 +50,4 @@ template class BreadthFirstSearchDriver<GroundStateModel>;
 template class BreadthFirstSearchDriver<CSPLiftedStateModel>;
 template class BreadthFirstSearchDriver<SDDLiftedStateModel>;
 
-} } // namespaces
+} // namespaces

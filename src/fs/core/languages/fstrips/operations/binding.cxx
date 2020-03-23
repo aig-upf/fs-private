@@ -324,7 +324,7 @@ Visit(const FluentHeadedNestedTerm& lhs) {
     bool all_constants = (constant_values.size() == subterms.size());
     bool is_fluent_atom = all_constants && _info.is_fluent(symbol_id, constant_values);
 
-	LPT_DEBUG( "binding", "Binding (FluentHeadedNestedTerm): " << lhs );
+//	LPT_DEBUG( "binding", "Binding (FluentHeadedNestedTerm): " << lhs );
 	if (all_constants) { // If all subterms were constant, and the symbol is fluent, we have a state variable
 
         if (is_fluent_atom) {

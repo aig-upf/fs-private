@@ -47,8 +47,6 @@ public:
 
 	const Problem& getTask() const { return _task; }
 
-	unsigned get_action_idx(const ActionId& action) const { return static_cast<unsigned>(action); }
-
 	static ActionManagerI* build_action_manager(const Problem& problem);
 
 	const std::vector<Atom>& get_last_changeset() const {
