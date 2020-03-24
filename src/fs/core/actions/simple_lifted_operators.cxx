@@ -138,8 +138,8 @@ std::vector<object_id> bind_arguments(
 
     std::size_t sz = arguments.size();
     interpreted.reserve(sz);
-    for (const auto& arg:arguments) {
-        interpreted.emplace_back(bind_simple_term(arg, binding, info));
+    for (std::size_t i= 0; i < sz; ++i) {
+        interpreted.emplace_back(bind_simple_term(arguments[i], binding, info));
     }
     return interpreted;
 }
@@ -179,7 +179,9 @@ bool evaluate_simple_condition(
         const Binding& binding,
         const ProblemInfo& info) {
     // First check simple-term (in-)equalities
-    for (const auto& atom:condition.simpleeqs) {
+    auto sz1 = condition.simpleeqs.size();
+    for (std::size_t i= 0; i < sz1; ++i) {
+        const auto& atom = condition.simpleeqs[i];
         auto lhs = bind_simple_term(atom.lhs, binding, info);
         auto rhs = bind_simple_term(atom.rhs, binding, info);
         if ((atom.is_eq() && lhs != rhs) || (!atom.is_eq() && lhs == rhs)) {
@@ -188,7 +190,9 @@ bool evaluate_simple_condition(
     }
 
     // Now check other terms involving non-builtin symbols
-    for (const auto& atom:condition.fluents) {
+    auto sz2 = condition.fluents.size();
+    for (std::size_t i= 0; i < sz2; ++i) {
+        const auto& atom = condition.fluents[i];
         auto lhs_val = evaluate_atom(state, atom.predicate_id, atom.arguments, binding, info);
         auto val = bind_simple_term(atom.value, binding, info);
         if ((!atom.negated && lhs_val != val) || (atom.negated && lhs_val == val)) {
@@ -215,7 +219,9 @@ void evaluate_simple_lifted_operator(
 
     atoms.clear();
 
-    for (const auto& eff:op.effects) {
+    auto sz = op.effects.size();
+    for (std::size_t i=0; i < sz; ++i) {
+        const auto& eff = op.effects[i];
         if (evaluate_simple_condition(state, eff.condition, binding, info)) {
             const auto& atom = eff.atom;
             assert(!atom.negated); // effect "atoms" cannot be negated, as they are in reality simple assignments
