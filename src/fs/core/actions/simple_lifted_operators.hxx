@@ -2,15 +2,16 @@
 #pragma once
 
 #include <fs/core/fs_types.hxx>
-#include <fs/core/utils/binding.hxx>
-#include <fs/core/applicability/action_managers.hxx>
-#include <fs/core/languages/fstrips/axioms.hxx>
+
 #include <utility>
 
 namespace fs0 {
 
 class PartiallyGroundedAction;
 class ProblemInfo;
+class Binding;
+class State;
+class Atom;
 
 class SimpleLiftedOperator {
 public:
@@ -18,7 +19,7 @@ public:
     // `y` represents the value c (tipically 0 or 1, for propositional problems); whereas state variable v
     // is the result of grounding predicate (or function) symbol `x1`
 
-    enum class argtype_t {var, constant};
+    enum class term_t {var, constant};
 
     union var_or_object_t {
         unsigned varidx;
@@ -27,33 +28,53 @@ public:
         var_or_object_t(object_id o) : o(o) {}
     };
 
-    struct argument_t {
-        argtype_t type;
+    // A simple term is a function-free term, i.e., a constant or a variable. We encode that with a union to save some
+    // space. We could probably use a bitfield to compact the whole thing into a word-size 64 bytes, but that would not
+    // be worth the possible portability headaches.
+    struct simple_term {
+        term_t type;
         var_or_object_t val;
-        argument_t(argtype_t type, var_or_object_t val) : type(type), val(val) {}
+        simple_term(term_t type, var_or_object_t val) : type(type), val(val) {}
     };
 
-    // A (lifted) atom made up of a predicate ID A, some arguments B, and a constant value C; representing the
-    // atom A(B) = C; where the integers b_i in B = <b1, b2, ... bn> can be either variables (b_i < 0, in which
-    // case abs(b_i) represents the variable ID, or constants (b_i >= 0
+    // A (lifted) atom made up of a predicate ID A, some arguments B, and a simple term t; representing the
+    // atom A(B) = t or A(B) != t (depending on the value of `negated`), where B is a list of simple terms.
     struct atom_t {
+        bool negated;
         uint16_t predicate_id;
-        std::vector<argument_t> arguments;
-        object_id value;
+        std::vector<simple_term> arguments;
 
-        atom_t(uint16_t predicate_id, std::vector<argument_t> arguments, object_id value) :
-                predicate_id(predicate_id), arguments(std::move(arguments)), value(value)
+        simple_term value;
+
+        atom_t(uint16_t predicate_id, std::vector<simple_term> arguments, simple_term value, bool negated=false) :
+            negated(negated), predicate_id(predicate_id), arguments(std::move(arguments)), value(value)
         {}
     };
 
+    // A simple_term_equality represents any atom of the sort of X = Y, X != Y, X = c, c != d, etc., i.e. an (in-)equality
+    // over simple terms, which are variables or constants.
+    enum class simple_term_equality_t {eq, neq};
+    struct simple_term_equality {
+        simple_term_equality_t type;
+        simple_term lhs;
+        simple_term rhs;
+        simple_term_equality(simple_term_equality_t type, simple_term lhs, simple_term rhs) :
+            type(type), lhs(lhs), rhs(rhs)
+        {}
+        bool is_eq() const { return type == simple_term_equality_t::eq; }
+    };
+
     // A condition stands for a conjunction of literals, which we represent as vector of (lifted) atoms
-    using condition_t = std::vector<atom_t>;
+    struct condition_t {
+        std::vector<simple_term_equality> simpleeqs;
+        std::vector<atom_t> fluents;
+    };
 
     struct effect_t {
-        std::vector<atom_t> condition;
+        condition_t condition;
         atom_t atom;
 
-        effect_t(std::vector<atom_t> condition, atom_t atom) :
+        effect_t(condition_t condition, atom_t atom) :
                 condition(std::move(condition)), atom(std::move(atom))
         {}
     };

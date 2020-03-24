@@ -9,6 +9,7 @@
 #include <fs/core/languages/fstrips/effects.hxx>
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/utils/printers/helper.hxx>
+#include <fs/core/utils/binding.hxx>
 
 
 namespace fs0 {
@@ -18,29 +19,27 @@ public:
     explicit CompilationError(const std::string& msg) : std::runtime_error(msg) {}
 };
 
-std::vector<SimpleLiftedOperator::argument_t> compile_arguments(const std::vector<const fs::Term*>& arguments) {
-    std::vector<SimpleLiftedOperator::argument_t> compiled;
-    for (const auto term:arguments) {
-        auto bv = dynamic_cast<const fs::BoundVariable*>(term);
-        auto c = dynamic_cast<const fs::Constant*>(term);
+SimpleLiftedOperator::simple_term compile_simple_term(const fs::Term* term) {
+    auto bv = dynamic_cast<const fs::BoundVariable*>(term);
+    auto c = dynamic_cast<const fs::Constant*>(term);
 
-        if (bv) {
-            compiled.emplace_back(SimpleLiftedOperator::argtype_t::var, bv->getVariableId());
-        } else if (c) {
-            compiled.emplace_back(SimpleLiftedOperator::argtype_t::constant, c->getValue());
-        } else {
-            throw CompilationError(fs0::printer() << "Cannot compile atom argument into SimpleLiftedOperator: " << *term);
-        }
+    if (bv) return {SimpleLiftedOperator::term_t::var, bv->getVariableId()};
+    if (c) return {SimpleLiftedOperator::term_t::constant, c->getValue()};
+    throw CompilationError(fs0::printer() << "Cannot compile atom argument into simple_term: " << *term);
+}
+
+std::vector<SimpleLiftedOperator::simple_term> compile_arguments(const std::vector<const fs::Term*>& arguments) {
+    std::vector<SimpleLiftedOperator::simple_term> compiled;
+    for (const auto term:arguments) {
+        compiled.emplace_back(compile_simple_term(term));
     }
     return compiled;
 }
 
-SimpleLiftedOperator::atom_t unpack_atom_into_literal(const fs::Term* lhs, const fs::Term* rhs, bool allow_statics=true) {
-    auto c = dynamic_cast<const fs::Constant*>(rhs);
-    if (!c) throw CompilationError(fs0::printer() << "Cannot compile effect right-hand side into SimpleLiftedOperator element: " << *rhs);
+SimpleLiftedOperator::atom_t unpack_atom_into_literal(const fs::Term* lhs, const fs::Term* rhs, bool negated, bool allow_statics) {
+    SimpleLiftedOperator::simple_term val = compile_simple_term(rhs);
 
-    // The LHF of an atom must be either a StateVariable or a FluentHeadedNestedTerm; in both cases, we'll
-    // deal with the (underlying) FluentHeadedNestedTerm
+    // Let's deal with each possible case for an atom LHS
     auto sv = dynamic_cast<const fs::StateVariable*>(lhs);
     auto fh = dynamic_cast<const fs::FluentHeadedNestedTerm*>(lhs);
     auto sh = dynamic_cast<const fs::StaticHeadedNestedTerm*>(lhs);
@@ -49,34 +48,49 @@ SimpleLiftedOperator::atom_t unpack_atom_into_literal(const fs::Term* lhs, const
     if (sv) origin = sv->getOrigin();
     else if (fh) origin = fh;
     else if (allow_statics && sh) origin = sh;
-    else throw CompilationError(fs0::printer() << "Cannot compile effect left-hand side into SimpleLiftedOperator element: " << *lhs);
+    else throw CompilationError(fs0::printer() << "Cannot compile atom left-hand side into SimpleLiftedOperator element: " << *lhs);
 
-    return SimpleLiftedOperator::atom_t(origin->getSymbolId(), compile_arguments(origin->getSubterms()), c->getValue());
+    return SimpleLiftedOperator::atom_t(origin->getSymbolId(), compile_arguments(origin->getSubterms()), val, negated);
+}
+
+SimpleLiftedOperator::simple_term_equality unpack_atom_into_simple_term_eq(const fs::Term* lhs, const fs::Term* rhs, bool negated) {
+    SimpleLiftedOperator::simple_term_equality_t type = negated ?
+            SimpleLiftedOperator::simple_term_equality_t::neq : SimpleLiftedOperator::simple_term_equality_t::eq;
+
+    return SimpleLiftedOperator::simple_term_equality(type, compile_simple_term(lhs), compile_simple_term(rhs));
+}
+
+void compile_conjunct(const fs::Formula* sub, SimpleLiftedOperator::condition_t& condition) {
+    const auto* taut = dynamic_cast<const fs::Tautology*>(sub);
+    if (taut) return; // No need to add any conjunct
+
+    const auto* eqf = dynamic_cast<const fs::EQAtomicFormula*>(sub);
+    const auto* neqf = dynamic_cast<const fs::NEQAtomicFormula*>(sub);
+    const auto* base = dynamic_cast<const fs::RelationalFormula*>(sub);
+    if (!eqf && !neqf) throw CompilationError(fs0::printer() << "Cannot compile conjunct into SimpleLiftedOperator: " << *sub);
+
+    bool negated = (bool) neqf;
+
+    // First try to compile into a simple_term_equality:
+    try {
+        condition.simpleeqs.emplace_back(unpack_atom_into_simple_term_eq(base->lhs(), base->rhs(), negated));
+    } catch(CompilationError& e) {
+        // If not possible, then try to compile into a standard atom
+        condition.fluents.emplace_back(unpack_atom_into_literal(base->lhs(), base->rhs(), negated, true));
+    }
 }
 
 SimpleLiftedOperator::condition_t compile_condition(const fs::Formula* formula) {
     SimpleLiftedOperator::condition_t condition;
 
     const auto* conjunction = dynamic_cast<const fs::Conjunction*>(formula);
-    const auto* taut = dynamic_cast<const fs::Tautology*>(formula);
-    const auto* atom = dynamic_cast<const fs::EQAtomicFormula*>(formula);
-
     if (conjunction) { // Wrap out the conjuncts
         for (const auto& sub:conjunction->getSubformulae()) {
-            const auto* sub_atom = dynamic_cast<const fs::EQAtomicFormula*>(sub);
-            if (!sub_atom) throw CompilationError(fs0::printer() << "Cannot compile conjunct into SimpleLiftedOperator: " << *sub);
-            condition.emplace_back(unpack_atom_into_literal(sub_atom->lhs(), sub_atom->rhs()));
+            compile_conjunct(sub, condition);
         }
-
-    } else if (atom) {
-        condition.emplace_back(unpack_atom_into_literal(atom->lhs(), atom->rhs()));
-
-    } else if (taut) {
-        // No need to do anything - the empty vector will be the right precondition
     } else {
-        throw CompilationError(fs0::printer() << "Cannot compile condition into SimpleLiftedOperator: " << *formula);
+        compile_conjunct(formula, condition);
     }
-
     return condition;
 }
 
@@ -88,7 +102,7 @@ SimpleLiftedOperator compile_schema_to_simple_lifted_operator(const PartiallyGro
     for (const auto& eff:action.getEffects()) {
         effects.emplace_back(
                 compile_condition(eff->condition()),
-                unpack_atom_into_literal(eff->lhs(), eff->rhs(), false));
+                unpack_atom_into_literal(eff->lhs(), eff->rhs(), false, false));
     }
 
     try {
@@ -99,8 +113,23 @@ SimpleLiftedOperator compile_schema_to_simple_lifted_operator(const PartiallyGro
     }
 }
 
+
+object_id bind_simple_term(
+        const SimpleLiftedOperator::simple_term& term,
+        const Binding& binding,
+        const ProblemInfo& info
+) {
+    if (term.type == SimpleLiftedOperator::term_t::constant) { // We have an object
+        return term.val.o;
+    }
+    // else we have a variable
+    assert(term.type == SimpleLiftedOperator::term_t::var);
+    auto varid = term.val.varidx;
+    return binding[varid];
+}
+
 std::vector<object_id> bind_arguments(
-        const std::vector<SimpleLiftedOperator::argument_t>& arguments,
+        const std::vector<SimpleLiftedOperator::simple_term>& arguments,
         const Binding& binding,
         const ProblemInfo& info
 ) {
@@ -110,21 +139,14 @@ std::vector<object_id> bind_arguments(
     std::size_t sz = arguments.size();
     interpreted.reserve(sz);
     for (const auto& arg:arguments) {
-        if (arg.type == SimpleLiftedOperator::argtype_t::constant) { // We have an object
-            interpreted.emplace_back(arg.val.o);
-        } else { // We have a variable
-            assert(arg.type == SimpleLiftedOperator::argtype_t::var);
-            auto varid = arg.val.varidx;
-            assert(binding.binds(varid));
-            interpreted.emplace_back(binding[varid]);
-        }
+        interpreted.emplace_back(bind_simple_term(arg, binding, info));
     }
     return interpreted;
 }
 
 VariableIdx bind_variable(
         uint16_t predicate_id,
-        const std::vector<SimpleLiftedOperator::argument_t>& arguments,
+        const std::vector<SimpleLiftedOperator::simple_term>& arguments,
         const Binding& binding,
         const ProblemInfo& info
 ) {
@@ -132,10 +154,10 @@ VariableIdx bind_variable(
 }
 
 // Return the value of the given atom under the given binding and state
-object_id bind_atom(
+object_id evaluate_atom(
         const State& state,
         uint16_t predicate_id,
-        const std::vector<SimpleLiftedOperator::argument_t>& arguments,
+        const std::vector<SimpleLiftedOperator::simple_term>& arguments,
         const Binding& binding,
         const ProblemInfo& info
         ) {
@@ -156,9 +178,22 @@ bool evaluate_simple_condition(
         const SimpleLiftedOperator::condition_t& condition,
         const Binding& binding,
         const ProblemInfo& info) {
-    for (const auto& conjunct:condition) {
-        auto lhs_val = bind_atom(state, conjunct.predicate_id, conjunct.arguments, binding, info);
-        if (lhs_val != conjunct.value) return false; // early-terminate the evaluation of the conjunction
+    // First check simple-term (in-)equalities
+    for (const auto& atom:condition.simpleeqs) {
+        auto lhs = bind_simple_term(atom.lhs, binding, info);
+        auto rhs = bind_simple_term(atom.rhs, binding, info);
+        if ((atom.is_eq() && lhs != rhs) || (!atom.is_eq() && lhs == rhs)) {
+            return false; // early-terminate the evaluation of the conjunction
+        }
+    }
+
+    // Now check other terms involving non-builtin symbols
+    for (const auto& atom:condition.fluents) {
+        auto lhs_val = evaluate_atom(state, atom.predicate_id, atom.arguments, binding, info);
+        auto val = bind_simple_term(atom.value, binding, info);
+        if ((!atom.negated && lhs_val != val) || (atom.negated && lhs_val == val)) {
+            return false; // early-terminate the evaluation of the conjunction
+        }
     }
 
     // Note that this also implies that a conjunction with 0 conjuncts is equivalent to true, which is what we want
@@ -183,8 +218,9 @@ void evaluate_simple_lifted_operator(
     for (const auto& eff:op.effects) {
         if (evaluate_simple_condition(state, eff.condition, binding, info)) {
             const auto& atom = eff.atom;
+            assert(!atom.negated); // effect "atoms" cannot be negated, as they are in reality simple assignments
             VariableIdx var = bind_variable(atom.predicate_id, atom.arguments, binding, info);
-            atoms.emplace_back(var, atom.value);
+            atoms.emplace_back(var, bind_simple_term(atom.value, binding, info));
         }
     }
 }
