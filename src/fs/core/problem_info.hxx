@@ -91,7 +91,8 @@ protected:
 
     //! A map from the actual data "f(t1, t2, ..., tn)" to the assigned variable ID
     using varidx_t = std::pair<unsigned, std::vector<object_id>>;
-	std::unordered_map<varidx_t, VariableIdx, boost::hash<varidx_t>> variableDataToId;
+    using fluentidx_t = std::unordered_map<varidx_t, VariableIdx, boost::hash<varidx_t>>;
+    fluentidx_t variableDataToId;
 	std::vector<std::pair<unsigned, std::vector<object_id>>> variableIdToData;
 
 	//! Mapping from state variable index to the type associated to the state variable
@@ -198,7 +199,10 @@ public:
 	    return variableDataToId.find(std::make_pair(symbol_id, constants)) != variableDataToId.end();
 	}
 
-	//! Return the data that originated a state variable
+    const fluentidx_t& get_fluent_index() const { return variableDataToId; }
+
+
+    //! Return the data that originated a state variable
 	const std::pair<unsigned, std::vector<object_id>>& getVariableData(VariableIdx variable) const { return variableIdToData.at(variable); }
 
 	unsigned num_objects() const;

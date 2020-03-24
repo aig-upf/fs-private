@@ -38,9 +38,8 @@ private:
 };
 } // namespaces
 
-namespace fs0 { namespace print {
 
-
+namespace fs0::print {
 
 class Helper {
 public:
@@ -66,5 +65,5 @@ std::string normalize(const T& t) {
 }
 
 
-} } // namespaces
+} // namespaces
 
