@@ -4,48 +4,28 @@ import os
 from fslab.common_setup import FSIssueExperiment, IssueConfig
 from common import generate_environment, filter_benchmarks_if_test_run, ALL_ATTRIBUTES, add_standard_experiment_steps
 
-TIME_LIMIT = 1800
-MEMORY_LIMIT = 8000
+TIME_LIMIT = 600
+MEMORY_LIMIT = 4000
 
-# Benchmarked problems include all instances from the last
-# planning competition (IPC 2014), along with all instances
-# from IPC 2011 domains that did not appear in IPC 2014,
-# with the exception of Parcprinter, Tidybot and Woodworking,
-# which produced parsing errors. There are thus a total
-# of 19 domains, with 20 instances each, for a total of 380 instances
 SUITE = [
-    # 'barman-sat11-strips',
-    'barman-sat14-strips',
+    'barman-opt14-strips',
     'cavediving-14-adl',
-    'childsnack-sat14-strips',
-    'citycar-sat14-adl',
-    'elevators-sat11-strips',
-    # 'floortile-sat11-strips',
-    'floortile-sat14-strips',
-    # 'ged-sat14-strips',  # case-sensitivity
-    'hiking-sat14-strips',
-    'maintenance-sat14-adl',
-    'nomystery-sat11-strips',
-    # 'openstacks-sat11-strips',
-    'openstacks-sat14-strips',
-    # 'parcprinter-sat11-strips',
-    # 'parking-sat11-strips',
-    'parking-sat14-strips',
-    'pegsol-sat11-strips',
-    'scanalyzer-sat11-strips',
-    'sokoban-sat11-strips',
-    'tetris-sat14-strips',
-    'thoughtful-sat14-strips',
-    # 'tidybot-sat11-strips',
-    # 'transport-sat11-strips',
-    'transport-sat14-strips',
-    # 'visitall-sat11-strips',
-    'visitall-sat14-strips',
-    # 'woodworking-sat11-strips',
-]
+    'childsnack-opt14-strips',
+    'citycar-opt14-adl',
+    'floortile-opt14-strips',
+    'ged-opt14-strips',
+    'hiking-opt14-strips',
+    'maintenance-opt14-adl',
+    'openstacks-opt14-strips',
+    'parking-opt14-strips',
+    'tetris-opt14-strips',
+    'tidybot-opt14-strips',
+    'transport-opt14-strips',
+    'visitall-opt14-strips']
+
 
 REVISIONS = [
-    "8b88f316"
+    "42ac4b03"
 ]
 BENCHMARKS_DIR = os.environ["DOWNWARD_BENCHMARKS"]
 
@@ -54,10 +34,10 @@ def configs():
     csp = '--reachability=none --driver bfs-csp --options "verbose_stats=true"'
     # csp_reach_full = '--reachability=full --driver lsbfws --options "verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"'
     # csp_reach_vars = '--reachability=vars --driver lsbfws --options "verbose_stats=true,evaluator_t=adaptive,bfws.rs=sim,sim.r_all=true"'
-    grounded_mt = '--driver bfs --options "verbose_stats=true,successor_generation=match_tree"'
+    grounded_mt_no_reach = '--reachability=none --driver bfs --options "verbose_stats=true,successor_generation=match_tree"'
 
     return [
-        IssueConfig("grounded-bfs", grounded_mt.split()),
+        IssueConfig("grounded-bfs (MT, no reach)", grounded_mt_no_reach.split()),
         # IssueConfig("bfws-r_all-csp-var-reach", csp_reach_vars.split()),
         IssueConfig("lifted-bfs-csp", csp.split()),
         # IssueConfig("bfws-r_all-csp-full-reach", csp_reach_full.split()),
@@ -77,7 +57,8 @@ def main():
 
     benchmarks = filter_benchmarks_if_test_run(SUITE)
 
-    attributes = [att for name, att in ALL_ATTRIBUTES.items() if not name.startswith('sdd')]
+    attributes = [att for name, att in ALL_ATTRIBUTES.items() if not name.startswith('sdd')
+                  and not name.startswith('sim') and name not in ('mem_before_mt', 'mem_before_search')]
 
     exp.add_suite(os.environ["DOWNWARD_BENCHMARKS"], benchmarks)
 
