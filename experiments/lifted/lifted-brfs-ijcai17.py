@@ -19,7 +19,7 @@ SUITE = [
     'openstacks-opt14-strips',
     'parking-opt14-strips',
     'tetris-opt14-strips',
-    'tidybot-opt14-strips',
+    # 'tidybot-opt14-strips', # Duplicate object name cart
     'transport-opt14-strips',
     'visitall-opt14-strips']
 
