@@ -73,8 +73,9 @@ protected:
 
         if (_verbose) {
             auto generated = _stats.generated();
-            if (generated % 10000 == 0) {
-                LPT_INFO("cout", "Node generation rate after " << generated / 1000 << "K generations (nodes/sec.): " << node_generation_rate());
+            if (generated % 50000 == 0) {
+                LPT_INFO("cout", "Node generation rate after " << generated / 1000 << "K generations (nodes/sec.): " << node_generation_rate()
+                                                               << ". Memory consumption: "<< get_current_memory_in_kb() << "kB. / " << get_peak_memory_in_kb() << " kB.");
             }
         }
     }
