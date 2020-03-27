@@ -8,7 +8,7 @@ namespace fs0 {
 
 class SearchStats {
 public:
-	SearchStats() : _expanded(0), _generated(0), _evaluated(0), _initial_search_time(0) {}
+	SearchStats() : _expanded(0), _generated(0), _evaluated(0), _initial_search_time(-1) {}
 	
 	void expansion() { ++_expanded; }
 	void generation(std::size_t distance) {
@@ -43,8 +43,17 @@ public:
 		};
 	}
 
-    void set_initial_search_time(double t) { _initial_search_time = t; }
-	double initial_search_time() const { return _initial_search_time; }
+    void log_start_of_search(double initial_search_time) {
+        _initial_search_time = initial_search_time;
+    }
+
+	double initial_search_time() const {
+	    if (_initial_search_time < 0) {
+            throw std::runtime_error("Attempted to access initial_search_time without having invoked"
+                                     " method 'log_start_of_search'");
+	    }
+	    return _initial_search_time;
+	}
 	
 protected:
 	unsigned long _expanded;

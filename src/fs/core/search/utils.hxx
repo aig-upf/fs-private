@@ -65,7 +65,7 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 
 			PlanT plan;
 			double t0 = aptk::time_used();
-            stats.set_initial_search_time(t0);
+            stats.log_start_of_search(t0);
 			bool solved = false, oom = false;
             bool valid_plan = false;
 

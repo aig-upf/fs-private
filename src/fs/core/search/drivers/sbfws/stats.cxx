@@ -14,7 +14,7 @@ BFWSStats::BFWSStats() : _expanded(0), _generated(0), _evaluated(0),
     _initial_relevant_atoms(std::numeric_limits<unsigned>::max()),
     _max_relevant_atoms(0),
     _sum_relevant_atoms(0),
-    _initial_search_time(0)
+    _initial_search_time(-1)
 {}
 
 std::string
@@ -23,7 +23,7 @@ BFWSStats::_if_computed(unsigned val) {
 }
 
 std::string 
-BFWSStats::_avg(unsigned val, unsigned den) {
+BFWSStats::_avg(unsigned long val, unsigned den) {
     if (den == 0) return "N/A";
     std::stringstream ss;
     ss << std::fixed << std::setprecision(2) << val / (float) den;
@@ -53,7 +53,7 @@ std::vector<BFWSStats::DataPointT> BFWSStats::dump() const {
         std::make_tuple("sim_expanded_nodes", "Total nodes expanded during simulations", std::to_string(_sim_expanded_nodes)),
         std::make_tuple("sim_generated_nodes", "Total nodes generated during simulation", std::to_string(_sim_generated_nodes)),
 
-        std::make_tuple("sim_avg_time", "Avg. simulation time", _avg(_sim_time, _simulations)),
+        std::make_tuple("sim_avg_time", "Avg. simulation time", _avg((ulong)_sim_time, _simulations)),
         std::make_tuple("sim_avg_expanded_nodes", "Avg. nodes expanded during simulations", _avg(_sim_expanded_nodes, _simulations)),
         std::make_tuple("sim_avg_generated_nodes", "Avg. nodes generated during simulation", _avg(_sim_generated_nodes, _simulations)),
 
@@ -75,12 +75,12 @@ std::vector<BFWSStats::DataPointT> BFWSStats::dump() const {
 
     for (unsigned k = 1; k < _sim_wtables.size(); ++k) {
         std::string kstr = std::to_string(k);
-        data.push_back(std::make_tuple("sim_w" + kstr + "_tables", "Number of width-" + kstr + " tables created during simulation", std::to_string(_sim_wtables[k])));
+        data.emplace_back("sim_w" + kstr + "_tables", "Number of width-" + kstr + " tables created during simulation", std::to_string(_sim_wtables[k]));
     }
 
     for (unsigned k = 1; k < _search_wtables.size(); ++k) {
         std::string kstr = std::to_string(k);
-        data.push_back(std::make_tuple("search_w" + kstr + "_tables", "Number of width-" + kstr + " tables created during search", std::to_string(_search_wtables[k])));
+        data.emplace_back("search_w" + kstr + "_tables", "Number of width-" + kstr + " tables created during search", std::to_string(_search_wtables[k]));
     }
 
 

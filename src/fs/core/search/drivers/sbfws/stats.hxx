@@ -82,13 +82,22 @@ public:
     std::vector<DataPointT> dump() const;
 
 
-    void set_initial_search_time(double t) { _initial_search_time = t; }
-    double initial_search_time() const { return _initial_search_time; }
+    void log_start_of_search(double initial_search_time) {
+        _initial_search_time = initial_search_time;
+    }
+
+    double initial_search_time() const {
+        if (_initial_search_time < 0) {
+            throw std::runtime_error("Attempted to access initial_search_time without having invoked"
+                                     " method 'log_start_of_search'");
+        }
+        return _initial_search_time;
+    }
 
 protected:
 
     static std::string _if_computed(unsigned val);
-    static std::string _avg(unsigned val, unsigned den);
+    static std::string _avg(unsigned long val, unsigned den);
 
     unsigned long _expanded;
     unsigned long _generated;
