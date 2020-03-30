@@ -1,8 +1,10 @@
 
 #pragma once
+
 #include <string>
 #include <tuple>
 #include <vector>
+#include <cassert>
 
 namespace fs0 { 
 

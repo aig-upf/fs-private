@@ -15,7 +15,7 @@ public:
 	typedef std::function<Problem* (const rapidjson::Document&, const std::string&)> ProblemGeneratorType;
 	
 	//! Set up the runner, loading the problem, the configuration, etc.
-	Runner(const EngineOptions& options, ProblemGeneratorType generator);
+	Runner(EngineOptions  options, ProblemGeneratorType generator);
 	
 	//! Run the search engine
 	int run();

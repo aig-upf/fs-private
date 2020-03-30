@@ -236,24 +236,32 @@ def run_solver(translation_dir, args, dry_run):
     return translation_dir
 
 
-def explain_output(output):
-    if output == 0:
+def is_nonerror_code(code):
+    return 0 <= code <= 19
+
+
+def print_code_message(code):
+    msg = {
+        0: None,
+        11: "Problem is provably unsolvable",
+        12: "Search ended without finding a plan",
+        22: "Search ran out of memory",
+        23: "Search ran out of time",
+        32: "Critical error during search",
+        33: "Input error",
+        34: "Unsupported feature requested",
+    }.get(code)
+    if msg is not None:
+        print(msg)
+
+
+def explain_output(code):
+    print_code_message(code)
+
+    if is_nonerror_code(code):
         return
 
-    if output == 1:
-        print("Critical error while running the planner.")
-    elif output == 2:
-        print("Input error while running the planner.")
-    elif output == 3:
-        print("Unsupported feature requested on the planner.")
-    elif output == 4:
-        print("No plan was found")
-    elif output == 5:
-        print("Search ended without finding a solution")
-    elif output == 6:
-        print("The planner ran out of memory.")
-
-    sys.exit(output)
+    sys.exit(code)
 
 
 def solver_name(args):

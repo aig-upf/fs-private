@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <type_traits> //for std::underlying_type
 
 #include <lapkt/tools/resources_control.hxx>
 #include <lapkt/tools/logging.hxx>
@@ -14,10 +15,11 @@
 #include <fs/core/languages/fstrips/operations.hxx>
 
 
-namespace fs0 { namespace drivers {
 
-Runner::Runner(const EngineOptions& options, ProblemGeneratorType generator)
-	: _options(options), _generator(generator), _start_time(aptk::time_used())
+namespace fs0::drivers {
+
+Runner::Runner(EngineOptions  options, ProblemGeneratorType generator)
+	: _options(std::move(options)), _generator(std::move(generator)), _start_time(aptk::time_used())
 {}
 
 int Runner::run() {
@@ -40,7 +42,8 @@ int Runner::run() {
 	auto driver = EngineRegistry::instance().get(_options.getDriver());
 	ExitCode code = driver->search(*problem, config, _options, _start_time);
 	report_stats(*problem, _options.getOutputDir()); // Report stats here again so that the number of ground actions, etc. is correctly reported.
-	return code;
+
+    return static_cast<std::underlying_type<ExitCode>::type>(code);
 }
 
 void Runner::report_stats(const Problem& problem, const std::string& out_dir) {
@@ -76,4 +79,4 @@ void Runner::report_stats(const Problem& problem, const std::string& out_dir) {
 	json_out.close();
 }
 
-} } // namespaces
+} // namespaces

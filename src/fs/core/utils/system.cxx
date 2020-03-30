@@ -5,7 +5,7 @@
 
 
 #include <csignal>
-#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <ctype.h>
 #include <fcntl.h>
@@ -13,6 +13,7 @@
 #include <iostream>
 #include <limits>
 #include <unistd.h>
+
 #include <fs/core/utils/system.hxx>
 
 #if defined(_WIN32)
@@ -41,34 +42,17 @@
 
 namespace fs0 {
 
-const char* exit_code_string( ExitCode c ) {
-    switch (c) {
-        case PLAN_FOUND:
-            return "PLAN_FOUND";
-        case CRITICAL_ERROR:
-            return "CRITICAL_ERROR";
-        case INPUT_ERROR:
-            return "INPUT_ERROR";
-        case UNSUPPORTED:
-            return "UNSUPPORTED";
-        case UNSOLVABLE:
-            return "UNSOLVABLE";
-        case UNSOLVED_INCOMPLETE:
-            return "UNSOLVED_INCOMPLETE";
-        case OUT_OF_MEMORY:
-            return "OUT_OF_MEMORY";
-    };
-
-    return "UNKNOWN";
-}
 
 void write_reentrant(int filedescr, const char *message, int len) {
     while (len > 0) {
-        int written = TEMP_FAILURE_RETRY(write(filedescr, message, len));
+        int written;
+        do {
+            written = write(filedescr, message, len);
+        } while (written == -1 && errno == EINTR);
         /*
-          We could check the value of errno here but all errors except EINTR
-          are catastrophic enough to abort, so we do not need the distintion.
-          The error EINTR is handled by the macro TEMP_FAILURE_RETRY.
+          We could check for other values of errno here but all errors except
+          EINTR are catastrophic enough to abort, so we do not need the
+          distinction.
         */
         if (written == -1)
             abort();
@@ -94,11 +78,14 @@ void write_reentrant_int(int filedescr, int value) {
 }
 
 bool read_char_reentrant(int filedescr, char *c) {
-    int result = TEMP_FAILURE_RETRY(read(filedescr, c, 1));
+    int result;
+    do {
+        result = read(filedescr, c, 1);
+    } while (result == -1 && errno == EINTR);
     /*
-      We could check the value of errno here but all errors except EINTR
-      are catastrophic enough to abort, so we do not need the distinction.
-      The error EINTR is handled by the macro TEMP_FAILURE_RETRY.
+      We could check for other values of errno here but all errors except
+      EINTR are catastrophic enough to abort, so we do not need the
+      distinction.
     */
     if (result == -1)
         abort();
@@ -165,7 +152,7 @@ void out_of_memory_handler() {
       memory for the stack of the signal handler and raising a signal here.
     */
     write_reentrant_str(STDOUT_FILENO, "Failed to allocate memory.\n");
-    exit(ExitCode::OUT_OF_MEMORY);
+    exit_with(ExitCode::SEARCH_OUT_OF_MEMORY);
 }
 
 void signal_handler(int signal_number) {
@@ -173,6 +160,9 @@ void signal_handler(int signal_number) {
     write_reentrant_str(STDOUT_FILENO, "caught signal ");
     write_reentrant_int(STDOUT_FILENO, signal_number);
     write_reentrant_str(STDOUT_FILENO, " -- exiting\n");
+    if (signal_number == SIGXCPU) {
+        exit_after_receiving_signal(ExitCode::SEARCH_OUT_OF_TIME);
+    }
     raise(signal_number);
 }
 
@@ -186,7 +176,7 @@ size_t get_current_memory_in_kb() { return utils::getCurrentRSS() / 1024; }
         The latter is slower but guarantees reentrancy.
 */
 int get_peak_memory_in_kb() {
-    // On error, produces a warning on std::cerr and returns -1.
+    // On error, produces a warning on cerr and returns -1.
     int memory_in_kb = -1;
 
     std::ifstream procfile;
@@ -229,7 +219,6 @@ void register_event_handlers() {
     sigaddset(&default_signal_action.sa_mask, SIGSEGV);
     sigaddset(&default_signal_action.sa_mask, SIGINT);
     sigaddset(&default_signal_action.sa_mask, SIGXCPU);
-    sigaddset(&default_signal_action.sa_mask, SIGKILL);
     // Reset handler to default action after completion.
     default_signal_action.sa_flags = SA_RESETHAND;
 
@@ -238,9 +227,22 @@ void register_event_handlers() {
     sigaction(SIGSEGV, &default_signal_action, 0);
     sigaction(SIGINT, &default_signal_action, 0);
     sigaction(SIGXCPU, &default_signal_action, 0);
-    sigaction(SIGKILL, &default_signal_action, 0);
 }
 
+void report_exit_code_reentrant(ExitCode exitcode) {
+    const char *message = get_exit_code_message_reentrant(exitcode);
+    bool is_error = is_exit_code_error_reentrant(exitcode);
+    if (message) {
+        int filedescr = is_error ? STDERR_FILENO : STDOUT_FILENO;
+        write_reentrant_str(filedescr, message);
+        write_reentrant_char(filedescr, '\n');
+    } else {
+        write_reentrant_str(STDERR_FILENO, "Exitcode: ");
+        write_reentrant_int(STDERR_FILENO, static_cast<int>(exitcode));
+        write_reentrant_str(STDERR_FILENO, "\nUnknown exitcode.\n");
+        abort();
+    }
+}
 
 int get_process_id() {
     return getpid();
@@ -262,11 +264,62 @@ void init_fs_system() {
 }
 
 
+const char *get_exit_code_message_reentrant(ExitCode exitcode) {
+    switch (exitcode) {
+        case ExitCode::SUCCESS:
+            return "Solution found.";
+        case ExitCode::SEARCH_CRITICAL_ERROR:
+            return "Unexplained error occurred.";
+        case ExitCode::SEARCH_INPUT_ERROR:
+            return "Usage error occurred.";
+        case ExitCode::SEARCH_UNSUPPORTED:
+            return "Tried to use unsupported feature.";
+        case ExitCode::SEARCH_UNSOLVABLE:
+            return "Task is provably unsolvable.";
+        case ExitCode::SEARCH_UNSOLVED_INCOMPLETE:
+            return "Search stopped without finding a solution.";
+        case ExitCode::SEARCH_OUT_OF_MEMORY:
+            return "Memory limit has been reached.";
+        case ExitCode::SEARCH_OUT_OF_TIME:
+            return "Time limit has been reached.";
+        default:
+            return nullptr;
+    }
+}
+
+bool is_exit_code_error_reentrant(ExitCode exitcode) {
+    switch (exitcode) {
+        case ExitCode::SUCCESS:
+        case ExitCode::SEARCH_UNSOLVABLE:
+        case ExitCode::SEARCH_UNSOLVED_INCOMPLETE:
+        case ExitCode::SEARCH_OUT_OF_MEMORY:
+        case ExitCode::SEARCH_OUT_OF_TIME:
+            return false;
+        case ExitCode::SEARCH_CRITICAL_ERROR:
+        case ExitCode::SEARCH_INPUT_ERROR:
+        case ExitCode::SEARCH_UNSUPPORTED:
+        default:
+            return true;
+    }
+}
+
+void exit_with(ExitCode exitcode) {
+    report_exit_code_reentrant(exitcode);
+    exit(static_cast<int>(exitcode));
+}
+
+void exit_after_receiving_signal(ExitCode exitcode) {
+    /*
+      In signal handlers, we have to use the "safe function" _Exit() rather
+      than the unsafe function exit().
+    */
+    report_exit_code_reentrant(exitcode);
+    _Exit(static_cast<int>(exitcode));
+}
+
 } // namespaces
 
 namespace fs0::utils {
-
-
 
 /**
  * Returns the peak (maximum so far) resident set size (physical

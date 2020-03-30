@@ -86,8 +86,11 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 					solved = engine.solve_model(plan);
 				}
 				catch (const std::bad_alloc &ex) {
-					LPT_INFO("cout", "FAILED TO ALLOCATE MEMORY");
-					oom = true;
+                    out_of_memory_handler();
+                    exit_with(ExitCode::SEARCH_OUT_OF_MEMORY);
+				} catch (const Gecode::MemoryExhausted& ex) {
+                    out_of_memory_handler();
+                    exit_with(ExitCode::SEARCH_OUT_OF_MEMORY);
 				}
 			}
 
@@ -118,7 +121,6 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 			json_out << "\t\"eval_per_second\": " << std::fixed << std::setprecision(2) << evalrate << "," << std::endl;
 			json_out << "\t\"solved\": " << ( solved ? "true" : "false" ) << "," << std::endl;
 			json_out << "\t\"valid\": " << ( valid_plan ? "true" : "false" ) << "," << std::endl;
-			json_out << "\t\"out_of_memory\": " << ( oom ? "true" : "false" ) << "," << std::endl;
 			json_out << "\t\"plan_length\": " << plan.size() << "," << std::endl;
 			json_out << "\t\"plan\": ";
 			PlanPrinter::print_json( plan, json_out);
@@ -155,27 +157,14 @@ static void dump_stats(std::ofstream& out, const StatsT& stats) {
 				}
 				LPT_INFO("cout", "Plan was saved in file \"" << resolved_path << "\"");
 
-				on_plan_found(plan);
-				result = ExitCode::PLAN_FOUND;
-			} else if (oom) {
-				LPT_INFO("cout", "Search Result: Out of memory. Peak memory: " << get_peak_memory_in_kb());
-				result = ExitCode::OUT_OF_MEMORY;
+				result = ExitCode::SUCCESS;
 			} else {
-				LPT_INFO("cout", "Search Result: No plan was found.");
-				result = ExitCode::UNSOLVABLE;
+				result = ExitCode::SEARCH_UNSOLVABLE;
 			}
 
 			return result;
 		}
-
-
-		// Extra actions when a plan is found
-		virtual void on_plan_found(const PlanT& plan) {
-		}
-
 	};
-
-
 };
 
 } // namespaces
