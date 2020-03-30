@@ -5,24 +5,19 @@
 
 #pragma once
 
-#include <stddef.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-
 /*
  * Author:  David Robert Nadeau
  * Site:    http://NadeauSoftware.com/
  * License: Creative Commons Attribution 3.0 Unported License
  *          http://creativecommons.org/licenses/by/3.0/deed.en_US
  */
-namespace fs0 { namespace utils {
+namespace fs0::utils {
 
 size_t getCurrentRSS( );
 size_t getPeakRSS( );
 
 
-} } // namespaces
+} // namespaces
 
 
 namespace fs0 {
