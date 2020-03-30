@@ -17,7 +17,7 @@ def fix_seed_and_possibly_rerun(verbose=False):
     """
     # Base case: Seed has already been fixed, so we simply return False to signal that execution can carry on normally
     if get_seed() == 1:
-        return False
+        return False, 0
 
     # Otherwise we print a warning and re-run the process with a fixed hash seed envvar.
     if verbose:
@@ -26,8 +26,8 @@ def fix_seed_and_possibly_rerun(verbose=False):
     import subprocess
     env = dict(os.environ)
     env.update(PYTHONHASHSEED='1')
-    subprocess.call(["python3"] + sys.argv, env=env)
-    return True
+    code = subprocess.call(["python3"] + sys.argv, env=env)
+    return True, code
 
 
 def get_seed():

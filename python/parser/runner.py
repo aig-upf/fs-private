@@ -331,9 +331,9 @@ def run(args):
     translation_dir = run_solver(workdir, args, args.parse_only)
 
     # Validate the resulting plan:
-    is_plan_valid = validate(args.domain, args.instance, os.path.join(translation_dir, 'first.plan'))
+    validate(args.domain, args.instance, os.path.join(translation_dir, 'first.plan'))
 
-    return is_plan_valid
+    return 0  # If there was any abnormal exit code, we'll have sys.exited before getting here
 
 
 def preprocess_with_tarski(args, is_debug_run, workdir):
@@ -399,8 +399,8 @@ def validate(domain_name, instance_name, planfile):
     with resources.timing(f"Running validate", newline=True):
         plan = Path(planfile)
         if not plan.is_file():
-            logging.info("No plan file could be found.")
-            return -1
+            logging.info("No plan file to validate could be found.")
+            return
 
         validate_inputs = ["validate", domain_name, instance_name, planfile]
 
@@ -409,11 +409,9 @@ def validate(domain_name, instance_name, planfile):
         except OSError as err:
             if err.errno == errno.ENOENT:
                 logging.error("Error: 'validate' binary not found. Is it on the PATH?")
-                return -1
+                return
             else:
                 logging.error("Error executing 'validate': {}".format(err))
-
-    return 0
 
 
 def parse_problem_with_tarski(domain_file, inst_file):

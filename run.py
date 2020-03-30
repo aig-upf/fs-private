@@ -13,6 +13,8 @@ from python import utils, runner
 if __name__ == "__main__":
     # Make sure that the random seed is fixed before running the script, to ensure determinism
     # in the output of the parser.
-    if not utils.fix_seed_and_possibly_rerun(verbose="--debug" in sys.argv):
+    fixed, code = utils.fix_seed_and_possibly_rerun(verbose="--debug" in sys.argv)
+    if not fixed:
         print('Invocation command: "{}"'.format(' '.join(sys.argv)))
-        runner.main(sys.argv[1:])
+        code = runner.main(sys.argv[1:])
+    sys.exit(code)
