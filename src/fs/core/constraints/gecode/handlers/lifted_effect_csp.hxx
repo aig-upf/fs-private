@@ -6,10 +6,10 @@
 
 namespace fs0 { class AtomIndex; }
 
-namespace fs0 { namespace language { namespace fstrips { class StateVariable; } } }
+namespace fs0::language::fstrips { class StateVariable; }
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 class RPGIndex;
 
@@ -24,7 +24,7 @@ public:
 
 	//! The only constructor
 	LiftedEffectCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const AtomIndex& tuple_index, bool approximate);
-	~LiftedEffectCSP() = default;
+	~LiftedEffectCSP() override = default;
 	LiftedEffectCSP(const LiftedEffectCSP&) = delete;
 	LiftedEffectCSP(LiftedEffectCSP&&) = delete;
 	LiftedEffectCSP& operator=(const LiftedEffectCSP&) = delete;
@@ -89,4 +89,4 @@ protected:
 };
 
 
-} } // namespaces
+} // namespaces

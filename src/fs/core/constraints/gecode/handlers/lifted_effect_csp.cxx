@@ -11,7 +11,7 @@
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 
 std::vector<std::unique_ptr<LiftedEffectCSP>>
@@ -248,4 +248,4 @@ LiftedEffectCSP::process(RPGIndex& graph) {
     seek_novel_tuples(graph);
 }
 
-} } // namespaces
+} // namespaces
