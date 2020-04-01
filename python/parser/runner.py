@@ -369,7 +369,7 @@ def preprocess_with_tarski(args, is_debug_run, workdir):
             ground_variables = grounding.ground_state_variables()
     statics, fluents = grounding.static_symbols, grounding.fluent_symbols
     if args.sdd:
-        from tarski.sdd.sdd import process_problem
+        from tarski.analysis.sdd import process_problem
         sdddir = os.path.join(workdir, 'data', 'sdd')
         utils.mkdirp(sdddir)
         process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
