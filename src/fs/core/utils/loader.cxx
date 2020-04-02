@@ -17,7 +17,6 @@
 #include <fs/core/fstrips/language_info.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
-#include <fs/core/constraints/grounding.hxx>
 #include <fs/core/validator.hxx>
 
 
