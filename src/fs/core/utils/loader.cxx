@@ -117,12 +117,6 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	if ( !conjuncts.empty())
 		sc_set.push_back( new fs::Axiom("variable_bounds", {}, {}, fs::BindingUnit({},{}), new fs::Conjunction(conjuncts)));
 
-	std::vector< const fs::Axiom* > named_sc_schemata;
-	for ( unsigned i = 0; i < data["state_constraints"].Size(); ++i ) {
-		auto named_sc = loadNamedStateConstraint(data["state_constraints"][i], info);
-		if ( named_sc == nullptr ) continue;
-	   	named_sc_schemata.push_back( named_sc );
-	}
 	auto sc_idx = _index_axioms(sc_set);
 
 	LPT_INFO("main", "Loading Problem Metric...");
@@ -352,19 +346,6 @@ Loader::loadTransitions(const rapidjson::Value& data, const ProblemInfo& info) {
         }
     }
     return all;
-}
-
-const fs::Axiom*
-Loader::loadNamedStateConstraint(const rapidjson::Value& data, const ProblemInfo& info) {
-    std::vector<const fs::Axiom*> axioms;
-    if ( !data.HasMember("name")) {
-        return nullptr;
-    }
-    const ActionData* adata = loadActionData(data, 0, info, false);
-    if (adata != nullptr )
-        return new fs::Axiom(adata->getName(), adata->getSignature(), adata->getParameterNames(), adata->getBindingUnit(), adata->getPrecondition()->clone());
-    assert(false);
-    return nullptr;
 }
 
 rapidjson::Document

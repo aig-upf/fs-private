@@ -52,7 +52,6 @@ protected:
 
 	//! Load a formula and process it
 	static const fs::Formula*  loadGroundedFormula(const rapidjson::Value& data, const ProblemInfo& info);
-    static const fs::Axiom*    loadNamedStateConstraint(const rapidjson::Value& data, const ProblemInfo& info);
 
 	//
 	static AllTransitionGraphsT loadTransitions(const rapidjson::Value& data, const ProblemInfo& info);
