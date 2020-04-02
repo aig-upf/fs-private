@@ -36,7 +36,7 @@ NestedFluentElementTranslator::NestedFluentElementTranslator(const fs::FluentHea
 
 void NestedFluentElementTranslator::register_variables(CSPTranslator& translator) {
 	LPT_DEBUG( "translation", "Registering nested fluent CSP variables " << *_term);
-	GecodeSpace& csp = translator.getBaseCSP();
+	FSGecodeSpace& csp = translator.getBaseCSP();
 	
 	// Now, for a nested fluent such as e.g. 'tile(blank())', we register as involved state variables all state variables
 	// tile(nw), tile(n), ..., etc., where nw, n, etc. are the possible values for state variable 'blank()'.
@@ -57,7 +57,7 @@ void NestedFluentElementTranslator::register_variables(CSPTranslator& translator
 }
 
 void NestedFluentElementTranslator::register_constraints(CSPTranslator& translator) {
-	GecodeSpace& csp = translator.getBaseCSP();
+	FSGecodeSpace& csp = translator.getBaseCSP();
 
 	const std::vector<const fs::Term*>& subterms = _term->getSubterms();
 
@@ -92,12 +92,12 @@ void NestedFluentElementTranslator::register_constraints(CSPTranslator& translat
 	LPT_EDEBUG("translation", "Fluent-headed term \"" << *_term << "\" produces element constraint: " << print::element(table, zero_based_index, element_result));
 }
 
-const Gecode::IntVar& NestedFluentData::getIndex(const GecodeSpace& csp) const {
+const Gecode::IntVar& NestedFluentData::getIndex(const FSGecodeSpace& csp) const {
 	return csp._intvars[_index_position];
 }
 
 
-VariableIdx NestedFluentData::resolveStateVariable(const GecodeSpace& csp) const {
+VariableIdx NestedFluentData::resolveStateVariable(const FSGecodeSpace& csp) const {
 	unsigned idx = getIndex(csp).val();
 	return _table_variables[idx];
 }

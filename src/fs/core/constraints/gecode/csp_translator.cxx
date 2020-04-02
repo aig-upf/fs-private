@@ -131,33 +131,33 @@ unsigned CSPTranslator::resolveVariableIndex(const fs::Term* term) const {
 	return it->second;
 }
 
-const Gecode::IntVar& CSPTranslator::resolveVariable(const fs::Term* term, const GecodeSpace& csp) const {
+const Gecode::IntVar& CSPTranslator::resolveVariable(const fs::Term* term, const FSGecodeSpace& csp) const {
 	return resolveVariableFromIndex(resolveVariableIndex(term), csp);
 }
 
-object_id CSPTranslator::resolveValue(const fs::Term* term, const GecodeSpace& csp) const {
+object_id CSPTranslator::resolveValue(const fs::Term* term, const FSGecodeSpace& csp) const {
 	unsigned idx = resolveVariableIndex(term);
 	return resolveValueFromIndex(idx, csp);
 }
 
-const Gecode::IntVar& CSPTranslator::resolveVariableFromIndex(unsigned variable_index, const GecodeSpace& csp) const {
+const Gecode::IntVar& CSPTranslator::resolveVariableFromIndex(unsigned variable_index, const FSGecodeSpace& csp) const {
 	return csp._intvars[variable_index];
 }
 
-const Gecode::BoolVar& CSPTranslator::resolveBoolVariableFromIndex(unsigned variable_index, const GecodeSpace& csp) const {
+const Gecode::BoolVar& CSPTranslator::resolveBoolVariableFromIndex(unsigned variable_index, const FSGecodeSpace& csp) const {
     return csp._boolvars[variable_index];
 }
 
-object_id CSPTranslator::resolveValueFromIndex(unsigned variable_index, const GecodeSpace& csp) const {
+object_id CSPTranslator::resolveValueFromIndex(unsigned variable_index, const FSGecodeSpace& csp) const {
 	const type_id& t = _intvars_types.at(variable_index);
 	return make_object(t, resolveVariableFromIndex(variable_index, csp).val());
 }
 
-const Gecode::IntVar& CSPTranslator::resolveInputStateVariable(const GecodeSpace& csp, VariableIdx variable) const {
+const Gecode::IntVar& CSPTranslator::resolveInputStateVariable(const FSGecodeSpace& csp, VariableIdx variable) const {
 	return csp._intvars[resolveInputVariableIndex(variable)];
 }
 
-Gecode::IntVarArgs CSPTranslator::resolveVariables(const std::vector<const fs::Term*>& terms, const GecodeSpace& csp) const {
+Gecode::IntVarArgs CSPTranslator::resolveVariables(const std::vector<const fs::Term*>& terms, const FSGecodeSpace& csp) const {
 	Gecode::IntVarArgs variables;
 	for (const fs::Term* term:terms) {
 		variables << resolveVariable(term, csp);
@@ -165,7 +165,7 @@ Gecode::IntVarArgs CSPTranslator::resolveVariables(const std::vector<const fs::T
 	return variables;
 }
 
-std::vector<object_id> CSPTranslator::resolveValues(const std::vector<const fs::Term*>& terms, const GecodeSpace& csp) const {
+std::vector<object_id> CSPTranslator::resolveValues(const std::vector<const fs::Term*>& terms, const FSGecodeSpace& csp) const {
 	std::vector<object_id> values;
 	for (const fs::Term* term:terms) {
 		values.push_back(resolveValue(term, csp));
@@ -173,7 +173,7 @@ std::vector<object_id> CSPTranslator::resolveValues(const std::vector<const fs::
 	return values;
 }
 
-std::ostream& CSPTranslator::print(std::ostream& os, const GecodeSpace& csp) const {
+std::ostream& CSPTranslator::print(std::ostream& os, const FSGecodeSpace& csp) const {
 	const fs0::ProblemInfo& info = ProblemInfo::getInstance();
 	os << "Gecode CSP with " << _registered.size() + _input_state_variables.size() << " variables" << std::endl;
 	
@@ -192,12 +192,12 @@ std::ostream& CSPTranslator::print(std::ostream& os, const GecodeSpace& csp) con
 	return os;
 }
 
-void CSPTranslator::updateStateVariableDomains(GecodeSpace& csp, const RPGIndex& graph) const {
+void CSPTranslator::updateStateVariableDomains(FSGecodeSpace& csp, const RPGIndex& graph) const {
 	updateStateVariableDomains(csp, graph.get_domains());
 }
 
 void CSPTranslator::
-updateStateVariableDomains(GecodeSpace& csp, const std::vector<Gecode::IntSet>& domains, bool empty_means_no_constraint) const {
+updateStateVariableDomains(FSGecodeSpace& csp, const std::vector<Gecode::IntSet>& domains, bool empty_means_no_constraint) const {
 	// Iterate over all the input state variables and constrain them according to the RPG layer
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
@@ -209,7 +209,7 @@ updateStateVariableDomains(GecodeSpace& csp, const std::vector<Gecode::IntSet>& 
 	}
 }
 
-void CSPTranslator::updateStateVariableDomains(GecodeSpace& csp, const std::vector<const Gecode::IntSet*>& domains) const {
+void CSPTranslator::updateStateVariableDomains(FSGecodeSpace& csp, const std::vector<const Gecode::IntSet*>& domains) const {
 	// Iterate over all the input state variables and constrain them according to the RPG layer
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
@@ -222,7 +222,7 @@ void CSPTranslator::updateStateVariableDomains(GecodeSpace& csp, const std::vect
 	}
 }
 
-void CSPTranslator::updateStateVariableDomains(GecodeSpace& csp, const State& state) const {
+void CSPTranslator::updateStateVariableDomains(FSGecodeSpace& csp, const State& state) const {
 	// Iterate over all the input state variables and assign them the only possible value dictated by the state.
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
@@ -231,7 +231,7 @@ void CSPTranslator::updateStateVariableDomains(GecodeSpace& csp, const State& st
 	}
 }
 
-PartialAssignment CSPTranslator::buildAssignment(GecodeSpace& solution) const {
+PartialAssignment CSPTranslator::buildAssignment(FSGecodeSpace& solution) const {
 	PartialAssignment assignment;
 	for (const auto& it:_input_state_variables) {
 		VariableIdx variable = it.first;
@@ -287,7 +287,7 @@ unsigned CSPTranslator::resolveReifiedAtomVariableIndex(const fs::AtomicFormula*
 }
 
 const Gecode::BoolVar&
-CSPTranslator::resolveReifiedAtomVariable(const fs::AtomicFormula* atom, const GecodeSpace& csp) const {
+CSPTranslator::resolveReifiedAtomVariable(const fs::AtomicFormula* atom, const FSGecodeSpace& csp) const {
     return resolveBoolVariableFromIndex(resolveReifiedAtomVariableIndex(atom), csp);
 }
 

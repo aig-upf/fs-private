@@ -74,11 +74,11 @@ LiftedEffectCSP::prune_unreachable(std::vector<std::unique_ptr<LiftedEffectCSP>>
 	for(auto it = managers.begin(); it != managers.end();) {
 		bool reachable = false;
 		std::unique_ptr<LiftedEffectCSP>& manager = *it;
-		if (GecodeSpace* csp = manager->instantiate_wo_novelty(rpg)) {
-			Gecode::DFS<GecodeSpace> engine(csp);
+		if (FSGecodeSpace* csp = manager->instantiate_wo_novelty(rpg)) {
+			Gecode::DFS<FSGecodeSpace> engine(csp);
 			
-			if (GecodeSpace* solution = engine.next()) { // The CSP has at least one solution, thus is relevant for the problem
-				manager->update_csp(std::unique_ptr<GecodeSpace>(csp));
+			if (FSGecodeSpace* solution = engine.next()) { // The CSP has at least one solution, thus is relevant for the problem
+				manager->update_csp(std::unique_ptr<FSGecodeSpace>(csp));
 				reachable = true;
 				delete solution;
 			} else {
@@ -176,14 +176,14 @@ LiftedEffectCSP::check_valid_effect(const fs::ActionEffect* effect) {
 
 void
 LiftedEffectCSP::seek_novel_tuples(RPGIndex& rpg) const {
-	if (GecodeSpace* csp = instantiate(rpg)) {
+	if (FSGecodeSpace* csp = instantiate(rpg)) {
 		if (!csp->propagate()) {
 			LPT_EDEBUG("heuristic", "The effect CSP cannot produce any new tuple");
 		}
 		else {
-			Gecode::DFS<GecodeSpace> engine(csp);
+			Gecode::DFS<FSGecodeSpace> engine(csp);
 			unsigned num_solutions = 0;
-			while (GecodeSpace* solution = engine.next()) {
+			while (FSGecodeSpace* solution = engine.next()) {
 //		 		LPT_DEBUG("cout", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": "); // << print::csp(_translator, *solution))
 //				_translator.print(std::cout, *csp);
 				process_effect_solution(solution, rpg);
@@ -197,7 +197,7 @@ LiftedEffectCSP::seek_novel_tuples(RPGIndex& rpg) const {
 }
 
 AtomIdx
-LiftedEffectCSP::compute_reached_tuple(const GecodeSpace* solution) const {
+LiftedEffectCSP::compute_reached_tuple(const FSGecodeSpace* solution) const {
 	AtomIdx tuple_idx = _achievable_tuple_idx;
 	if (tuple_idx == INVALID_TUPLE) { // i.e. we have a functional effect, and thus need to factor the function result into the tuple.
 		ValueTuple tuple(_effect_tuple); // Copy the tuple
@@ -208,7 +208,7 @@ LiftedEffectCSP::compute_reached_tuple(const GecodeSpace* solution) const {
 }
 
 void
-LiftedEffectCSP::process_effect_solution(const GecodeSpace* solution, RPGIndex& rpg) const {
+LiftedEffectCSP::process_effect_solution(const FSGecodeSpace* solution, RPGIndex& rpg) const {
 	AtomIdx tuple_idx = compute_reached_tuple(solution);
 	
 	bool reached = rpg.reached(tuple_idx);
@@ -228,7 +228,7 @@ LiftedEffectCSP::create_novelty_constraint() {
 }
 
 void
-LiftedEffectCSP::post_novelty_constraint(GecodeSpace& csp, const RPGIndex& rpg) const {
+LiftedEffectCSP::post_novelty_constraint(FSGecodeSpace& csp, const RPGIndex& rpg) const {
 	if (_novelty) _novelty->post_constraint(csp, rpg);
 }
 

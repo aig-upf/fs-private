@@ -98,7 +98,7 @@ StrongNoveltyConstraint::StrongNoveltyConstraint(CSPTranslator& translator, cons
 }
 
 //! A private helper
-Gecode::BoolVar& post_individual_constraint(GecodeSpace& csp, const RPGIndex& layer, const std::tuple<VariableIdx, unsigned, unsigned>& element) {
+Gecode::BoolVar& post_individual_constraint(FSGecodeSpace& csp, const RPGIndex& layer, const std::tuple<VariableIdx, unsigned, unsigned>& element) {
 	VariableIdx variable = std::get<0>(element);
 	unsigned csp_variable_id = std::get<1>(element);
 	unsigned reified_variable_id = std::get<2>(element);
@@ -109,7 +109,7 @@ Gecode::BoolVar& post_individual_constraint(GecodeSpace& csp, const RPGIndex& la
 	return reification_variable;
 }
 
-void StrongNoveltyConstraint::post_constraint(GecodeSpace& csp, const RPGIndex& layer) const {
+void StrongNoveltyConstraint::post_constraint(FSGecodeSpace& csp, const RPGIndex& layer) const {
 	if (_variables.empty()) return;
 	
 	Gecode::BoolVarArgs reification_variables;
@@ -134,7 +134,7 @@ EffectNoveltyConstraint::EffectNoveltyConstraint(CSPTranslator& translator, cons
 	_variable = std::make_tuple(variable->getValue(), csp_var_id, reified_id);
 }
 
-void EffectNoveltyConstraint::post_constraint(GecodeSpace& csp, const RPGIndex& layer) const {
+void EffectNoveltyConstraint::post_constraint(FSGecodeSpace& csp, const RPGIndex& layer) const {
 	VariableIdx variable = std::get<0>(_variable);
 	unsigned csp_variable_id = std::get<1>(_variable);
 	unsigned reified_variable_id = std::get<2>(_variable);

@@ -31,12 +31,12 @@ public:
 	}
 	
 	//! Preinstantiate the CSP
-	GecodeSpace* preinstantiate(const RPGIndex& rpg) const;
+	FSGecodeSpace* preinstantiate(const RPGIndex& rpg) const;
 	
 	//! Find whether this effect can support the atom 'tuple' = 'atom' in the RPG layer given by layer_csp
-	bool find_atom_support(AtomIdx tuple, const Atom& atom, const State& seed, GecodeSpace& layer_csp, RPGIndex& rpg) const;
+	bool find_atom_support(AtomIdx tuple, const Atom& atom, const State& seed, FSGecodeSpace& layer_csp, RPGIndex& rpg) const;
 	
-	void post(GecodeSpace& csp, const Atom& atom) const;
+	void post(FSGecodeSpace& csp, const Atom& atom) const;
 	
 	const GroundAction& get_action() const override { return _action; }
 	
@@ -52,7 +52,7 @@ protected:
 	//! to return a vector of effects. By construction, we have that _effects.size() == 1
 	const std::vector<const fs::ActionEffect*> _effects;
 	
-	const ActionID* get_action_id(const GecodeSpace* solution) const override;
+	const ActionID* get_action_id(const FSGecodeSpace* solution) const override;
 
 	//! Index the CSP variables corresponding the the effect LHS.
 	std::vector<unsigned> index_lhs_subterms();
@@ -67,7 +67,7 @@ protected:
 	
 	void log() const override;
 	
-	bool solve(AtomIdx tuple, gecode::GecodeSpace* csp, RPGIndex& graph) const;
+	bool solve(AtomIdx tuple, gecode::FSGecodeSpace* csp, RPGIndex& graph) const;
 // 	void solve_approximately(const Atom& atom, gecode::GecodeSpace* csp, RPGData& rpg, const State& seed) const;
 };
 

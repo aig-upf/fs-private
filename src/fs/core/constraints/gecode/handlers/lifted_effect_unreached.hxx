@@ -41,16 +41,16 @@ protected:
 	
 	void create_novelty_constraint() override;
 	
-	void post_novelty_constraint(GecodeSpace& csp, const RPGIndex& rpg) const override;
+	void post_novelty_constraint(FSGecodeSpace& csp, const RPGIndex& rpg) const override;
 
 	
 	void log() const override;
 	
 	
 	
-	bool solve_for_tuple(AtomIdx tuple, gecode::GecodeSpace* csp, RPGIndex& graph) const;
+	bool solve_for_tuple(AtomIdx tuple, gecode::FSGecodeSpace* csp, RPGIndex& graph) const;
 	
-	void post_atom(GecodeSpace& csp, const Atom& atom) const;
+	void post_atom(FSGecodeSpace& csp, const Atom& atom) const;
 
 
 	//! Index the CSP variables corresponding the the effect LHS.
@@ -61,10 +61,10 @@ protected:
 
 public:
 	//! Preinstantiate the CSP
-	GecodeSpace* preinstantiate(const RPGIndex& rpg) const;
+	FSGecodeSpace* preinstantiate(const RPGIndex& rpg) const;
 	
 	//! Find whether this effect can support the atom 'tuple' = 'atom' in the RPG layer given by layer_csp
-	bool find_atom_support(AtomIdx tuple, const Atom& atom, const State& seed, GecodeSpace& layer_csp, RPGIndex& rpg) const;
+	bool find_atom_support(AtomIdx tuple, const Atom& atom, const State& seed, FSGecodeSpace& layer_csp, RPGIndex& rpg) const;
 };
 
 

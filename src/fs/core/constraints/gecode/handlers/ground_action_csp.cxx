@@ -45,7 +45,7 @@ const std::vector<const fs::ActionEffect*>& GroundActionCSP::get_effects() const
 }
 
 
-const ActionID* GroundActionCSP::get_action_id(const GecodeSpace* solution) const {
+const ActionID* GroundActionCSP::get_action_id(const FSGecodeSpace* solution) const {
 	return new PlainActionID(&_action);
 }
 
@@ -53,10 +53,10 @@ void GroundActionCSP::log() const {
 	LPT_EDEBUG("heuristic", "Processing action: " << _action);
 }
 
-GecodeSpace*
+FSGecodeSpace*
 GroundActionCSP::post(VariableIdx variable, const object_id& value) const {
 	if (_failed) return nullptr;
-	GecodeSpace* clone = static_cast<GecodeSpace*>(_gecode_space->clone());
+	FSGecodeSpace* clone = static_cast<FSGecodeSpace*>(_gecode_space->clone());
 	const auto& csp_var = _translator.resolveInputStateVariable(*clone, variable);
 	
 	Gecode::rel(*clone, csp_var,  Gecode::IRT_EQ, fs0::value<int>(value));
@@ -69,10 +69,10 @@ GroundActionCSP::post(VariableIdx variable, const object_id& value) const {
 }
 
 bool
-GroundActionCSP::check_one_solution_exists(GecodeSpace* csp) {
+GroundActionCSP::check_one_solution_exists(FSGecodeSpace* csp) {
 	// We just want to tell whether at least one solution exists
-	Gecode::DFS<GecodeSpace> engine(csp);
-	GecodeSpace* solution = engine.next();
+	Gecode::DFS<FSGecodeSpace> engine(csp);
+	FSGecodeSpace* solution = engine.next();
 	if (!solution) return false; // The CSP has no solution at all
 	delete solution;
 	return true;

@@ -33,11 +33,11 @@ public:
 	
 	//! Create a new action CSP constraint by the given RPG layer domains
 	//! Ownership of the generated pointer belongs to the caller
-	GecodeSpace* instantiate(const RPGIndex& graph) const;
-	GecodeSpace* instantiate(const State& state, const StateBasedExtensionHandler& handler) const;
-	GecodeSpace* instantiate_wo_novelty(const RPGIndex& graph) const;
+	FSGecodeSpace* instantiate(const RPGIndex& graph) const;
+	FSGecodeSpace* instantiate(const State& state, const StateBasedExtensionHandler& handler) const;
+	FSGecodeSpace* instantiate_wo_novelty(const RPGIndex& graph) const;
 	
-	void update_csp(std::unique_ptr<GecodeSpace>&& csp);
+	void update_csp(std::unique_ptr<FSGecodeSpace>&& csp);
 	
 	const CSPTranslator& getTranslator() const { return _translator; }
 
@@ -51,11 +51,11 @@ public:
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const BaseCSP& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const { return print(os, *_gecode_space); }
-	std::ostream& print(std::ostream& os, const GecodeSpace& csp) const;
+	std::ostream& print(std::ostream& os, const FSGecodeSpace& csp) const;
 	
 protected:
 	//! The base Gecode CSP
-	std::unique_ptr<GecodeSpace> _gecode_space;
+	std::unique_ptr<FSGecodeSpace> _gecode_space;
 	
 	//! Whether the underlying CSP gecode space has already been detected as failed.
 	bool _failed;
@@ -112,7 +112,7 @@ protected:
 	virtual void create_novelty_constraint() {}
 	
 	//! By default, we post no novelty constraint whatsoever
-	virtual void post_novelty_constraint(GecodeSpace& csp, const RPGIndex& rpg) const {}
+	virtual void post_novelty_constraint(FSGecodeSpace& csp, const RPGIndex& rpg) const {}
 };
 
 } // namespaces

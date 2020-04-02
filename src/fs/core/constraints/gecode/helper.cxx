@@ -52,7 +52,7 @@ Gecode::IntVar Helper::createVariable(Gecode::Space& csp, TypeIdx typeId) {
 	}
 }
 
-void Helper::constrainCSPVariable(GecodeSpace& csp, const Gecode::IntVar& variable, const Gecode::IntSet& domain) {
+void Helper::constrainCSPVariable(FSGecodeSpace& csp, const Gecode::IntVar& variable, const Gecode::IntSet& domain) {
 	if (domain.size() ==  static_cast<unsigned>(domain.max() - domain.min()) + 1) { // A micro-optimization
 		Gecode::dom(csp, variable, domain.min(), domain.max());
 	}
@@ -157,7 +157,7 @@ Gecode::TupleSet Helper::extensionalize(const fs::AtomicFormula* formula) {
 	return tuples;
 }
 
-void Helper::postBranchingStrategy(GecodeSpace& csp) {
+void Helper::postBranchingStrategy(FSGecodeSpace& csp) {
 	// Beware that the order in which the branching strategies are posted matters.
 	// For the integer variables, we post an unitialized value selector that will act as a default INT_VAL_MIN selector
 	// until it is instructed (depending on the planner configuration) in order to favor lower-h_max atoms.
@@ -179,7 +179,7 @@ int Helper::selectValueIfExists(Gecode::IntVarValues& value_set, int value) {
 int Helper::value_selector(const Gecode::Space& home, Gecode::IntVar x, int csp_var_idx) {
 	// "A branch value function takes a constant reference to a space, a variable, and the variable’s
 	// position and returns a value, where the type of the value depends on the variable type."
-	return static_cast<const GecodeSpace&>(home).select_value(x, csp_var_idx);
+	return static_cast<const FSGecodeSpace&>(home).select_value(x, csp_var_idx);
 }
 
 Helper::Helper() :

@@ -5,12 +5,12 @@
 
 namespace fs0::gecode {
 
-GecodeSpace::GecodeSpace() : _value_selector(nullptr) {}
+FSGecodeSpace::FSGecodeSpace() : _value_selector(nullptr) {}
 
-GecodeSpace::~GecodeSpace() = default;
+FSGecodeSpace::~FSGecodeSpace() = default;
 
 //! Cloning constructor, required by Gecode
-GecodeSpace::GecodeSpace(GecodeSpace& other) :
+FSGecodeSpace::FSGecodeSpace(FSGecodeSpace& other) :
 	Gecode::Space(other),
 	_value_selector(other._value_selector)
 {
@@ -18,25 +18,25 @@ GecodeSpace::GecodeSpace(GecodeSpace& other) :
 	_boolvars.update(*this, other._boolvars);
 }
 
-Gecode::Space* GecodeSpace::copy() { return new GecodeSpace(*this); }
+Gecode::Space* FSGecodeSpace::copy() { return new FSGecodeSpace(*this); }
 
 
-bool GecodeSpace::propagate() {
+bool FSGecodeSpace::propagate() {
 	return status() != Gecode::SpaceStatus::SS_FAILED;
 }
 
 //! Prints a representation of a CSP. Mostly for debugging purposes
-std::ostream& GecodeSpace::print(std::ostream& os) const {
+std::ostream& FSGecodeSpace::print(std::ostream& os) const {
 	os << _intvars << std::endl;
 	os << _boolvars; 
 	return os;
 }
 
-void GecodeSpace::init_value_selector(std::shared_ptr<MinHMaxValueSelector> value_selector) {
+void FSGecodeSpace::init_value_selector(std::shared_ptr<MinHMaxValueSelector> value_selector) {
 	_value_selector = std::move(value_selector);
 }
 
-int GecodeSpace::select_value(Gecode::IntVar& x, int csp_var_idx) const {
+int FSGecodeSpace::select_value(Gecode::IntVar& x, int csp_var_idx) const {
 	// If the value selector has not been initialized, we simply fall back to a min-value selection policy
 	if (_value_selector == nullptr) return x.min();
 	

@@ -16,7 +16,7 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0::gecode {
 
-class GecodeSpace;
+class FSGecodeSpace;
 class LiftedActionCSP;
 
 //! An iterator that models action schema applicability as an action CSP.
@@ -39,7 +39,7 @@ public:
         friend class CSPActionIterator;
 
     public:
-        using engine_t = Gecode::DFS<GecodeSpace>;
+        using engine_t = Gecode::DFS<FSGecodeSpace>;
 
         ~Iterator();
 
@@ -54,7 +54,7 @@ public:
 
         engine_t* _engine;
 
-        GecodeSpace* _csp;
+        FSGecodeSpace* _csp;
 
         LiftedActionID* _action;
 

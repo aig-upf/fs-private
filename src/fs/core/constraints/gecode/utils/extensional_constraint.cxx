@@ -33,7 +33,7 @@ void ExtensionalConstraint::register_constraints(CSPTranslator& translator) {
 
 // Updating the CSP from a non-relaxed state is necessary to efficiently implement satisfiability tests on states
 // with formulas involving existential variables
-bool ExtensionalConstraint::update(GecodeSpace& csp, const CSPTranslator& translator, const State& state) const {
+bool ExtensionalConstraint::update(FSGecodeSpace& csp, const CSPTranslator& translator, const State& state) const {
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
 	    auto intval = int(state.getValue(_variable_idx));
         assert(intval == 1 || intval == 0);
@@ -43,7 +43,7 @@ bool ExtensionalConstraint::update(GecodeSpace& csp, const CSPTranslator& transl
 	}
 }
 
-bool ExtensionalConstraint::update(GecodeSpace& csp, const CSPTranslator& translator, const RPGIndex& layer) const {
+bool ExtensionalConstraint::update(FSGecodeSpace& csp, const CSPTranslator& translator, const RPGIndex& layer) const {
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
 	    bool sat = layer.is_true(_variable_idx);  // return true iff the constraint is satisfied, otherwise the CSP is unsolvable
 		return sat == !_negative;
@@ -53,7 +53,7 @@ bool ExtensionalConstraint::update(GecodeSpace& csp, const CSPTranslator& transl
 	}
 }
 
-bool ExtensionalConstraint::update(GecodeSpace& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const {
+bool ExtensionalConstraint::update(FSGecodeSpace& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const {
     assert(extension.finalized());
 
     // If the extension of the constraint is empty and it is not a negative constraint, then

@@ -22,14 +22,14 @@ public:
 	FormulaCSP& operator=(FormulaCSP&&) = delete;
 	
 	//! Returns true iff the goal CSP is solvable. In that case, extracts the goal supports from the first solution
-	bool compute_support(GecodeSpace* csp, std::vector<AtomIdx>& support) const;
+	bool compute_support(FSGecodeSpace* csp, std::vector<AtomIdx>& support) const;
 	
 	void init_value_selector(const RPGIndex* graph);
 	
 	//! Return true iff the CSP has at least one solution
-	bool is_satisfiable(GecodeSpace* csp) const;
+	bool is_satisfiable(FSGecodeSpace* csp) const;
 
-	static GecodeSpace* compute_single_solution(GecodeSpace* csp);
+	static FSGecodeSpace* compute_single_solution(FSGecodeSpace* csp);
 
 protected:
 	//! The formula being managed

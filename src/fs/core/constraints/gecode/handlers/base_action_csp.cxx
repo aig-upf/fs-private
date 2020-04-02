@@ -59,7 +59,7 @@ bool BaseActionCSP::init(bool use_novelty_constraint) {
 void BaseActionCSP::process(RPGIndex& graph) const {
 	log();
 	
-	GecodeSpace* csp = instantiate(graph);
+	FSGecodeSpace* csp = instantiate(graph);
 
 	if (!csp || !csp->propagate()) { // This colaterally enforces propagation of constraints
 		LPT_EDEBUG("heuristic", "The action CSP is locally inconsistent "); // << print::csp(handler->getTranslator(), *csp));
@@ -165,7 +165,7 @@ void BaseActionCSP::create_novelty_constraint() {
 	_novelty = NoveltyConstraint::createFromEffects(_translator, get_precondition(), get_effects());
 }
 
-void BaseActionCSP::post_novelty_constraint(GecodeSpace& csp, const RPGIndex& rpg) const {
+void BaseActionCSP::post_novelty_constraint(FSGecodeSpace& csp, const RPGIndex& rpg) const {
 	if (_novelty) _novelty->post_constraint(csp, rpg);
 }
 
@@ -184,11 +184,11 @@ void BaseActionCSP::registerEffectConstraints(const fs::ActionEffect* effect) {
 	}
 }
 
-void BaseActionCSP::compute_support(GecodeSpace* csp, RPGIndex& graph) const {
+void BaseActionCSP::compute_support(FSGecodeSpace* csp, RPGIndex& graph) const {
 	LPT_EDEBUG("heuristic", "Computing full support for action " << get_action());
-	Gecode::DFS<GecodeSpace> engine(csp);
+	Gecode::DFS<FSGecodeSpace> engine(csp);
 	unsigned num_solutions = 0;
-	while (GecodeSpace* solution = engine.next()) {
+	while (FSGecodeSpace* solution = engine.next()) {
 		LPT_EDEBUG("heuristic", std::endl << "Processing action CSP solution #"<< num_solutions + 1 << ": " << print::csp(_translator, *solution))
 		process_solution(solution, graph);
 		++num_solutions;
@@ -199,7 +199,7 @@ void BaseActionCSP::compute_support(GecodeSpace* csp, RPGIndex& graph) const {
 }
 
 
-void BaseActionCSP::process_solution(GecodeSpace* solution, RPGIndex& graph) const {
+void BaseActionCSP::process_solution(FSGecodeSpace* solution, RPGIndex& graph) const {
 	PartialAssignment assignment;
 	Binding binding;
 	if (_has_nested_lhs || _has_nested_relevant_terms) {
@@ -219,7 +219,7 @@ void BaseActionCSP::process_solution(GecodeSpace* solution, RPGIndex& graph) con
 	}
 }
 
-void BaseActionCSP::simple_atom_processing(GecodeSpace* solution, RPGIndex& graph, AtomIdx tuple, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
+void BaseActionCSP::simple_atom_processing(FSGecodeSpace* solution, RPGIndex& graph, AtomIdx tuple, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
 	
 	bool reached = graph.reached(tuple);
 	LPT_EDEBUG("heuristic", "Processing effect \"" << *get_effects()[effect_idx] << "\" produces " << (reached ? "repeated" : "new") << " tuple " << tuple);
@@ -237,7 +237,7 @@ void BaseActionCSP::simple_atom_processing(GecodeSpace* solution, RPGIndex& grap
 }
 
 
-std::vector<AtomIdx> BaseActionCSP::extract_support_from_solution(GecodeSpace* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
+std::vector<AtomIdx> BaseActionCSP::extract_support_from_solution(FSGecodeSpace* solution, unsigned effect_idx, const PartialAssignment& assignment, const Binding& binding) const {
 	std::vector<AtomIdx> support;
 
 	// First extract the supports of the "direct" state variables
@@ -255,9 +255,9 @@ std::vector<AtomIdx> BaseActionCSP::extract_support_from_solution(GecodeSpace* s
 	return support;
 }
 
-Binding BaseActionCSP::build_binding_from_solution(const GecodeSpace* solution) const { return Binding::EMPTY_BINDING; }
+Binding BaseActionCSP::build_binding_from_solution(const FSGecodeSpace* solution) const { return Binding::EMPTY_BINDING; }
 
-void BaseActionCSP::extract_nested_term_support(const GecodeSpace* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<AtomIdx>& support) const {
+void BaseActionCSP::extract_nested_term_support(const FSGecodeSpace* solution, const std::vector<const fs::FluentHeadedNestedTerm*>& nested_terms, const PartialAssignment& assignment, const Binding& binding, std::vector<AtomIdx>& support) const {
 	if (nested_terms.empty()) return;
 
 	// And now of the derived state variables. Note that we keep track dynamically (with the 'insert' set) of the actual variables into which

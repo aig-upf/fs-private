@@ -8,7 +8,7 @@
 
 namespace fs0 { namespace gecode {
 
-class GecodeSpace; class CSPTranslator;
+class FSGecodeSpace; class CSPTranslator;
 
 //! Some helper methods related to the construction of Gecode CSPs.
 class Helper {
@@ -38,7 +38,7 @@ public:
 	static Gecode::BoolVar createBoolVariable(Gecode::Space& csp);
 	
 	//! Constrains the given CSP variable to have values in the given domain
-	static void constrainCSPVariable(GecodeSpace& csp, const Gecode::IntVar& variable, const Gecode::IntSet& domain);
+	static void constrainCSPVariable(FSGecodeSpace& csp, const Gecode::IntVar& variable, const Gecode::IntSet& domain);
 	
 	//! Extensionalize a given (static) term by building a tupleset characterizing the (functional) relation
 	//! that underlies the static term in all interpretations.
@@ -48,7 +48,7 @@ public:
 	static Gecode::TupleSet extensionalize(const fs::AtomicFormula* formula);
 
 	//! A simple helper to post a certain Gecode branching strategy to the CSP
-	static void postBranchingStrategy(GecodeSpace& csp);
+	static void postBranchingStrategy(FSGecodeSpace& csp);
 	
 	//! Small helper to check whether a Gecode IntVarValues set contains a given value
 	//! Unfortunately, it has linear cost.

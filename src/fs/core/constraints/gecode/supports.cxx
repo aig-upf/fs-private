@@ -9,7 +9,7 @@
 namespace fs0 { namespace gecode {
 
 std::vector<AtomIdx>
-Supports::extract_support(const GecodeSpace* solution, const CSPTranslator& translator, const std::vector<std::pair<unsigned, std::vector<unsigned>>>& tuple_indexes, const std::vector<AtomIdx>& necessary_tuples) {
+Supports::extract_support(const FSGecodeSpace* solution, const CSPTranslator& translator, const std::vector<std::pair<unsigned, std::vector<unsigned>>>& tuple_indexes, const std::vector<AtomIdx>& necessary_tuples) {
 	const auto& info = ProblemInfo::getInstance();
 	const auto& tuple_index = Problem::getInstance().get_tuple_index();
 	std::vector<AtomIdx> support;

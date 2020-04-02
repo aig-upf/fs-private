@@ -60,7 +60,7 @@ CSPFormulaInterpreter::CSPFormulaInterpreter(const CSPFormulaInterpreter& other)
 bool CSPFormulaInterpreter::satisfied(const State& state) const {
 	fs0::gecode::StateBasedExtensionHandler handler(_tuple_index, state); // TODO Manage only relevant symbols, not all
 
-	gecode::GecodeSpace* csp = _formula_csp->instantiate(state, handler);
+	gecode::FSGecodeSpace* csp = _formula_csp->instantiate(state, handler);
 	if (!csp) return false;
 
 	if (!csp->propagate()) {
@@ -69,7 +69,7 @@ bool CSPFormulaInterpreter::satisfied(const State& state) const {
 	}
 
 
-    gecode::GecodeSpace* solution = _formula_csp->compute_single_solution(csp);
+    gecode::FSGecodeSpace* solution = _formula_csp->compute_single_solution(csp);
 	if (!solution) return false;
 
 	LPT_INFO("formula-solution", "Formula CSP is satisfiable; a possible solution is:");

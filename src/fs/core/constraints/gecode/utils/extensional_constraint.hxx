@@ -11,7 +11,7 @@ namespace fs = fs0::language::fstrips;
 
 namespace fs0::gecode {
 
-class GecodeSpace;
+class FSGecodeSpace;
 class CSPTranslator;
 class RPGIndex;
 
@@ -29,9 +29,9 @@ public:
 	const fs::FluentHeadedNestedTerm* get_term() const {return _term; }
 	
 	//! Constraint-posting routines
-	bool update(GecodeSpace& csp, const CSPTranslator& translator, const State& state) const;
-	bool update(GecodeSpace& csp, const CSPTranslator& translator, const RPGIndex& layer) const;
-	bool update(GecodeSpace& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const;
+	bool update(FSGecodeSpace& csp, const CSPTranslator& translator, const State& state) const;
+	bool update(FSGecodeSpace& csp, const CSPTranslator& translator, const RPGIndex& layer) const;
+	bool update(FSGecodeSpace& csp, const CSPTranslator& translator, const Gecode::TupleSet& extension) const;
 
 	//! Prints a representation of the state to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const ExtensionalConstraint&  o) { return o.print(os); }

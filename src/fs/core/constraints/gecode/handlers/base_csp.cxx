@@ -16,7 +16,7 @@
 namespace fs0::gecode {
 
 BaseCSP::BaseCSP(const AtomIndex& tuple_index, bool approximate) :
-        _gecode_space(new GecodeSpace()),
+        _gecode_space(new FSGecodeSpace()),
         _failed(false),
         _approximate(approximate),
         _translator(*_gecode_space),
@@ -24,7 +24,7 @@ BaseCSP::BaseCSP(const AtomIndex& tuple_index, bool approximate) :
 {}
 
 void
-BaseCSP::update_csp(std::unique_ptr<GecodeSpace>&& csp) {
+BaseCSP::update_csp(std::unique_ptr<FSGecodeSpace>&& csp) {
     _gecode_space = std::move(csp);
 }
 
@@ -60,13 +60,13 @@ BaseCSP::registerFormulaConstraints(const fs::Formula* formula, CSPTranslator& t
 
 //! A helper
 template <typename T>
-GecodeSpace*
-_instantiate(const GecodeSpace& csp,
+FSGecodeSpace*
+_instantiate(const FSGecodeSpace& csp,
 			 const AtomIndex& tuple_index,
 			 const CSPTranslator& translator,
 			 const std::vector<ExtensionalConstraint>& extensional_constraints,
 			 const T& layer) {
-	auto* clone = static_cast<GecodeSpace*>(csp.clone());
+	auto* clone = static_cast<FSGecodeSpace*>(csp.clone());
 	translator.updateStateVariableDomains(*clone, layer);
 	for (const ExtensionalConstraint& constraint:extensional_constraints) {
 		if (!constraint.update(*clone, translator, layer)) {
@@ -78,14 +78,14 @@ _instantiate(const GecodeSpace& csp,
 }
 
 
-GecodeSpace*
-_instantiate(const GecodeSpace& csp,
+FSGecodeSpace*
+_instantiate(const FSGecodeSpace& csp,
 			 const AtomIndex& tuple_index,
 			 const CSPTranslator& translator,
 			 const std::vector<ExtensionalConstraint>& extensional_constraints,
 			 const State& state,
 			 const StateBasedExtensionHandler& handler) {
-	auto* clone = static_cast<GecodeSpace*>(csp.clone());
+	auto* clone = static_cast<FSGecodeSpace*>(csp.clone());
 	translator.updateStateVariableDomains(*clone, state);
 
 	for (const ExtensionalConstraint& constraint:extensional_constraints) {
@@ -99,17 +99,17 @@ _instantiate(const GecodeSpace& csp,
 }
 
 
-GecodeSpace*
+FSGecodeSpace*
 BaseCSP::instantiate_wo_novelty(const RPGIndex& graph) const {
 	if (_failed) return nullptr;
-	GecodeSpace* csp = _instantiate(*_gecode_space, _tuple_index, _translator, _extensional_constraints, graph);
+	FSGecodeSpace* csp = _instantiate(*_gecode_space, _tuple_index, _translator, _extensional_constraints, graph);
 	return csp;
 }
 
-GecodeSpace*
+FSGecodeSpace*
 BaseCSP::instantiate(const RPGIndex& graph) const {
 	if (_failed) return nullptr;
-	GecodeSpace* csp = _instantiate(*_gecode_space, _tuple_index, _translator, _extensional_constraints, graph);
+	FSGecodeSpace* csp = _instantiate(*_gecode_space, _tuple_index, _translator, _extensional_constraints, graph);
 	if (!csp) return csp; // The CSP was detected unsatisfiable even before propagating anything
 	
 	// Post the novelty constraint
@@ -118,7 +118,7 @@ BaseCSP::instantiate(const RPGIndex& graph) const {
 	return csp;
 }
 
-GecodeSpace*
+FSGecodeSpace*
 BaseCSP::instantiate(const State& state, const StateBasedExtensionHandler& handler) const {
 	if (_failed) return nullptr;
 	return _instantiate(*_gecode_space, _tuple_index, _translator, _extensional_constraints, state, handler);
@@ -217,7 +217,7 @@ BaseCSP::register_csp_constraints() {
 }
 
 std::ostream&
-BaseCSP::print(std::ostream& os, const GecodeSpace& csp) const {
+BaseCSP::print(std::ostream& os, const FSGecodeSpace& csp) const {
 	return _translator.print(os, csp);
 }
 
