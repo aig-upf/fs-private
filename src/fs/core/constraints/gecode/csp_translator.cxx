@@ -10,7 +10,7 @@
 #include <fs/core/utils/printers/helper.hxx>
 #include <fs/core/fstrips/language_info.hxx>
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 void CSPTranslator::perform_registration() {
 	Gecode::IntVarArray intarray(_space, _intvars);
@@ -253,7 +253,7 @@ CSPTranslator::index_fluents(const std::unordered_set<const fs::Term*>& terms) {
 
 	// Register the indexes of the CSP variables that correspond to all involved nested fluent symbols
 	for (auto term:terms) {
-		if (const fs::FluentHeadedNestedTerm* nested = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) {
+		if (const auto* nested = dynamic_cast<const fs::FluentHeadedNestedTerm*>(term)) {
 			unsigned symbol = nested->getSymbolId();
 			std::vector<unsigned> indexes;
 			for (const fs::Term* subterm:nested->getSubterms()) {
@@ -263,7 +263,7 @@ CSPTranslator::index_fluents(const std::unordered_set<const fs::Term*>& terms) {
 			if (!info.isPredicate(symbol)) { // If we have a functional symbol, we add the value of the term to the end of the tuple
 				indexes.push_back(resolveVariableIndex(nested));
 			}
-			tuple_indexes.push_back(std::make_pair(nested->getSymbolId(), indexes));
+			tuple_indexes.emplace_back(nested->getSymbolId(), indexes);
 		}
 	}
 	return tuple_indexes;
@@ -292,4 +292,4 @@ CSPTranslator::resolveReifiedAtomVariable(const fs::AtomicFormula* atom, const F
 }
 
 
-} } // namespaces
+} // namespaces
