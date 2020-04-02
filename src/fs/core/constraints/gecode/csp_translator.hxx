@@ -36,7 +36,7 @@ public:
 class CSPTranslator {
 public:
 
-	explicit CSPTranslator(FSGecodeSpace& base_csp) : _base_csp(base_csp) {}
+	explicit CSPTranslator(FSGecodeSpace& base_csp) : _space(base_csp) {}
 	virtual ~CSPTranslator() = default;
 	CSPTranslator(const CSPTranslator&) = delete;
 	CSPTranslator(CSPTranslator&&) = delete;
@@ -116,10 +116,10 @@ public:
 	PartialAssignment buildAssignment(FSGecodeSpace& solution) const;
 
 	//! Prints a representation of the object to the given stream.
-	friend std::ostream& operator<<(std::ostream &os, const CSPTranslator& o) { return o.print(os, o._base_csp); }
+	friend std::ostream& operator<<(std::ostream &os, const CSPTranslator& o) { return o.print(os, o._space); }
 	std::ostream& print(std::ostream& os, const FSGecodeSpace& csp) const;
 	
-	FSGecodeSpace& getBaseCSP() { return _base_csp; }
+	FSGecodeSpace& getBaseCSP() { return _space; }
 	
 	VariableIdx getPlanningVariable(unsigned csp_var_idx) const;
 	
@@ -141,7 +141,7 @@ public:
 
 protected:
 	//! The base CSP object upon which static variable and constraint registration processes act.
-	FSGecodeSpace& _base_csp;
+	FSGecodeSpace& _space;
 	
 	// The list of integer and boolean CSP variables that is created during the variable registration state
 	Gecode::IntVarArgs _intvars;

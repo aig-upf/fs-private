@@ -13,11 +13,11 @@
 namespace fs0 { namespace gecode {
 
 void CSPTranslator::perform_registration() {
-	Gecode::IntVarArray intarray(_base_csp, _intvars);
-	_base_csp._intvars.update(_base_csp, intarray);
+	Gecode::IntVarArray intarray(_space, _intvars);
+	_space._intvars.update(_space, intarray);
 
-	Gecode::BoolVarArray boolarray(_base_csp, _boolvars);
-	_base_csp._boolvars.update(_base_csp, boolarray);
+	Gecode::BoolVarArray boolarray(_space, _boolvars);
+	_space._boolvars.update(_space, boolarray);
 }
 
 unsigned CSPTranslator::add_intvar(const Gecode::IntVar& csp_variable, type_id var_t, VariableIdx planning_variable) {
@@ -37,7 +37,7 @@ unsigned CSPTranslator::add_boolvar(const Gecode::BoolVar& csp_variable) {
 }
 
 unsigned CSPTranslator::create_bool_variable() {
-	return add_boolvar(Helper::createBoolVariable(_base_csp));
+	return add_boolvar(Helper::createBoolVariable(_space));
 }
 
 void CSPTranslator::registerConstant(const fs::Constant* constant) {
@@ -50,10 +50,10 @@ void CSPTranslator::registerConstant(const fs::Constant* constant) {
 	unsigned id = 0;
 	if (t == type_id::bool_t) {
 		bool value =  fs0::value<bool>(o);
-		id = add_intvar(Gecode::IntVar(_base_csp, value, value), t);
+		id = add_intvar(Gecode::IntVar(_space, value, value), t);
 	} else if (t == type_id::object_t || t == type_id::int_t) {
 		int value =  fs0::value<int>(o);
-		id = add_intvar(Gecode::IntVar(_base_csp, value, value), t);
+		id = add_intvar(Gecode::IntVar(_space, value, value), t);
 	} else {
 		throw std::runtime_error("Yet to implement CSPs with float constants");
 	}
@@ -64,14 +64,14 @@ void CSPTranslator::registerConstant(const fs::Constant* constant) {
 void CSPTranslator::registerExistentialVariable(const fs::BoundVariable* variable) {
 	TypeIdx fstype = variable->getType();
 	type_id tid = fs0::fstrips::LanguageInfo::instance().get_type_id(fstype);
-	unsigned id = add_intvar(Helper::createTemporaryVariable(_base_csp, fstype), tid);
+	unsigned id = add_intvar(Helper::createTemporaryVariable(_space, fstype), tid);
 	auto res = _registered.insert(std::make_pair(variable, id));
 	_unused(res);
 	assert(res.second); // Make sure the element was not there before
 }
 
 unsigned CSPTranslator::registerIntVariable(int min, int max) {
-	return add_intvar(Helper::createTemporaryIntVariable(_base_csp, min, max), type_id::int_t);
+	return add_intvar(Helper::createTemporaryIntVariable(_space, min, max), type_id::int_t);
 }
 
 
@@ -84,7 +84,7 @@ void CSPTranslator::registerInputStateVariable(VariableIdx variable) {
 	if (it != _input_state_variables.end()) return; // The state variable was already registered, no need to register it again
 	
 	type_id tid = ProblemInfo::getInstance().sv_type(variable);
-	unsigned id = add_intvar(Helper::createPlanningVariable(_base_csp, variable), tid, variable);
+	unsigned id = add_intvar(Helper::createPlanningVariable(_space, variable), tid, variable);
 	_input_state_variables.insert(std::make_pair(variable, id));
 }
 
@@ -101,7 +101,7 @@ bool CSPTranslator::registerNestedTerm(const fs::NestedTerm* nested) {
 bool CSPTranslator::registerNestedTerm(const fs::NestedTerm* nested, TypeIdx domain_type, const type_id& codomain_tid) {
 	auto it = _registered.find(nested);
 	if (it!= _registered.end()) return false; // The element was already registered
-	unsigned id = add_intvar(Helper::createTemporaryVariable(_base_csp, domain_type), codomain_tid);
+	unsigned id = add_intvar(Helper::createTemporaryVariable(_space, domain_type), codomain_tid);
 
 	_registered.insert(it, std::make_pair(nested, id));
 	return true;
@@ -111,7 +111,7 @@ bool CSPTranslator::registerNestedTerm(const fs::NestedTerm* nested, int min, in
 	auto it = _registered.find(nested);
 	if (it!= _registered.end()) return false; // The element was already registered
 
-	unsigned id = add_intvar(Helper::createTemporaryIntVariable(_base_csp, min, max), type_id::int_t);
+	unsigned id = add_intvar(Helper::createTemporaryIntVariable(_space, min, max), type_id::int_t);
 
 	_registered.insert(it, std::make_pair(nested, id));
 	return true;
