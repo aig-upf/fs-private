@@ -67,7 +67,7 @@ def parse_arguments(args):
     parser.add_argument('--planfile', default=None, help="(Optional) Path to the file where the solution plan "
                                                          "will be left.")
 
-    parser.add_argument("--sdd", action='store_true', help='Use SDD-based successor generator')
+    parser.add_argument("--sdd", action='store_true', help='Use SDD-based successor generator.')
     parser.add_argument("--var_ordering", default=None, help='Variable ordering for SDD construction')
     parser.add_argument("--sdd_incr_minimization_time", default=0, type=int,
                         help='Incremental minimization time for SDD construction')
@@ -338,20 +338,49 @@ def run(args):
 
 def preprocess_with_tarski(args, is_debug_run, workdir):
     t0 = resources.Timer()
+
     with resources.timing(f"Parsing problem", newline=True):
         problem = parse_problem_with_tarski(args.domain, args.instance)
-    with resources.timing(f"Preprocessing problem", newline=True):
-        # Both the LP reachability analysis and the backend expect a problem without universally-quantified effects
-        with resources.timing(f"Compiling universal effects away", newline=False):
-            problem = compile_universal_effects_away(problem)
 
-        # Note that we might want to compile negated preconditions away after reachability analysis?
-        if not args.safe:
-            with resources.timing(f"Compiling negated preconditions away", newline=False):
-                problem = compile_negated_preconditions_away(problem, inplace=False)
+    # Both the LP reachability analysis and the backend expect a problem without universally-quantified effects
+    with resources.timing(f"Compiling universal effects away", newline=False):
+        problem = compile_universal_effects_away(problem)
+
+    action_groundings, ground_variables, fluents, statics = ground_problem(args, problem)
+
+    if args.sdd:
+        generate_sdds(args, ground_variables, problem, workdir)
+
+    if not args.safe and 'bfws' in args.driver:
+        with resources.timing(f"Compiling negated preconditions away", newline=False):
+            problem = compile_negated_preconditions_away(problem, inplace=False)
+
+    if is_debug_run:
+        ground_variables = sort_state_variables(ground_variables)
+    data, init_atoms, obj_idx = generate_tarski_problem(problem, fluents, statics, variables=ground_variables)
+    serializer = Serializer(os.path.join(workdir, 'data'))
+    serialize_representation(data, init_atoms, serializer, debug=is_debug_run)
+
+    # Print the reachable action groundings if available; otherwise remove possible grounding files from previous runs.
+    print_groundings(data['action_schemata'], action_groundings, obj_idx, serializer)
+    print(f"Python parser and preprocessing: {t0}")
+
+
+def generate_sdds(args, ground_variables, problem, workdir):
+    from tarski.analysis.sdd import process_problem
+    sdddir = os.path.join(workdir, 'data', 'sdd')
+    utils.mkdirp(sdddir)
+    process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
+                    sdd_minimization_time=None, graphs_directory=None,
+                    var_ordering=args.var_ordering, reachable_vars=ground_variables,
+                    sdd_incr_minimization_time=args.sdd_incr_minimization_time)
+
+
+def ground_problem(args, problem):
     do_reachability = args.reachability != 'none' and not args.sdd  # SDD not compatible with reachability
     if not do_reachability and args.reachability_includes_variable_inequalities:
         raise RuntimeError("Cannot do reachability analysis with inequalities if reachability=none is specified.")
+
     action_groundings = None  # Schemas will be ground in the backend
     if do_reachability:
         do_ground_actions = args.reachability == 'full'
@@ -363,35 +392,22 @@ def preprocess_with_tarski(args, is_debug_run, workdir):
             ground_variables = grounding.ground_state_variables()
             if do_ground_actions:
                 action_groundings = grounding.ground_actions()
+
     else:
         with resources.timing(f"Computing naive groundings", newline=True):
             grounding = NaiveGroundingStrategy(problem, ignore_symbols={'total-cost'})
             ground_variables = grounding.ground_state_variables()
     statics, fluents = grounding.static_symbols, grounding.fluent_symbols
-    if args.sdd:
-        from tarski.analysis.sdd import process_problem
-        sdddir = os.path.join(workdir, 'data', 'sdd')
-        utils.mkdirp(sdddir)
-        process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
-                        sdd_minimization_time=None, graphs_directory=None,
-                        var_ordering=args.var_ordering, reachable_vars=ground_variables,
-                        sdd_incr_minimization_time=args.sdd_incr_minimization_time)
+
+    # If we did generate some action groundings, then we prune those action schemas that have no grounding at all
     if action_groundings:
-        # Prune those action schemas that have no grounding at all
         reachable_schemas = OrderedDict()
         for name, act in problem.actions.items():
             if action_groundings[name]:
                 reachable_schemas[name] = act
         problem.actions = reachable_schemas
-    if is_debug_run:
-        ground_variables = sort_state_variables(ground_variables)
-    data, init_atoms, obj_idx = generate_tarski_problem(problem, fluents, statics, variables=ground_variables)
-    serializer = Serializer(os.path.join(workdir, 'data'))
-    serialize_representation(data, init_atoms, serializer, debug=is_debug_run)
-    # Print the reachable action groundings if available;
-    # if not, erase grounding files that might exist from previous runs.
-    print_groundings(data['action_schemata'], action_groundings, obj_idx, serializer)
-    print(f"Python parser and preprocessing: {t0}")
+
+    return action_groundings, ground_variables, fluents, statics
 
 
 def validate(domain_name, instance_name, planfile):
