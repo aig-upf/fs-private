@@ -43,7 +43,6 @@ public:
 
 	//! Get the set of action schemata of the problem
 	const std::vector<const ActionData*>& getActionData() const { return _action_data; }
-    void addActionData( const ActionData* data ) { _action_data.push_back(data); }
 
 	//! Get the set of ground actions of the problem
 	const std::vector<const GroundAction*>& getGroundActions() const { return _ground; }
@@ -100,8 +99,6 @@ public:
 	//! Prints a representation of the object to the given stream.
 	friend std::ostream& operator<<(std::ostream &os, const Problem& o) { return o.print(os); }
 	std::ostream& print(std::ostream& os) const;
-
-	void consolidateAxioms();
 
 	const AllTransitionGraphsT& get_transition_graphs() const { return _transition_graphs; }
 
