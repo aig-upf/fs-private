@@ -124,8 +124,8 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 
 	//! Set the global singleton Problem instance
 	bool has_negated_preconditions = _check_negated_preconditions(action_data);
-	if (has_negated_preconditions) throw std::runtime_error("Negated preconditions should have been compiled away at"
-                                                         " preprocessing. Check code, there must be some bug.");
+//	if (has_negated_preconditions) throw std::runtime_error("Negated preconditions should have been compiled away at"
+//                                                         " preprocessing. Check code, there must be some bug.");
 
 	// We will index the negative literals if either the problem has neg. precs, or the user explicitly wants _not_ to ignore them on novelty computations.
 	bool index_negative_literals = !(config.getOption<bool>("ignore_neg_literals", true));
