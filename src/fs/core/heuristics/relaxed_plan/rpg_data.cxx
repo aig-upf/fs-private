@@ -20,7 +20,7 @@ RPGData::RPGData(const State& seed, bool ignore_negated) :
 	for (unsigned variable = 0; variable < seed.numAtoms(); ++variable) {
 		object_id value = seed.getValue(variable);
 		
-		if (ignore_negated && info.isPredicativeVariable(variable) && int(value) == 0) { // TODO This check is expensive and should be optimized out
+		if (ignore_negated && info.isPredicativeVariable(variable) && value == object_id::FALSE) { // TODO This check is expensive and should be optimized out
 			continue; // If requested, we ignore negated predicative atoms.
 		}
 		

@@ -3,9 +3,7 @@
 
 #include <vector>
 
-namespace fs0 { namespace language { namespace fstrips {
-            class Formula;
-} } }
+namespace fs0::language::fstrips { class Formula; }
 
 namespace fs = fs0::language::fstrips;
 

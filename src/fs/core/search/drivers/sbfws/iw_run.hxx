@@ -320,7 +320,7 @@ public:
                 const StateT& state = node->state;
                 for (unsigned var = 0; var < state.numAtoms(); ++var) {
                     object_id val = state.getValue(var);
-                    if (int(val) != 0) {
+                    if (unsigned (val) != 0) {
                         atoms[index.to_index(var, val)] = true;
                     }
                 }
@@ -345,7 +345,7 @@ public:
         std::vector<bool> all(index.size(), false);
         for (unsigned i = 0; i < all.size(); ++i) {
             const Atom& atom = index.to_atom(i);
-            if (int(atom.getValue())!=0) all[i] = true;
+            if (unsigned(atom.getValue())!=0) all[i] = true;
         }
         LPT_INFO("search", "Simulation - Computed R_All set with " << std::count(all.cbegin(), all.cend(), true) << " atoms");
         return all;

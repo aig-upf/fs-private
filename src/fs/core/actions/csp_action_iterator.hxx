@@ -1,10 +1,13 @@
 
 #pragma once
 
-#include <memory>
+#include <fs/core/constraints/gecode/extensions.hxx>
+#include <fs/core/constraints/gecode/v2/action_schema_csp.hxx>
 
 #include <gecode/driver.hh>
-#include <fs/core/constraints/gecode/extensions.hxx>
+
+#include <memory>
+
 
 namespace fs0 {
     class State;
@@ -25,28 +28,44 @@ class LiftedActionCSP;
 class CSPActionIterator {
 protected:
     const std::vector<std::shared_ptr<LiftedActionCSP>>& _handlers;
+    const std::vector<v2::ActionSchemaCSP>& handlers2;
+    const std::vector<const PartiallyGroundedAction*>& schemas;
 
     const State& _state;
-
-    const std::vector<const fs::Formula*>& _state_constraints;
 
     StateBasedExtensionHandler _extension_handler;
 
 public:
-    CSPActionIterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const std::vector<const fs::Formula*>& state_constraints, const AtomIndex& tuple_index);
+    CSPActionIterator(
+            const State& state,
+            const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers,
+            const std::vector<v2::ActionSchemaCSP>& handlers2,
+            const std::vector<unsigned>& symbols_in_extensions,
+            const std::vector<const PartiallyGroundedAction*>& schemas,
+            const AtomIndex& tuple_index);
 
     class Iterator {
         friend class CSPActionIterator;
 
     public:
-        using engine_t = Gecode::DFS<FSGecodeSpace>;
+//        using engine_t = Gecode::DFS<FSGecodeSpace>;
+        using engine_t = Gecode::DFS<v2::FSGecodeSpace>;
 
         ~Iterator();
 
     protected:
-        Iterator(const State& state, const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers, const std::vector<const fs::Formula*>& state_constraints, const StateBasedExtensionHandler& extension_handler, unsigned currentIdx);
+        Iterator(
+                const State& state,
+                const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers,
+                const std::vector<v2::ActionSchemaCSP>& handlers2,
+                const std::vector<const PartiallyGroundedAction*>& schemas,
+                const StateBasedExtensionHandler& extension_handler,
+                unsigned currentIdx);
 
         const std::vector<std::shared_ptr<LiftedActionCSP>>& _handlers;
+        const std::vector<v2::ActionSchemaCSP>& handlers2;
+        const std::vector<const PartiallyGroundedAction*>& schemas;
+        std::size_t num_handlers;
 
         const State& _state;
 
@@ -54,12 +73,10 @@ public:
 
         engine_t* _engine;
 
-        FSGecodeSpace* _csp;
+//        FSGecodeSpace* _csp;
+        v2::FSGecodeSpace* _csp;
 
         LiftedActionID* _action;
-
-        //! The state constraints
-        const std::vector<const fs::Formula*>& _state_constraints;
 
         const StateBasedExtensionHandler& _extension_handler;
 
@@ -82,8 +99,8 @@ public:
         bool operator!=(const Iterator &other) const { return !(this->operator==(other)); }
     };
 
-    Iterator begin() const { return Iterator(_state, _handlers, _state_constraints, _extension_handler, 0); }
-    Iterator end() const { return Iterator(_state,_handlers, _state_constraints, _extension_handler, _handlers.size()); }
+    Iterator begin() const { return Iterator(_state, _handlers, handlers2, schemas, _extension_handler, 0); }
+    Iterator end() const { return Iterator(_state,_handlers, handlers2, schemas, _extension_handler, _handlers.size()); }
 };
 
 } // namespaces

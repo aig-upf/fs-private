@@ -69,7 +69,7 @@ protected:
         const auto& downcasted = dynamic_cast<const GenerationEvent&>(event);
         _stats.generation(downcasted.node.g);
 
-//        LPT_EDEBUG("search", std::setw(7) << "GENER.: " << dynamic_cast<const CreationEvent&>(event).node);
+//        LPT_DEBUG("cout", std::setw(7) << "GENER.: " << downcasted.node);
 
         if (_verbose) {
             auto generated = _stats.generated();

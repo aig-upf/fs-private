@@ -9,7 +9,7 @@
 namespace fs0 {
 
 bool AtomIndex::is_indexed(VariableIdx variable, const object_id& value) const {
-	return !_info.isPredicativeVariable(variable) || _indexes_negated_literals || int(value) == 1;
+	return !_info.isPredicativeVariable(variable) || _indexes_negated_literals || unsigned(value) == 1;
 }
 
 

@@ -1,29 +1,32 @@
 
-#include <unordered_map>
+#include <fs/core/fstrips/language_info.hxx>
+
+#include <fs/core/utils/printers/helper.hxx>
 
 #include <lapkt/tools/logging.hxx>
 
-#include <fs/core/fstrips/language_info.hxx>
-#include <fs/core/utils/loader.hxx>
-#include <fs/core/utils/printers/helper.hxx>
+#include <unordered_map>
 
-
-namespace fs0 { namespace fstrips {
+namespace fs0::fstrips {
 
 class unregistered_symbol : public std::runtime_error {
-public: unregistered_symbol(const std::string& msg) : std::runtime_error(msg) {}
+public: explicit unregistered_symbol(const std::string& msg) :
+    std::runtime_error(msg) {}
 };
 
 class unregistered_fstype : public std::runtime_error {
-public: unregistered_fstype(TypeIdx fstype) : std::runtime_error("FS type with id \"" + std::to_string(fstype) + "\" has not been registered") {}
+public: explicit unregistered_fstype(TypeIdx fstype) :
+    std::runtime_error("FS type with id \"" + std::to_string(fstype) + "\" has not been registered") {}
 };
 
 class unregistered_type_id : public std::runtime_error {
-public: unregistered_type_id(const type_id& t) : std::runtime_error(printer() << "Unregistered type_id: \"" << t << "\"") {}
+public: explicit unregistered_type_id(const type_id& t) :
+    std::runtime_error(printer() << "Unregistered type_id: \"" << t << "\"") {}
 };
 
 class unregistered_object : public std::runtime_error {
-public: unregistered_object(const object_id& object) : std::runtime_error(printer() << "Unregistered object: " << object) {}
+public: explicit unregistered_object(const object_id& object) :
+    std::runtime_error(printer() << "Unregistered object: " << object) {}
 };
 
 class range_type_mismatch : public std::runtime_error {
@@ -32,15 +35,18 @@ public: range_type_mismatch(const type_id& t1, const type_id& t2) :
 };
 
 class invalid_range : public std::runtime_error {
-public: invalid_range(const type_range& range) : std::runtime_error(printer() << "Invalid range: [" << range.first << ", " << range.second << "]") {}
+public: explicit invalid_range(const type_range& range) :
+    std::runtime_error(printer() << "Invalid range: [" << range.first << ", " << range.second << "]") {}
 };
 
 class non_range_type : public std::runtime_error {
-public: non_range_type(const type_range& range) : std::runtime_error(printer() << "The provided range corresponds to a type_id where ranges are not possible: " << range.first << ", " << range.second << "]") {}
+public: explicit non_range_type(const type_range& range) :
+    std::runtime_error(printer() << "The provided range corresponds to a type_id where ranges are not possible: " << range.first << ", " << range.second << "]") {}
 };
 
 class out_of_range_object : public std::runtime_error {
-public: out_of_range_object(const object_id& object, const std::string& fstype) : std::runtime_error(printer() << "Object with FS type " << fstype << " out of its declared range: " << object) {}
+public: out_of_range_object(const object_id& object, const std::string& fstype) :
+    std::runtime_error(printer() << "Object with FS type " << fstype << " out of its declared range: " << object) {}
 };
 
 
@@ -55,9 +61,13 @@ private:
 	Implementation() {
 
 		// The first object Ids are reserved for Booleans
+		// TODO Remove this, there is no sane reason for having these implicitly declared now that we have the
+		//      object_id system
 		TypeIdx bool_t = add_fstype("bool", type_id::bool_t);
 		object_id o_false = add_object("*false*", bool_t);
 		object_id o_true = add_object("*true*", bool_t);
+        bind_object_to_type(bool_t, o_false);
+        bind_object_to_type(bool_t, o_true);
 
 // 		LPT_INFO("cout", "o_false: " << o_false);
 // 		LPT_INFO("cout", "o_true: " << o_true);
@@ -65,9 +75,6 @@ private:
 // 		LPT_INFO("cout", "object_id::TRUE: " << object_id::TRUE);
 // 		assert(o_false == object_id::FALSE);
 // 		assert(o_true == object_id::TRUE);
-
-		bind_object_to_type(bool_t, o_false);
-		bind_object_to_type(bool_t, o_true);
 	}
 
 	Implementation(const Implementation&) = default;
@@ -385,4 +392,4 @@ bool LanguageInfo::
 check_valid_object(const object_id& object, TypeIdx type) const { return impl().check_valid_object(object, type); }
 
 
-} } // namespaces
+} // namespaces

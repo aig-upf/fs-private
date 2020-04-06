@@ -1,30 +1,22 @@
 
-#include <iostream>
-#include <fstream>
-
 #include <fs/core/problem_info.hxx>
-#include <boost/algorithm/string.hpp>
-#include <fs/core/utils/lexical_cast.hxx>
-#include <fs/core/atom.hxx>
-#include <lapkt/tools/logging.hxx>
 
+#include <fs/core/atom.hxx>
 #include <fs/core/fstrips/language_info.hxx>
 
-namespace fs0 {
+#include <lapkt/tools/logging.hxx>
 
-class unregistered_object_error : public std::runtime_error {
-public:
-	unregistered_object_error(const object_id& o) : std::runtime_error(msg(o)) {}
-	std::string msg(const object_id& o) {
-		return "Unregistered object"; // TODO ENHANCE THIS
-	}
-};
+#include <iostream>
+#include <utility>
+
+
+namespace fs0 {
 
 
 std::unique_ptr<ProblemInfo> ProblemInfo::_instance = nullptr;
 
-ProblemInfo::ProblemInfo(const rapidjson::Document& data, const std::string& data_dir) :
-	_data_dir(data_dir), _can_extensionalize_var_domains(true)
+ProblemInfo::ProblemInfo(const rapidjson::Document& data, std::string data_dir) :
+	_data_dir(std::move(data_dir)), _can_extensionalize_var_domains(true)
 {
 	LPT_INFO("main", "Loading Symbol index...");
 	loadSymbolIndex(data["symbols"]);
@@ -37,7 +29,7 @@ ProblemInfo::ProblemInfo(const rapidjson::Document& data, const std::string& dat
 
 	LPT_INFO("main", "All indexes loaded");
 
-	// Load the cached map of predicative variables for more performant access
+	// Compute and cache a map of predicative variables for more performant access
 	for (unsigned variable = 0; variable < getNumVariables(); ++variable) {
 		_predicative_variables.push_back((unsigned) isPredicate(getVariableData(variable).first));
 	}

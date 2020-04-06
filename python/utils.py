@@ -1,5 +1,6 @@
 
 import os
+import shutil
 import sys
 import errno
 
@@ -41,6 +42,13 @@ def mkdirp(directory):
     """" mkdir -p -like functionality """
     if not os.path.isdir(directory):
         os.makedirs(directory)
+
+
+def wipedir(directory):
+    """ Wipe all of the given directory contents, if they exist, otherwise do nothing. """
+    if not os.path.isdir(directory):
+        return
+    shutil.rmtree(directory)
 
 
 def silentremove(filename):

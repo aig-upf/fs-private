@@ -1,10 +1,10 @@
 
 #pragma once
 
+#include <fs/core/fs_types.hxx> // TODO - REMOVE DEPENDENCY?
+
 #include <memory>
 #include <utility>
-
-#include <fs/core/fs_types.hxx> // TODO - REMOVE DEPENDENCY?
 
 
 namespace fs0::fstrips {
@@ -15,8 +15,8 @@ enum class symbol_t {Predicate, Function};
 
 class FSTypeInfo {
 public:
-	FSTypeInfo(TypeIdx id, std::string  name_, type_id underlying_type, const type_range& bounds)
-		: _id(id), _name(std::move(name_)), _type_id(underlying_type), _bounds(bounds)
+	FSTypeInfo(TypeIdx id, std::string  name_, type_id underlying_type, type_range bounds)
+		: _id(id), _name(std::move(name_)), _type_id(underlying_type), _bounds(std::move(bounds))
 	{}
 
 	//!

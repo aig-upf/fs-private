@@ -217,7 +217,7 @@ void _loadObjectIndex(const rapidjson::Value& data, LanguageInfo& lang) {
 
 		object_id id = lang.add_object(name, lang.get_fstype_id(fstype));
 		_unused(id);
-		assert((int)expected_id == (int)id); // Check values are decoded in the proper order
+		assert(expected_id == (unsigned) id); // Check values are decoded in the proper order
 	}
 }
 

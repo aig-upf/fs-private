@@ -74,7 +74,7 @@ class IntegerFeatureEvaluator {
 public:
     //!
     template <typename StateT>
-    const std::vector<int> evaluate(const StateT& state) const {
+    std::vector<int> evaluate(const StateT& state) const {
         unsigned sz = state.numAtoms();
         std::vector<int> valuation;
         valuation.reserve(sz);

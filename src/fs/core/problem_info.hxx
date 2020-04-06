@@ -1,12 +1,13 @@
 
 #pragma once
 
+#include <fs/core/utils/external.hxx>
 #include <fs/core/fs_types.hxx>
-#include <unordered_map>
+#include <fs/core/utils/static.hxx>
 
 #include <rapidjson/document.h>
-#include <fs/core/utils/static.hxx>
-#include <fs/core/utils/external.hxx>
+
+#include <unordered_map>
 #include <utility>
 
 namespace fs0::fstrips { class LanguageInfo; }
@@ -118,7 +119,7 @@ protected:
 	std::unique_ptr<ExternalI> _external;
 
 public:
-	ProblemInfo(const rapidjson::Document& data, const std::string& data_dir);
+	ProblemInfo(const rapidjson::Document& data, std::string data_dir);
 	~ProblemInfo() = default;
 
 	const std::string& getVariableName(VariableIdx index) const;

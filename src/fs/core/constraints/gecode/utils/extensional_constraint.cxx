@@ -35,7 +35,7 @@ void ExtensionalConstraint::register_constraints(CSPTranslator& translator) {
 // with formulas involving existential variables
 bool ExtensionalConstraint::update(FSGecodeSpace& csp, const CSPTranslator& translator, const State& state) const {
 	if (_variable_idx >= 0) { // If the predicate is 0-ary, there is no actual extension, we thus treat the case specially.
-	    auto intval = int(state.getValue(_variable_idx));
+	    auto intval = unsigned(state.getValue(_variable_idx));
         assert(intval == 1 || intval == 0);
 		return bool(intval) == !_negative;
 	} else {

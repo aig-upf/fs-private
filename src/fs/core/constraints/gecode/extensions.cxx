@@ -55,11 +55,11 @@ AtomIdx ExtensionHandler::process_atom(VariableIdx variable, const object_id& va
 
 
 	// "False" (i.e. negated) atoms do not result in any additional tuple being added to the extension of the symbol
-	if (is_predicate && int(value) == 0) return INVALID_TUPLE;
+	if (is_predicate && unsigned(value) == 0) return INVALID_TUPLE;
 
 	AtomIdx index;
 
-	if (is_predicate && int(value) == 1) {
+	if (is_predicate && unsigned(value) == 1) {
 		index = _tuple_index.to_index(tuple_data);
 
 	} else {
@@ -133,7 +133,7 @@ StateBasedExtensionHandler::StateBasedExtensionHandler(const AtomIndex& tuple_in
 
         // "False" (i.e. negated) atoms do not result in any additional tuple being added to the extension of the symbol
         const auto val = state.getValue(variable);
-        if (_info.isPredicativeVariable(variable) && int(val) == 0) continue;
+        if (_info.isPredicativeVariable(variable) && val == object_id::FALSE) continue;
 
         const ValueTuple& values = _tuple_index.to_tuple(variable, val);
 

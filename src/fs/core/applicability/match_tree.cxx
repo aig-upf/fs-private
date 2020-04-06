@@ -116,7 +116,6 @@ namespace fs0 {
 				for (unsigned i = 0; i < pivot_atoms.size(); ++i) {
 					AtomIdx atom = pivot_atoms[i];
 
-					assert(int(context._tuple_index.to_atom(atom).getValue()) == 0 || int(context._tuple_index.to_atom(atom).getValue()) == 1); // Not yet ready for multivalued match tree... soon!
 					if (required.find(atom) != required.end()) {
 						is_relevant = true;
 						actions_split_by_pivot_value[i].push_back(action);
