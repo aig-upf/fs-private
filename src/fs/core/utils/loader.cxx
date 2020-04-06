@@ -123,7 +123,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 	const fs::Metric* metric = data.HasMember("metric") ? loadMetric( data["metric"], info ) : nullptr;
 
 	//! Set the global singleton Problem instance
-	bool has_negated_preconditions = _check_negated_preconditions(action_data);
+//	bool has_negated_preconditions = _check_negated_preconditions(action_data);
 //	if (has_negated_preconditions) throw std::runtime_error("Negated preconditions should have been compiled away at"
 //                                                         " preprocessing. Check code, there must be some bug.");
 
@@ -214,9 +214,11 @@ object_id Loader::parse_object(const ProblemInfo &info, VariableIdx var,
     std::vector<const ActionData*>
 Loader::loadAllActionData(const rapidjson::Value& data, const ProblemInfo& info, bool load_effects) {
 	std::vector<const ActionData*> schemata;
+	unsigned id = 0;
 	for (unsigned i = 0; i < data.Size(); ++i) {
-		if (const ActionData* adata = loadActionData(data[i], i, info, load_effects)) {
+		if (const ActionData* adata = loadActionData(data[i], id, info, load_effects)) {
 			schemata.push_back(adata);
+            id++; // Make sure to increase the ID only when the action schema hasn't been discarded
 		}
 	}
 	return schemata;
