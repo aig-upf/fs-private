@@ -1,19 +1,19 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
-#include <limits>
+#include <fs/core/base.hxx>
 
+#include <boost/container/flat_set.hpp>
 #include <boost/functional/hash.hpp>
 
-#include <vector>
-#include <map>
-#include <unordered_set>
-#include <boost/container/flat_set.hpp>
-
 #include <exception>
-#include <fs/core/base.hxx>
+#include <functional>
+#include <limits>
+#include <map>
+#include <memory>
+#include <unordered_set>
+#include <vector>
+
 
 //! A handy macro for explicitly declaring a variable is not used and avoiding the corresponding warnings (see e.g. http://stackoverflow.com/q/777261)
 #define _unused(x) do { (void)sizeof(x);} while (0)
@@ -104,17 +104,12 @@ namespace fs0 {
 	 */
 	class UnimplementedFeatureException : public std::runtime_error {
 	public:
-		UnimplementedFeatureException(const std::string& msg) : std::runtime_error(msg) {}
-	};
-	
-	class InvalidConfiguration : public std::runtime_error {
-	public:
-		InvalidConfiguration(const std::string& msg) : std::runtime_error(msg) {}
+		explicit UnimplementedFeatureException(const std::string& msg) : std::runtime_error(msg) {}
 	};
 	
 	class UndefinedValueAccess : public std::runtime_error {
 	public:
-		UndefinedValueAccess(const std::string& msg) : std::runtime_error(msg) {}
+		explicit UndefinedValueAccess(const std::string& msg) : std::runtime_error(msg) {}
 		UndefinedValueAccess() : UndefinedValueAccess("") {}
 	};
 

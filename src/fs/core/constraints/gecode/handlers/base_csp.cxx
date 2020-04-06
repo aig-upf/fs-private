@@ -66,6 +66,7 @@ _instantiate(const FSGecodeSpace& csp,
 			 const CSPTranslator& translator,
 			 const std::vector<ExtensionalConstraint>& extensional_constraints,
 			 const T& layer) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
 	auto* clone = static_cast<FSGecodeSpace*>(csp.clone());
 	translator.updateStateVariableDomains(*clone, layer);
 	for (const ExtensionalConstraint& constraint:extensional_constraints) {
@@ -85,6 +86,7 @@ _instantiate(const FSGecodeSpace& csp,
 			 const std::vector<ExtensionalConstraint>& extensional_constraints,
 			 const State& state,
 			 const StateBasedExtensionHandler& handler) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
 	auto* clone = static_cast<FSGecodeSpace*>(csp.clone());
 	translator.updateStateVariableDomains(*clone, state);
 

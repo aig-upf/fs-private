@@ -15,8 +15,6 @@ protected:
 	object_id  _value;
 	
 public:
-	using vctrp = std::shared_ptr<std::vector<Atom>>;
-
 	Atom(VariableIdx variable, const object_id& value) : _variable(variable), _value(value) {};
 	Atom(const Atom& other) = default;
 	Atom(Atom&& other) = default;
@@ -39,8 +37,7 @@ inline bool operator!=(const Atom& lhs, const Atom& rhs){return !operator==(lhs,
 inline bool operator< (const Atom& lhs, const Atom& rhs){
 	if (lhs.getVariable() < rhs.getVariable()) return true;
 	if (lhs.getVariable() > rhs.getVariable()) return false;
-	if (lhs.getValue() < rhs.getValue()) return true;
-	return false;
+    return lhs.getValue() < rhs.getValue();
 }
 inline bool operator> (const Atom& lhs, const Atom& rhs){return  operator< (rhs,lhs);}
 inline bool operator<=(const Atom& lhs, const Atom& rhs){return !operator> (lhs,rhs);}

@@ -79,16 +79,6 @@ SimpleStateModel::goal(const StateT& state) const {
 	return _task.getGoalSatManager().satisfied(state);
 }
 
-bool
-SimpleStateModel::is_applicable(const StateT& state, const ActionId& action, bool enforce_state_constraints) const {
-	return is_applicable(state, *(_task.getGroundActions()[action]), enforce_state_constraints);
-}
-
-bool
-SimpleStateModel::is_applicable(const StateT& state, const ActionType& action, bool enforce_state_constraints) const {
-	return _manager->applicable(state, action, enforce_state_constraints);
-}
-
 SimpleStateModel::StateT
 SimpleStateModel::next(const StateT& state, const GroundAction::IdType& actionIdx) const {
 	return next(state, *(_task.getGroundActions()[actionIdx]));

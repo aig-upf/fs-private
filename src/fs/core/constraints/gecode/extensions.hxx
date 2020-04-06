@@ -6,7 +6,7 @@
 
 namespace fs0 { class ProblemInfo; class State; }
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 //! A small helper class to generate the Gecode tuplesets.
 class Extension {
@@ -92,4 +92,4 @@ public:
 
 	const Gecode::TupleSet& retrieve(unsigned symbol_id) const;
 };
-} } // namespaces
+} // namespaces

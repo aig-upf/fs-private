@@ -4,6 +4,7 @@
  */
 
 
+#include <cassert>
 #include <csignal>
 #include <cstdlib>
 #include <cstring>
@@ -305,6 +306,7 @@ bool is_exit_code_error_reentrant(ExitCode exitcode) {
 
 void exit_with(ExitCode exitcode) {
     report_exit_code_reentrant(exitcode);
+    assert(false);  // Let's break here for debugging purposes
     exit(static_cast<int>(exitcode));
 }
 

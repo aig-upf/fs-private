@@ -195,7 +195,7 @@ protected:
 	
 	bool check_node_correctness(const NodePT& node) const {
 		if (node->has_parent()) {
-			assert(_model.is_applicable(node->parent->state, node->action));
+//			assert(_model.is_applicable(node->parent->state, node->action));
 		}
 		return true;
 	}

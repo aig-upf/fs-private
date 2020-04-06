@@ -38,8 +38,6 @@ public:
 		return applicable_actions(state,true);
 	}
 
-//	bool is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const;
-//	bool is_applicable(const State& state, const ActionId& action, bool enforce_state_constraints) const;
 
 	//! Returns the state resulting from applying the given action action on the given state
 	State next(const State& state, const GroundAction::IdType& id) const;

@@ -27,17 +27,6 @@ namespace fs0 {
         return _task.getGoalSatManager().satisfied(state);
     }
 
-    bool SDDLiftedStateModel::is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const {
-        auto ground_action = action.generate();
-        bool res = is_applicable(state, *ground_action, enforce_state_constraints);
-        delete ground_action;
-        return res;
-    }
-
-    bool SDDLiftedStateModel::is_applicable(const State& state, const GroundAction& action, bool enforce_state_constraints) const {
-        NaiveApplicabilityManager manager(_task.getStateConstraints());
-        return manager.isApplicable(state, action, enforce_state_constraints);
-    }
 
     State SDDLiftedStateModel::next(const State& state, const LiftedActionID& action) const {
         auto ground_action = action.generate();
