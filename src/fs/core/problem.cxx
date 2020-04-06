@@ -1,44 +1,47 @@
 
 #include <fs/core/problem.hxx>
-#include <fs/core/problem_info.hxx>
-#include <fs/core/state.hxx>
+
 #include <fs/core/actions/actions.hxx>
-#include <fs/core/actions/grounding.hxx>
-#include <lapkt/tools/logging.hxx>
-#include <fs/core/utils/printers/actions.hxx>
-#include <fs/core/utils/utils.hxx>
 #include <fs/core/applicability/formula_interpreter.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
-#include <fs/core/languages/fstrips/operations/axioms.hxx>
 #include <fs/core/languages/fstrips/metrics.hxx>
+#include <fs/core/languages/fstrips/operations/axioms.hxx>
+#include <fs/core/utils/printers/actions.hxx>
+#include <fs/core/problem_info.hxx>
+#include <fs/core/state.hxx>
+#include <fs/core/utils/utils.hxx>
+
+#include <utility>
 
 
 namespace fs0 {
 
 std::unique_ptr<Problem> Problem::_instance = nullptr;
 
-Problem::Problem(   State* init, StateAtomIndexer* state_indexer,
-                    const std::vector<const ActionData*>& action_data,
-                    const std::unordered_map<std::string, const fs::Axiom*>& axioms,
-                    const fs::Formula* goal,
-                    const std::unordered_map<std::string, const fs::Axiom*>& state_constraints,
-                    const fs::Metric* metric,
-                    AtomIndex&& tuple_index,
-                    const AllTransitionGraphsT& transitions
+Problem::Problem(
+        State* init,
+        StateAtomIndexer* state_indexer,
+        std::vector<const ActionData*> action_data,
+        std::unordered_map<std::string, const fs::Axiom*> axioms,
+        const fs::Formula* goal,
+        std::unordered_map<std::string, const fs::Axiom*> state_constraints,
+        const fs::Metric* metric,
+        AtomIndex&& tuple_index,
+        AllTransitionGraphsT transitions
 ) :
 	_tuple_index(std::move(tuple_index)),
 	_init(init),
 	_state_indexer(state_indexer),
-	_action_data(action_data),
-	_axioms(axioms),
+	_action_data(std::move(action_data)),
+	_axioms(std::move(axioms)),
 	_ground(),
 	_partials(),
-	_state_constraints(state_constraints),
+	_state_constraints(std::move(state_constraints)),
 	_goal_formula(goal),
     _metric(metric),
 	_goal_sat_manager(FormulaInterpreter::create(_goal_formula, get_tuple_index())),
 	_is_predicative(check_is_predicative()),
-    _transition_graphs(transitions)
+    _transition_graphs(std::move(transitions))
 {
     //! Store pointers to the state constraint definitions for ease of use
     for ( auto c : _state_constraints ) {

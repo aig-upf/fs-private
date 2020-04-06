@@ -4,7 +4,7 @@
 #include <fs/core/fs_types.hxx>
 #include <fs/core/utils/atom_index.hxx>
 
-namespace fs0 { namespace language { namespace fstrips { class Formula; class Axiom; class Metric;}}}
+namespace fs0::language::fstrips { class Formula; class Axiom; class Metric;}
 namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
@@ -19,15 +19,15 @@ class GroundAction;
 
 class Problem {
 public:
-	Problem(    State* init,
-                StateAtomIndexer* state_indexer,
-                const std::vector<const ActionData*>& action_data,
-                const std::unordered_map<std::string, const fs::Axiom*>& axioms,
-                const fs::Formula* goal,
-                const std::unordered_map<std::string, const fs::Axiom*>& state_constraints,
-                const fs::Metric* metric,
-                AtomIndex&& tuple_index,
-                const AllTransitionGraphsT& transitions);
+	Problem(State* init,
+	        StateAtomIndexer* state_indexer,
+	        std::vector<const ActionData*> action_data,
+	        std::unordered_map<std::string, const fs::Axiom*> axioms,
+	        const fs::Formula* goal,
+	        std::unordered_map<std::string, const fs::Axiom*> state_constraints,
+	        const fs::Metric* metric,
+	        AtomIndex&& tuple_index,
+	        AllTransitionGraphsT transitions);
 	~Problem();
 
 	Problem(const Problem& other);
@@ -129,7 +129,7 @@ protected:
 	std::vector< const fs::Formula*> _state_constraints_formulae;
 	const fs::Formula* _goal_formula;
 
-    const fs::Metric*   _metric;
+    const fs::Metric* _metric;
 
 	std::unique_ptr<FormulaInterpreter> _goal_sat_manager;
 
