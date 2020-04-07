@@ -16,7 +16,7 @@ namespace fs0 {
 std::unique_ptr<ProblemInfo> ProblemInfo::_instance = nullptr;
 
 ProblemInfo::ProblemInfo(const rapidjson::Document& data, std::string data_dir) :
-	_data_dir(std::move(data_dir))
+	_data_dir(std::move(data_dir)), _can_extensionalize_var_domains(true)
 {
 	LPT_INFO("main", "Loading Symbol index...");
 	loadSymbolIndex(data["symbols"]);
@@ -33,6 +33,8 @@ ProblemInfo::ProblemInfo(const rapidjson::Document& data, std::string data_dir) 
 	for (unsigned variable = 0; variable < getNumVariables(); ++variable) {
 		_predicative_variables.push_back((unsigned) isPredicate(getVariableData(variable).first));
 	}
+
+	_extensions.resize(getNumLogicalSymbols());
 }
 
 const std::string& ProblemInfo::getVariableName(VariableIdx index) const { return variableNames.at(index); }
@@ -65,6 +67,11 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		} catch( std::out_of_range& ex ) {
 			throw std::runtime_error("Unknown FS-type " + type);
 		}
+
+		if (t == type_id::int_t) {
+			_can_extensionalize_var_domains = false;
+		}
+
 
 		// Load the info necessary to resolve state variables dynamically
 		unsigned symbol_id = var_data["symbol_id"].GetInt();
@@ -119,7 +126,7 @@ void ProblemInfo::loadSymbolIndex(const rapidjson::Value& data) {
 
 		bool is_static = data[i][6].GetBool();
         bool has_unbounded_arity = data[i][7].GetBool();
-		_functionData.emplace_back(type, domain, codomain, variables, is_static, has_unbounded_arity);
+		_functionData.push_back(SymbolData(type, domain, codomain, variables, is_static, has_unbounded_arity));
 	}
 }
 
@@ -129,6 +136,20 @@ void ProblemInfo::loadProblemMetadata(const rapidjson::Value& data) {
 	setInstanceName(data["instance"].GetString());
 }
 
+
+void
+ProblemInfo::set_extension(unsigned symbol_id, std::unique_ptr<StaticExtension>&& extension) {
+	assert(_extensions.at(symbol_id) == nullptr); // Shouldn't be setting twice the same extension
+	setFunction(symbol_id, extension->get_function());
+	_extensions.at(symbol_id) = std::move(extension);
+}
+
+
+const StaticExtension&
+ProblemInfo::get_extension(unsigned symbol_id) const {
+	assert(_extensions.at(symbol_id) != nullptr);
+	return *_extensions.at(symbol_id);
+}
 
 bool ProblemInfo::isBoundedType(TypeIdx type) const {
 	return fstrips::LanguageInfo::instance().typeinfo(type).bounded();
