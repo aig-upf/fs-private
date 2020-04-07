@@ -13,7 +13,7 @@
 #include <fs/core/utils/printers/vector.hxx>
 #include <fs/core/utils/printers/helper.hxx>
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 
 Gecode::IntVar Helper::createPlanningVariable(Gecode::Space& csp, VariableIdx variable) {
@@ -96,8 +96,6 @@ const Gecode::TupleSet& Helper::compute_symbol_extension(unsigned symbol) {
     if (_cached_static_extensions[symbol]) {
         return _static_extensions[symbol];
     }
-
-//    const auto& functor = data.getFunction();
 
     Gecode::TupleSet tuples;
 
@@ -188,4 +186,4 @@ Helper::Helper() :
 {
 }
 
-} } // namespaces
+} // namespaces

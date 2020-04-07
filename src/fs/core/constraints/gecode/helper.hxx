@@ -6,7 +6,7 @@
 #include <fs/core/fs_types.hxx>
 #include <gecode/int.hh>
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 class FSGecodeSpace; class CSPTranslator;
 
@@ -64,4 +64,4 @@ protected:
 	std::vector<Gecode::TupleSet> _static_extensions;
 };
 
-} } // namespaces
+} // namespaces
