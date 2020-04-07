@@ -99,7 +99,12 @@ CSPLiftedStateModel::build(const Problem& problem, const ProblemInfo& info, cons
         const std::string& schema_name = schema->getName();
         std::string fname = schema_name + ".csp";
         std::ifstream ifs(info.getDataDir() + "/csps/" + schema_name + ".csp");
+        if (ifs.fail()) {
+            std::cerr << "Non-existing CSP file for action \"" << schema_name << "\"" << std::endl;
+            exit_with(ExitCode::SEARCH_INPUT_ERROR);
+        }
         csps_tmp.push_back(gecode::v2::ActionSchemaCSP::load(ifs, info, symbols_in_extensions));
+        ifs.close();
     }
 
     gecode::v2::SymbolExtensionGenerator extension_generator(info, atom_index, symbols_in_extensions);
