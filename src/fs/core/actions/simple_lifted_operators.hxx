@@ -9,7 +9,6 @@ namespace fs0 {
 
 class PartiallyGroundedAction;
 class ProblemInfo;
-class Binding;
 class State;
 class Atom;
 
@@ -80,12 +79,19 @@ public:
     };
 
 
+    //! A null operator that does nothing. We need this to act as a null value in certain contexts.
+    SimpleLiftedOperator() :
+            precondition(), effects()
+    {}
+
     SimpleLiftedOperator(condition_t precondition, std::vector<effect_t> effects) :
             precondition(std::move(precondition)), effects(std::move(effects))
     {}
 
     condition_t precondition;
     std::vector<effect_t> effects;
+
+
 };
 
 SimpleLiftedOperator compile_schema_to_simple_lifted_operator(const PartiallyGroundedAction& action);
@@ -93,7 +99,7 @@ SimpleLiftedOperator compile_schema_to_simple_lifted_operator(const PartiallyGro
 void evaluate_simple_lifted_operator(
         const State& state,
         const SimpleLiftedOperator& op,
-        const Binding& binding,
+        const std::vector<object_id>& binding,
         const ProblemInfo& info,
         bool check_precondition,
         std::vector<Atom>& atoms);

@@ -45,7 +45,7 @@ protected:
     //! The action that originates this handler
     const PartiallyGroundedAction _action;
 
-    //! The effects of the action which are relevant to the CSP manaer (typically these will exclude predicative delete effects!)
+    //! The effects of the action which are relevant to the CSP manager (typically these will exclude predicative delete effects!)
     const std::vector<const fs::ActionEffect*> _effects;
 
     //! '_parameter_variables[i]' contains the index of the CSP variable that models the value of i-th parameter of the action schema
@@ -59,7 +59,8 @@ protected:
     void index_parameters();
 
     //! Return the action binding that corresponds to the given solution
-    Binding build_binding_from_solution(const FSGecodeSpace* solution) const override;
+    Binding build_binding_from_solution(const FSGecodeSpace* solution) const override { throw std::runtime_error("Deprecated"); }
+    std::vector<object_id> compute_binding_from_solution(const FSGecodeSpace* solution) const;
 
     //! Return the (Lifted) ActionID corresponding to the given solution
     const ActionID* get_action_id(const FSGecodeSpace* solution) const override;

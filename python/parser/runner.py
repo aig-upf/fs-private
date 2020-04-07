@@ -17,6 +17,7 @@ from .. import utils, FS_PATH, FS_WORKSPACE, FS_BUILD
 from .templates import tplManager
 from .tarski_serialization import generate_tarski_problem, serialize_representation, Serializer, print_groundings
 from tarski.syntax.transform import compile_universal_effects_away
+from tarski.syntax.ops import compute_sort_id_assignment
 from tarski.fstrips.representation import compile_negated_preconditions_away
 from tarski.io import FstripsReader, find_domain_filename
 from tarski.utils import resources
@@ -194,11 +195,11 @@ def compile_translation(translation_dir, use_vanilla, args):
             raise RuntimeError('Error compiling problem at {0}'.format(translation_dir))
 
 
-def run_solver(translation_dir, args, dry_run):
+def run_solver(workdir, args, dry_run):
     """ Runs the solver binary resulting from the compilation """
 
     solver = solver_name(args)
-    solver = os.path.join(translation_dir, solver)
+    solver = os.path.join(workdir, solver)
 
     if not args.driver:
         raise RuntimeError("Need to specify a driver to be able to run the solver")
@@ -229,11 +230,11 @@ def run_solver(translation_dir, args, dry_run):
 
     command_str = ' '.join(command)
     # We run the command spawning a new shell so that we can get typical shell kill signals such as OOM, etc.
-    output = subprocess.call(command_str, cwd=translation_dir, shell=True, env=env)
+    output = subprocess.call(command_str, cwd=workdir, shell=True, env=env)
 
     explain_output(output)
 
-    return translation_dir
+    return output
 
 
 def is_nonerror_code(code):
@@ -288,9 +289,9 @@ def create_working_dir(args, domain_name, instance_name):
 
 
 def sort_state_variables(ground_variables):
-    from tarski.util import IndexDictionary
+    from tarski.util import SymbolIndex
     varnames = sorted(ground_variables, key=str)
-    variables = IndexDictionary()
+    variables = SymbolIndex()
     for v in varnames:
         variables.add(v)
     return variables
@@ -328,12 +329,13 @@ def run(args):
         generate_debug_scripts(workdir, planner_arguments)
 
     # Invoke the planner:
-    translation_dir = run_solver(workdir, args, args.parse_only)
+    output = run_solver(workdir, args, args.parse_only)
 
     # Validate the resulting plan:
-    validate(args.domain, args.instance, os.path.join(translation_dir, 'first.plan'))
+    if output == 0:
+        validate(args.domain, args.instance, os.path.join(workdir, 'first.plan'))
 
-    return 0  # If there was any abnormal exit code, we'll have sys.exited before getting here
+    return output
 
 
 def preprocess_with_tarski(args, is_debug_run, workdir):
@@ -341,6 +343,8 @@ def preprocess_with_tarski(args, is_debug_run, workdir):
 
     with resources.timing(f"Parsing problem", newline=True):
         problem = parse_problem_with_tarski(args.domain, args.instance)
+        # Indexes 0 and 1 are reserved for two special boolean objects true and false
+        sort_bounds, object_ids = compute_sort_id_assignment(problem.language, start=2)
 
     # Both the LP reachability analysis and the backend expect a problem without universally-quantified effects
     with resources.timing(f"Compiling universal effects away", newline=False):
@@ -348,16 +352,23 @@ def preprocess_with_tarski(args, is_debug_run, workdir):
 
     action_groundings, ground_variables, fluents, statics = ground_problem(args, problem)
 
+    if is_debug_run:
+        # Note: Make sure that this is done before the ground variable index is used for any purpose!
+        ground_variables = sort_state_variables(ground_variables)
+
+    # Be careful with this, as it'll introduce new state variables
+    # if not args.safe and 'bfws' in args.driver:
+    #     with resources.timing(f"Compiling negated preconditions away", newline=False):
+    #         problem = compile_negated_preconditions_away(problem, inplace=False)
+
     if args.sdd:
         generate_sdds(args, ground_variables, problem, workdir)
 
-    if not args.safe and 'bfws' in args.driver:
-        with resources.timing(f"Compiling negated preconditions away", newline=False):
-            problem = compile_negated_preconditions_away(problem, inplace=False)
+    if not args.safe and '-csp' in args.driver:
+        generate_csps(args, ground_variables, problem, sort_bounds, object_ids, workdir)
 
-    if is_debug_run:
-        ground_variables = sort_state_variables(ground_variables)
-    data, init_atoms, obj_idx = generate_tarski_problem(problem, fluents, statics, variables=ground_variables)
+    data, init_atoms, obj_idx = generate_tarski_problem(
+        problem, fluents, statics, sort_bounds, object_ids, variables=ground_variables)
     serializer = Serializer(os.path.join(workdir, 'data'))
     serialize_representation(data, init_atoms, serializer, debug=is_debug_run)
 
@@ -368,12 +379,26 @@ def preprocess_with_tarski(args, is_debug_run, workdir):
 
 def generate_sdds(args, ground_variables, problem, workdir):
     from tarski.analysis.sdd import process_problem
-    sdddir = os.path.join(workdir, 'data', 'sdd')
-    utils.mkdirp(sdddir)
-    process_problem(problem, serialization_directory=sdddir, conjoin_with_init=False,
+    workdir = os.path.join(workdir, 'data', 'sdd')
+
+    utils.wipedir(workdir)
+    utils.mkdirp(workdir)
+
+    process_problem(problem, serialization_directory=workdir, conjoin_with_init=False,
                     sdd_minimization_time=None, graphs_directory=None,
                     var_ordering=args.var_ordering, reachable_vars=ground_variables,
                     sdd_incr_minimization_time=args.sdd_incr_minimization_time)
+
+
+def generate_csps(args, ground_variables, problem, sort_bounds, object_ids, workdir):
+    from tarski.analysis.csp_schema import CSPCompiler
+    workdir = os.path.join(workdir, 'data', 'csps')
+
+    utils.wipedir(workdir)
+    utils.mkdirp(workdir)
+
+    comp = CSPCompiler(problem, ground_variables, sort_bounds, object_ids)
+    comp.process_problem(serialization_directory=workdir)
 
 
 def ground_problem(args, problem):

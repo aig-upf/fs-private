@@ -1,16 +1,16 @@
 
 #pragma once
 
-#include <fs/core/atom.hxx>
-#include <fs/core/actions/action_id.hxx>
 #include <fs/core/actions/csp_action_iterator.hxx>
 #include <fs/core/actions/simple_lifted_operators.hxx>
 
 
 namespace fs0::gecode { class LiftedActionCSP; }
+namespace fs0::gecode::v2 { class ActionSchemaCSP; }
 
 namespace fs0 {
 
+class LiftedActionID;
 class Problem;
 class State;
 class GroundAction;
@@ -24,14 +24,14 @@ public:
 	using ActionType = LiftedActionID;
 
 protected:
-	CSPLiftedStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals);
+	CSPLiftedStateModel(const Problem& problem, std::vector<const fs::Formula*> subgoals, std::vector<unsigned>  symbols_in_extensions);
 
 public:
 
 	//! Factory method
 	static CSPLiftedStateModel build(const Problem& problem);
 
-	~CSPLiftedStateModel() = default;
+	~CSPLiftedStateModel();
 
 	CSPLiftedStateModel(const CSPLiftedStateModel&) = default;
 	CSPLiftedStateModel& operator=(const CSPLiftedStateModel&) = delete;
@@ -50,16 +50,13 @@ public:
 		return applicable_actions(state, true);
 	}
 
-	bool is_applicable(const State& state, const GroundAction& action, bool enforce_state_constraints) const;
-	bool is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const;
-
 	//! Returns the state resulting from applying the given action action on the given state
 	State next(const State& state, const ActionType& aid) const;
-    State next2(const State& state, const ActionType& aid) const;
 
 	const Problem& getTask() const { return _task; }
 	void set_handlers(std::vector<std::shared_ptr<gecode::LiftedActionCSP>> handlers) { _handlers = std::move(handlers); }
-    void set_operators(std::vector<SimpleLiftedOperator> handlers) { lifted_operators_ = std::move(handlers); }
+    void set_handlers2(std::vector<gecode::v2::ActionSchemaCSP>&& handlers, std::vector<const PartiallyGroundedAction*>&& schemas);
+    void set_operators(std::vector<SimpleLiftedOperator>&& handlers) { lifted_operators_ = std::move(handlers); }
 
 	//! Returns the number of subgoals into which the goal can be decomposed
 	unsigned num_subgoals() const { return _subgoals.size(); }
@@ -76,6 +73,9 @@ protected:
 	const Problem& _task;
 
 	std::vector<std::shared_ptr<gecode::LiftedActionCSP>> _handlers;
+    std::vector<gecode::v2::ActionSchemaCSP> _handlers2;
+    std::vector<unsigned> symbols_in_extensions;
+    std::vector<const PartiallyGroundedAction*> schemas;
 
 	std::vector<SimpleLiftedOperator> lifted_operators_;
 

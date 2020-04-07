@@ -41,7 +41,7 @@ protected:
 	const PartiallyGroundedAction* _action;
 	
 	//! The indexes of the action binding.
-	Binding _binding; // TODO This should be const, but then we cannot have assignment operator
+	std::vector<object_id> _binding;
 	
 	//! The hash code of the object
 	mutable std::size_t _hash;
@@ -57,7 +57,7 @@ public:
 	static const LiftedActionID invalid_action_id;
 	
 	//! Constructors
-	LiftedActionID(const PartiallyGroundedAction* action, Binding&& binding);
+	LiftedActionID(const PartiallyGroundedAction* action, std::vector<object_id>&& binding);
 	
 	//! Default copy constructors and assignment operators
 	LiftedActionID(const LiftedActionID& other) = default;
@@ -79,8 +79,7 @@ public:
     //! Prints a representation of the object to the given stream.
 	std::ostream& print(std::ostream& os) const override;
 
-    const Binding& get_binding() const { return _binding; }
-	Binding get_full_binding() const;
+    const std::vector<object_id>& get_binding() const { return _binding; }
 };
 
 //! A plain action ID is just the unsigned integer that identifies the action within the whole vector of grounded actions

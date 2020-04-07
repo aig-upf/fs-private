@@ -96,7 +96,7 @@ LiftedActionCSP::register_csp_variables() {
 
 
 
-Binding LiftedActionCSP::build_binding_from_solution(const FSGecodeSpace* solution) const {
+std::vector<object_id> LiftedActionCSP::compute_binding_from_solution(const FSGecodeSpace* solution) const {
     std::vector<object_id> values;
     std::vector<bool> valid;
     values.reserve(_parameter_variables.size());
@@ -110,7 +110,7 @@ Binding LiftedActionCSP::build_binding_from_solution(const FSGecodeSpace* soluti
             valid.push_back(true);
         }
     }
-    return Binding(std::move(values), std::move(valid));
+    return values;
 }
 
 const std::vector<const fs::ActionEffect*>& LiftedActionCSP::get_effects() const {
@@ -127,7 +127,7 @@ const ActionID* LiftedActionCSP::get_action_id(const FSGecodeSpace* solution) co
 }
 
 LiftedActionID* LiftedActionCSP::get_lifted_action_id(const FSGecodeSpace* solution) const {
-    return new LiftedActionID(&_action, build_binding_from_solution(solution));
+    return new LiftedActionID(&_action, compute_binding_from_solution(solution));
 }
 
 void LiftedActionCSP::log() const {

@@ -45,14 +45,14 @@ def tarski_sort_to_domain_type(t: Sort, type_id):
 
 
 def tarski_sort_to_domain(t: Sort, type_objects):
+    setobj, intobj = [], []
     if isinstance(t, Interval):
-        setobj = []
         intobj = [] if t in (t.language.Integer, t.language.Real) else [t.lower_bound, t.upper_bound]
 
     elif isinstance(t, Sort):
         # Not sure why the backend requires the object ID as a string here, but so it seems to be
         setobj = [str(oid) for oid in type_objects[t.name]]
-        intobj = []
+
     else:
         raise RuntimeError(f'Unknown domain for Tarski sort "{t}"')
     return setobj, intobj
@@ -63,7 +63,7 @@ def tarski_sort_to_typename(t: Sort):
 
 
 def serialize_type_info(language, type_objects):
-    type_idxs = dict()
+    type_idx = dict()
     data = []
     # data = [
     #     {'id': 2, 'fstype': 'int', 'type_id': 'int_t', 'domain_type': 'unbounded', 'interval': [], 'set': []},
@@ -78,7 +78,7 @@ def serialize_type_info(language, type_objects):
                 (isinstance(sort, Interval) and sort.name == 'number'):
             continue  # Natural and number types are not necessary for the backend
 
-        type_idxs[sort] = id_
+        type_idx[sort] = id_
         typeid = tarski_sort_to_typeid(sort)
         domain_type = tarski_sort_to_domain_type(sort, typeid)
         setobj, intobj = tarski_sort_to_domain(sort, type_objects)
@@ -86,20 +86,7 @@ def serialize_type_info(language, type_objects):
         data.append(dict(id=id_, fstype=fstype, type_id=typeid, domain_type=domain_type, interval=intobj, set=setobj))
         id_ += 1
 
-    return type_idxs, data
-
-
-def serialize_object_info(language):
-    data, index = [], {}
-    type_objects = defaultdict(list)
-    # Indexes 0 and 1 are reserved for two special boolean objects true and false
-    # TODO Check if we still need these or can get rid of them
-    for oid, o in enumerate(language.constants(), start=2):
-        data.append(dict(id=oid, name=o.symbol, type=tarski_sort_to_typename(o.sort)))
-        index[o.symbol] = oid
-        for s in inclusion_closure(o.sort):
-            type_objects[s.name].append(oid)
-    return index, data, type_objects
+    return type_idx, data
 
 
 def serialize_symbol_info(language, obj_idx, variables, statics):
@@ -289,12 +276,20 @@ def serialize_tarski_action_schema(action, type_idx, obj_idx):
                 unit=unit)
 
 
-def generate_tarski_problem(problem, fluents, statics, variables):
+def generate_tarski_problem(problem, fluents, statics, sort_bounds, object_ids, variables):
     """ Collect all the data relevant to the given tarski problem, and return a serialization-friendly
     dict-based representation """
     data = {'problem': {'domain': problem.domain_name, 'instance': problem.name}}
 
-    obj_idx, data['objects'], type_objects = serialize_object_info(problem.language)
+    # Unwrap the symrefs into a map from object name (string) to object id
+    obj_idx = {sref.expr.symbol: oid for sref, oid in object_ids.items()}
+
+    # Serialize the object id information in the format expected by the backend
+    data['objects'] = [dict(id=oid, name=o.expr.symbol, type=tarski_sort_to_typename(o.expr.sort))
+                       for o, oid in object_ids.items()]
+
+    # A map between PDDL type name (string) and a list of all ids of objects of that type (considering type inheritance)
+    type_objects = {s.name: list(range(lb, ub)) for s, (lb, ub) in sort_bounds.items()}
 
     data['symbols'], data['variables'], smb_idx = serialize_symbol_info(problem.language, obj_idx, variables, statics)
 
@@ -431,6 +426,7 @@ def print_groundings(schemas, groundings, obj_idx, serializer: Serializer):
 
 
 def serialize_representation(data, init_atoms, serializer: Serializer, debug):
+    # First dump the actual problem serialization in JSON
     serializer.dump('problem', data, extension='json')
 
     # For historical reasons, we used to serialize the list of static atoms separately and in a custom format

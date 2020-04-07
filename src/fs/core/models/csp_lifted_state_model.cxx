@@ -1,18 +1,40 @@
 
 #include <fs/core/models/csp_lifted_state_model.hxx>
+
+#include <fs/core/actions/actions.hxx>
+#include <fs/core/actions/action_id.hxx>
+#include <fs/core/applicability/formula_interpreter.hxx>
+#include <fs/core/constraints/gecode/handlers/lifted_action_csp.hxx>
+#include <fs/core/constraints/gecode/v2/action_schema_csp.hxx>
+#include <fs/core/languages/fstrips/language.hxx>
+#include <fs/core/models/utils.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/state.hxx>
-#include <fs/core/applicability/formula_interpreter.hxx>
-#include <fs/core/applicability/action_managers.hxx>
-#include <fs/core/actions/actions.hxx>
+#include <fs/core/utils/system.hxx>
 
-#include <fs/core/languages/fstrips/language.hxx>
-#include <fs/core/constraints/gecode/handlers/lifted_action_csp.hxx>
-#include <fs/core/actions/grounding.hxx>
-#include "utils.hxx"
+#include <boost/filesystem.hpp>   // includes all needed Boost.Filesystem declarations
 
+#include <utility>
+
+
+namespace fsys = boost::filesystem;
 
 namespace fs0 {
+
+CSPLiftedStateModel::CSPLiftedStateModel(const Problem& problem, std::vector<const fs::Formula*> subgoals, std::vector<unsigned> symbols_in_extensions) :
+        _task(problem),
+        symbols_in_extensions(std::move(symbols_in_extensions)),
+        _subgoals(std::move(subgoals))
+{}
+
+CSPLiftedStateModel::~CSPLiftedStateModel() = default;
+
+void CSPLiftedStateModel::set_handlers2(
+        std::vector<gecode::v2::ActionSchemaCSP>&& handlers,
+        std::vector<const PartiallyGroundedAction*>&& schemas_) {
+    schemas = std::move(schemas_);
+    _handlers2 = std::move(handlers);
+}
 
 State CSPLiftedStateModel::init() const {
     // We need to make a copy so that we can return it as non-const.
@@ -25,42 +47,18 @@ bool CSPLiftedStateModel::goal(const State& state) const {
     return _task.getGoalSatManager().satisfied(state);
 }
 
-bool CSPLiftedStateModel::is_applicable(const State& state, const ActionType& action, bool enforce_state_constraints) const {
-    auto ground_action = action.generate();
-    bool res = is_applicable(state, *ground_action, enforce_state_constraints);
-    delete ground_action;
-    return res;
-}
-
-bool CSPLiftedStateModel::is_applicable(const State& state, const GroundAction& action, bool enforce_state_constraints) const {
-    NaiveApplicabilityManager manager(_task.getStateConstraints());
-    return manager.isApplicable(state, action, enforce_state_constraints);
-}
-
-State CSPLiftedStateModel::next2(const State& state, const LiftedActionID& aid) const {
-    auto binding = aid.get_full_binding();
-    auto effects = ActionGrounder::bind_effects(aid.getActionData(), binding, ProblemInfo::getInstance());
-    NaiveApplicabilityManager::computeEffects(state, effects, _effects_cache);
-    State s1(state, _effects_cache); // Copy everything into the new state and apply the changeset
-    for (const auto pointer:effects) delete pointer;
-    return s1;
-}
-
 
 State CSPLiftedStateModel::next(const State& state, const LiftedActionID& aid) const {
     auto& adata = aid.getActionData();
-    const auto& binding = aid.get_binding();
-    assert(binding.is_complete());
     auto& op = lifted_operators_[adata.getId()];
     // Note that we don't need to check the precondition of the operator, only evaluate the effects:
-    evaluate_simple_lifted_operator(state, op, binding, ProblemInfo::getInstance(), false, _effects_cache);
+    evaluate_simple_lifted_operator(state, op, aid.get_binding(), ProblemInfo::getInstance(), false, _effects_cache);
     return State(state, _effects_cache); // Copy everything into the new state and apply the changeset
 }
 
 gecode::CSPActionIterator CSPLiftedStateModel::applicable_actions(const State& state, bool enforce_state_constraints) const {
-    if ( enforce_state_constraints )
-        return gecode::CSPActionIterator(state, _handlers, _task.getStateConstraints(), _task.get_tuple_index());
-    return gecode::CSPActionIterator(state, _handlers, {}, _task.get_tuple_index());
+    // TODO At the moment we don't support state constraints anymore
+    return gecode::CSPActionIterator(state, _handlers, _handlers2, symbols_in_extensions, schemas, _task.get_tuple_index());
 }
 
 
@@ -75,22 +73,50 @@ CSPLiftedStateModel::goal(const StateT& s, unsigned i) const {
 
 CSPLiftedStateModel
 CSPLiftedStateModel::build(const Problem& problem) {
-    auto model = CSPLiftedStateModel(problem, obtain_goal_atoms(problem.getGoalConditions()));
-    model.set_handlers(gecode::LiftedActionCSP::create(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
-
-
-    std::vector<SimpleLiftedOperator> ops;
-    for (const auto a:problem.getPartiallyGroundedActions()) {
-        ops.emplace_back(compile_schema_to_simple_lifted_operator(*a));
+    const ProblemInfo& info = ProblemInfo::getInstance();
+    fsys::path path(info.getDataDir() + "/csps");
+    if (!fsys::exists(path)) {
+        std::cerr << "Non-existing CSP directory: " << path << std::endl;
+        exit_with(ExitCode::SEARCH_INPUT_ERROR);
     }
 
+    // We'll store which schemas result in some CSPs to keep a correspondence between them, and keep the CSPs
+    // independent from actions
+    std::vector<const PartiallyGroundedAction*> schemas;
+    std::vector<gecode::v2::ActionSchemaCSP> csps;
+    std::vector<SimpleLiftedOperator> ops;
+
+    // We'll use a vector of unsigned as a bit-vector, for performance reasons.
+    std::vector<unsigned> symbols_in_extensions(info.getNumLogicalSymbols(), 0);
+
+
+
+    for (const auto& schema:problem.getPartiallyGroundedActions()) {
+        // Each action schema has a number of filenames starting with the name of the schema
+        const std::string& schema_name = schema->getName();
+        std::string fname = schema_name + ".csp";
+        std::ifstream ifs(info.getDataDir() + "/csps/" + schema_name + ".csp");
+
+        auto csp = gecode::v2::ActionSchemaCSP::load(ifs, info, symbols_in_extensions);
+        if (csp.initialize()) {
+            csps.push_back(std::move(csp));
+            schemas.push_back(schema);
+            ops.emplace_back(compile_schema_to_simple_lifted_operator(*schema));
+        } else {
+            // Note that here in the case where the CSP has been detected as inconsistent at preprocessing, we need to
+            // add some dummy operator, so that the mapping between action schema IDs (which include those inconsistent)
+            // and operators stays correct.
+            ops.emplace_back();
+        }
+    }
+
+    auto model = CSPLiftedStateModel(problem, obtain_goal_atoms(problem.getGoalConditions()), symbols_in_extensions);
+    model.set_handlers(gecode::LiftedActionCSP::create(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
+
+    model.set_handlers2(std::move(csps), std::move(schemas));
     model.set_operators(std::move(ops));
+
     return model;
 }
-
-CSPLiftedStateModel::CSPLiftedStateModel(const Problem& problem, const std::vector<const fs::Formula*>& subgoals) :
-        _task(problem),
-        _subgoals(subgoals)
-{}
 
 } // namespaces

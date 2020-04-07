@@ -295,7 +295,7 @@ BaseCSP::index_csp_elements(const std::vector<const fs::Formula*>& conditions) {
 						
 						auto value = dynamic_cast<const fs::Constant*>(relational->rhs());
 						assert(value);
-						auto intval = int(value->getValue());
+						auto intval = (unsigned) value->getValue();
 						assert(intval == 1 || intval == 0);
 
 						// 24.01.2020 We revert back to dealing with predicative state variables in the standard way,

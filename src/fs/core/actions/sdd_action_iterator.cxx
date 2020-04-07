@@ -52,10 +52,8 @@ namespace fs0 {
 
                 delete _action;
                 auto grounding = schema_sdd.get_binding_from_model(model);
-                auto gr_size = grounding.size();
 
-                _action = new LiftedActionID(&schema_sdd.get_schema(),
-                        Binding(std::move(grounding), std::vector<bool>(gr_size, true)));
+                _action = new LiftedActionID(&schema_sdd.get_schema(), std::move(grounding));
 
                 ++current_resultset_idx_;
                 return;

@@ -116,7 +116,7 @@ SimpleLiftedOperator compile_schema_to_simple_lifted_operator(const PartiallyGro
 
 object_id bind_simple_term(
         const SimpleLiftedOperator::simple_term& term,
-        const Binding& binding,
+        const std::vector<object_id>& binding,
         const ProblemInfo& info
 ) {
     if (term.type == SimpleLiftedOperator::term_t::constant) { // We have an object
@@ -130,7 +130,7 @@ object_id bind_simple_term(
 
 std::vector<object_id> bind_arguments(
         const std::vector<SimpleLiftedOperator::simple_term>& arguments,
-        const Binding& binding,
+        const std::vector<object_id>& binding,
         const ProblemInfo& info
 ) {
     std::vector<object_id> interpreted;
@@ -147,7 +147,7 @@ std::vector<object_id> bind_arguments(
 VariableIdx bind_variable(
         uint16_t predicate_id,
         const std::vector<SimpleLiftedOperator::simple_term>& arguments,
-        const Binding& binding,
+        const std::vector<object_id>& binding,
         const ProblemInfo& info
 ) {
     return info.resolveStateVariable(predicate_id, bind_arguments(arguments, binding, info));
@@ -158,7 +158,7 @@ object_id evaluate_atom(
         const State& state,
         uint16_t predicate_id,
         const std::vector<SimpleLiftedOperator::simple_term>& arguments,
-        const Binding& binding,
+        const std::vector<object_id>& binding,
         const ProblemInfo& info
         ) {
     const auto& fidx = info.get_fluent_index();
@@ -176,7 +176,7 @@ object_id evaluate_atom(
 bool evaluate_simple_condition(
         const State& state,
         const SimpleLiftedOperator::condition_t& condition,
-        const Binding& binding,
+        const std::vector<object_id>& binding,
         const ProblemInfo& info) {
     // First check simple-term (in-)equalities
     auto sz1 = condition.simpleeqs.size();
@@ -207,7 +207,7 @@ bool evaluate_simple_condition(
 void evaluate_simple_lifted_operator(
         const State& state,
         const SimpleLiftedOperator& op,
-        const Binding& binding,
+        const std::vector<object_id>& binding,
         const ProblemInfo& info,
         bool check_precondition,
         std::vector<Atom>& atoms) {

@@ -81,7 +81,8 @@ private:
 public:
     //! TODO Might want to remove this operators in the future?
     explicit operator bool() const { return (bool) _value; }
-    explicit operator int() const { return (int) _value; }
+	explicit operator int() const { return (int) _value; }
+    explicit operator unsigned() const { return (unsigned) _value; }
 
 
 	~object_id()                           = default;
