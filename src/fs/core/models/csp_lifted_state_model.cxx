@@ -4,7 +4,6 @@
 #include <fs/core/actions/actions.hxx>
 #include <fs/core/actions/action_id.hxx>
 #include <fs/core/applicability/formula_interpreter.hxx>
-#include <fs/core/constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <fs/core/constraints/gecode/v2/action_schema_csp.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/models/utils.hxx>
@@ -21,36 +20,40 @@ namespace fsys = boost::filesystem;
 
 namespace fs0 {
 
-CSPLiftedStateModel::CSPLiftedStateModel(const Problem& problem, std::vector<const fs::Formula*> subgoals, std::vector<unsigned> symbols_in_extensions) :
-        _task(problem),
-        symbols_in_extensions(std::move(symbols_in_extensions)),
-        _subgoals(std::move(subgoals))
+CSPLiftedStateModel::CSPLiftedStateModel(
+        const Problem& problem,
+        std::vector<const fs::Formula*> subgoals,
+        std::vector<const PartiallyGroundedAction*>&& schemas,
+        std::vector<SimpleLiftedOperator>&& lifted_operators,
+        std::vector<gecode::v2::ActionSchemaCSP>&& schema_csps,
+        gecode::v2::SymbolExtensionGenerator&& extension_generator) :
+
+    problem(problem),
+    _subgoals(std::move(subgoals)),
+    schemas(std::move(schemas)),
+    lifted_operators(std::move(lifted_operators)),
+    schema_csps(std::move(schema_csps)),
+    extension_generator(std::move(extension_generator))
 {}
 
 CSPLiftedStateModel::~CSPLiftedStateModel() = default;
 
-void CSPLiftedStateModel::set_handlers2(
-        std::vector<gecode::v2::ActionSchemaCSP>&& handlers,
-        std::vector<const PartiallyGroundedAction*>&& schemas_) {
-    schemas = std::move(schemas_);
-    _handlers2 = std::move(handlers);
-}
 
 State CSPLiftedStateModel::init() const {
     // We need to make a copy so that we can return it as non-const.
     // Ugly, but this way we make it fit the search engine interface without further changes,
     // and this is only called once per search.
-    return State(_task.getInitialState());
+    return State(problem.getInitialState());
 }
 
 bool CSPLiftedStateModel::goal(const State& state) const {
-    return _task.getGoalSatManager().satisfied(state);
+    return problem.getGoalSatManager().satisfied(state);
 }
 
 
 State CSPLiftedStateModel::next(const State& state, const LiftedActionID& aid) const {
     auto& adata = aid.getActionData();
-    auto& op = lifted_operators_[adata.getId()];
+    auto& op = lifted_operators[adata.getId()];
     // Note that we don't need to check the precondition of the operator, only evaluate the effects:
     evaluate_simple_lifted_operator(state, op, aid.get_binding(), ProblemInfo::getInstance(), false, _effects_cache);
     return State(state, _effects_cache); // Copy everything into the new state and apply the changeset
@@ -58,7 +61,7 @@ State CSPLiftedStateModel::next(const State& state, const LiftedActionID& aid) c
 
 gecode::CSPActionIterator CSPLiftedStateModel::applicable_actions(const State& state, bool enforce_state_constraints) const {
     // TODO At the moment we don't support state constraints anymore
-    return gecode::CSPActionIterator(state, _handlers, _handlers2, symbols_in_extensions, schemas, _task.get_tuple_index());
+    return gecode::CSPActionIterator(state, schema_csps, extension_generator, schemas);
 }
 
 
@@ -72,8 +75,7 @@ CSPLiftedStateModel::goal(const StateT& s, unsigned i) const {
 }
 
 CSPLiftedStateModel
-CSPLiftedStateModel::build(const Problem& problem) {
-    const ProblemInfo& info = ProblemInfo::getInstance();
+CSPLiftedStateModel::build(const Problem& problem, const ProblemInfo& info, const AtomIndex& atom_index) {
     fsys::path path(info.getDataDir() + "/csps");
     if (!fsys::exists(path)) {
         std::cerr << "Non-existing CSP directory: " << path << std::endl;
@@ -88,8 +90,6 @@ CSPLiftedStateModel::build(const Problem& problem) {
 
     // We'll use a vector of unsigned as a bit-vector, for performance reasons.
     std::vector<unsigned> symbols_in_extensions(info.getNumLogicalSymbols(), 0);
-
-
 
     for (const auto& schema:problem.getPartiallyGroundedActions()) {
         // Each action schema has a number of filenames starting with the name of the schema
@@ -110,13 +110,13 @@ CSPLiftedStateModel::build(const Problem& problem) {
         }
     }
 
-    auto model = CSPLiftedStateModel(problem, obtain_goal_atoms(problem.getGoalConditions()), symbols_in_extensions);
-    model.set_handlers(gecode::LiftedActionCSP::create(problem.getPartiallyGroundedActions(), problem.get_tuple_index(), false, false));
-
-    model.set_handlers2(std::move(csps), std::move(schemas));
-    model.set_operators(std::move(ops));
-
-    return model;
+    return CSPLiftedStateModel(
+            problem,
+            obtain_goal_atoms(problem.getGoalConditions()),
+            std::move(schemas),
+            std::move(ops),
+            std::move(csps),
+            gecode::v2::SymbolExtensionGenerator(info, atom_index, symbols_in_extensions));
 }
 
 } // namespaces

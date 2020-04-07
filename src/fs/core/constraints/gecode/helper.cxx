@@ -4,7 +4,6 @@
 #include <fs/core/languages/fstrips/terms.hxx>
 #include <fs/core/languages/fstrips/formulae.hxx>
 #include <fs/core/constraints/gecode/helper.hxx>
-#include <fs/core/constraints/gecode/csp_translator.hxx>
 #include <fs/core/constraints/gecode/gecode_space.hxx>
 #include <fs/core/constraints/gecode/utils/term_list_iterator.hxx>
 

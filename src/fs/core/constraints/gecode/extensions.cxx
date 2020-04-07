@@ -1,8 +1,11 @@
 
 
 #include <fs/core/constraints/gecode/extensions.hxx>
+
 #include <fs/core/problem_info.hxx>
 #include <fs/core/state.hxx>
+#include <fs/core/utils/atom_index.hxx>
+
 #include <utility>
 
 namespace fs0::gecode {

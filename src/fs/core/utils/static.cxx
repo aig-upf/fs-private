@@ -1,7 +1,9 @@
 
-#include <fs/core/utils/static.hxx>
+#include "static.hxx"
+
 #include <fs/core/problem_info.hxx>
 #include <lapkt/tools/logging.hxx>
+
 #include <iostream>
 
 namespace fs0 {

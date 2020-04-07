@@ -10,7 +10,7 @@ CSPLiftedStateModel
 GroundingSetup::csp_lifted_model(Problem& problem) {
 	// We don't ground any action
 	problem.setPartiallyGroundedActions(ActionGrounder::fully_lifted(problem.getActionData(), ProblemInfo::getInstance()));
-	return CSPLiftedStateModel::build(problem);
+	return CSPLiftedStateModel::build(problem, ProblemInfo::getInstance(), problem.get_tuple_index());
 }
 
 

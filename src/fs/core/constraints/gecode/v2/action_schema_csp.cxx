@@ -1,7 +1,8 @@
 
 #include "action_schema_csp.hxx"
 #include "constraints.hxx"
-#include <fs/core/constraints/gecode/extensions.hxx>
+
+#include <fs/core/constraints/gecode/v2/extensions.hxx>
 #include <fs/core/utils/lexical_cast.hxx>
 #include <fs/core/utils/system.hxx>
 #include <fs/core/problem_info.hxx>
@@ -215,7 +216,7 @@ bool ActionSchemaCSP::initialize() {
 }
 
 
-FSGecodeSpace* ActionSchemaCSP::instantiate(const State& state, const StateBasedExtensionHandler& handler) const {
+FSGecodeSpace* ActionSchemaCSP::instantiate(const State& state, const SymbolExtensionGenerator& extension_generator) const {
     // Note that for state-variable constraints we don't even need to have cloned the CSP
     for (const auto& c:statevar_constraints) {
         if (!c.post(state)) return nullptr;
@@ -224,8 +225,12 @@ FSGecodeSpace* ActionSchemaCSP::instantiate(const State& state, const StateBased
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
     auto* clone = static_cast<FSGecodeSpace*>(space->clone());
 
+    auto extensions = extension_generator.instantiate(state);
+
     for (const auto& c:table_constraints) {
-        if (!c.post(*clone, handler.retrieve(c.symbol_idx()))) {
+        if (!c.post(*clone, extensions.at(c.symbol_idx()))) {
+            // We detected (by non-Gecode means) that the extensional constraint is not consistent,
+            // hence we can early-abort the processing
             delete clone;
             return nullptr;
         }

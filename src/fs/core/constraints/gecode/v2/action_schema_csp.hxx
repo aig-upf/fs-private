@@ -11,11 +11,10 @@ namespace fs0 {
     class ProblemInfo;
 }
 
-namespace fs0::gecode { class StateBasedExtensionHandler; }
-
 namespace fs0::gecode::v2 {
 
 class FSGecodeSpace;
+class SymbolExtensionGenerator;
 
 //! A CSP modeling and solving the effect of an action on a certain RPG layer
 class ActionSchemaCSP {
@@ -42,7 +41,7 @@ public:
     //! set of extensions (which in turn depend on the state, but it's good for performance reasons to compute them
     //! once for all interested CSPs). Return the cloned CSP, or null if it is not locally consistent and hence we
     //! know can't have any solution.
-    FSGecodeSpace* instantiate(const State& state, const StateBasedExtensionHandler& handler) const;
+    FSGecodeSpace* instantiate(const State& state, const SymbolExtensionGenerator& extension_generator) const;
 
     //! Return the action binding that corresponds to the given solution
     std::vector<object_id> build_binding_from_solution(const FSGecodeSpace* solution) const;

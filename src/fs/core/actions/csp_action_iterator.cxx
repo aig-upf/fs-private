@@ -1,47 +1,44 @@
 
-#include <fs/core/state.hxx>
-#include <fs/core/actions/csp_action_iterator.hxx>
+#include "csp_action_iterator.hxx"
+
 #include <fs/core/actions/action_id.hxx>
-#include <fs/core/constraints/gecode/handlers/lifted_action_csp.hxx>
 #include <fs/core/constraints/gecode/v2/gecode_space.hxx>
+#include <fs/core/state.hxx>
+
 
 namespace fs0::gecode {
 
 CSPActionIterator::CSPActionIterator(
         const State& state,
-        const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers,
-        const std::vector<v2::ActionSchemaCSP>& handlers2,
-        const std::vector<unsigned>& symbols_in_extensions,
-        const std::vector<const PartiallyGroundedAction*>& schemas,
-        const AtomIndex& tuple_index) :
-        _handlers(handlers),
-        handlers2(handlers2),
-        schemas(schemas),
-        _state(state),
-        _extension_handler(tuple_index, symbols_in_extensions, state)
+        const std::vector<v2::ActionSchemaCSP>& schema_csps,
+        const v2::SymbolExtensionGenerator& extension_generator,
+        const std::vector<const PartiallyGroundedAction*>& schemas) :
+
+    schema_csps(schema_csps),
+    schemas(schemas),
+    _state(state),
+    extension_generator(extension_generator)
 {
 }
 
 CSPActionIterator::Iterator::Iterator(
         const State& state,
-        const std::vector<std::shared_ptr<LiftedActionCSP>>& handlers,
-        const std::vector<v2::ActionSchemaCSP>& handlers2,
+        const std::vector<v2::ActionSchemaCSP>& schema_csps,
         const std::vector<const PartiallyGroundedAction*>& schemas,
-        const StateBasedExtensionHandler& extension_handler, unsigned currentIdx) :
+        const v2::SymbolExtensionGenerator& extension_generator,
+        unsigned currentIdx) :
 
-        _handlers(handlers),
-        handlers2(handlers2),
-        schemas(schemas),
-        num_handlers(handlers2.size()),
-        _state(state),
-        _current_handler_idx(currentIdx),
-        _engine(nullptr),
-        _csp(nullptr),
-        _action(nullptr),
-        _extension_handler(extension_handler)
+    schema_csps(schema_csps),
+    schemas(schemas),
+    num_schema_csps(schema_csps.size()),
+    _state(state),
+    _current_handler_idx(currentIdx),
+    _engine(nullptr),
+    _csp(nullptr),
+    _action(nullptr),
+    extension_generator(extension_generator)
 {
-    assert(_handlers.size() == num_handlers);
-    assert(schemas.size() == num_handlers);
+    assert(schemas.size() == num_schema_csps);
     advance();
 }
 
@@ -59,15 +56,13 @@ void CSPActionIterator::Iterator::advance() {
 
 
 bool CSPActionIterator::Iterator::next_solution() {
-    for (;_current_handler_idx < num_handlers; ++_current_handler_idx) {
-//        LiftedActionCSP& handler = *_handlers[_current_handler_idx];
-        const v2::ActionSchemaCSP& handler2 = handlers2[_current_handler_idx];
+    for (; _current_handler_idx < num_schema_csps; ++_current_handler_idx) {
+        const v2::ActionSchemaCSP& schema_csp = schema_csps.at(_current_handler_idx);
 
         // std::cout << std::endl << "applicability CSP: " << handler << std::endl;
 
         if (!_csp) {
-//            _csp = handler.instantiate(_state, _extension_handler);
-            _csp = handler2.instantiate(_state, _extension_handler);
+            _csp = schema_csp.instantiate(_state, extension_generator);
 
             // std::cout << std::endl << "After instantiation: "; handler.print(std::cout, *_csp); std::cout << std::endl;
 
@@ -92,12 +87,12 @@ bool CSPActionIterator::Iterator::next_solution() {
 
         delete _action;
 //        _action = handler.get_lifted_action_id(solution);
-        _action = new LiftedActionID(schemas[_current_handler_idx], handler2.build_binding_from_solution(solution));
+        _action = new LiftedActionID(schemas[_current_handler_idx], schema_csp.build_binding_from_solution(solution));
         delete solution;
         break;
     }
 
-    return _current_handler_idx != _handlers.size();
+    return _current_handler_idx != num_schema_csps;
 }
 
 } // namespaces

@@ -31,6 +31,7 @@ set(SOURCE_FILES
         src/fs/core/applicability/match_tree.hxx
         src/fs/core/constraints/gecode/v2/gecode_space
         src/fs/core/constraints/gecode/v2/constraints
+        src/fs/core/constraints/gecode/v2/extensions
         src/fs/core/constraints/gecode/v2/action_schema_csp
         src/fs/core/constraints/gecode/handlers/base_action_csp.cxx
         src/fs/core/constraints/gecode/handlers/base_action_csp.hxx

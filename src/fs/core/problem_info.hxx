@@ -31,6 +31,8 @@ public:
 	const Signature& getSignature() const { return _signature; }
 	const TypeIdx& getCodomainType() const { return _codomain; }
 	unsigned getArity() const { return _signature.size(); }
+	unsigned getUniformArity() const { return (_type == Type::PREDICATE) ? getArity() : getArity()+1; }
+
 	const std::vector<VariableIdx>& getVariables() const { return _variables; }
 
 	bool isStatic() const { return _static; }

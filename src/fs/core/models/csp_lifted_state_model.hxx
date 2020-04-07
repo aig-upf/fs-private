@@ -3,6 +3,7 @@
 
 #include <fs/core/actions/csp_action_iterator.hxx>
 #include <fs/core/actions/simple_lifted_operators.hxx>
+#include <fs/core/constraints/gecode/v2/extensions.hxx>
 
 
 namespace fs0::gecode { class LiftedActionCSP; }
@@ -24,12 +25,18 @@ public:
 	using ActionType = LiftedActionID;
 
 protected:
-	CSPLiftedStateModel(const Problem& problem, std::vector<const fs::Formula*> subgoals, std::vector<unsigned>  symbols_in_extensions);
+    CSPLiftedStateModel(
+            const Problem& problem,
+            std::vector<const fs::Formula*> subgoals,
+            std::vector<const PartiallyGroundedAction*>&& schemas,
+            std::vector<SimpleLiftedOperator>&& lifted_operators,
+            std::vector<gecode::v2::ActionSchemaCSP>&& schema_csps,
+            gecode::v2::SymbolExtensionGenerator&& extension_generator);
 
 public:
 
 	//! Factory method
-	static CSPLiftedStateModel build(const Problem& problem);
+	static CSPLiftedStateModel build(const Problem& problem, const ProblemInfo& info, const AtomIndex& atom_index);
 
 	~CSPLiftedStateModel();
 
@@ -53,10 +60,7 @@ public:
 	//! Returns the state resulting from applying the given action action on the given state
 	State next(const State& state, const ActionType& aid) const;
 
-	const Problem& getTask() const { return _task; }
-	void set_handlers(std::vector<std::shared_ptr<gecode::LiftedActionCSP>> handlers) { _handlers = std::move(handlers); }
-    void set_handlers2(std::vector<gecode::v2::ActionSchemaCSP>&& handlers, std::vector<const PartiallyGroundedAction*>&& schemas);
-    void set_operators(std::vector<SimpleLiftedOperator>&& handlers) { lifted_operators_ = std::move(handlers); }
+	const Problem& getTask() const { return problem; }
 
 	//! Returns the number of subgoals into which the goal can be decomposed
 	unsigned num_subgoals() const { return _subgoals.size(); }
@@ -70,16 +74,17 @@ public:
 
 protected:
 	// The underlying planning problem.
-	const Problem& _task;
+	const Problem& problem;
 
-	std::vector<std::shared_ptr<gecode::LiftedActionCSP>> _handlers;
-    std::vector<gecode::v2::ActionSchemaCSP> _handlers2;
-    std::vector<unsigned> symbols_in_extensions;
+    const std::vector<const fs::Formula*> _subgoals;
+
     std::vector<const PartiallyGroundedAction*> schemas;
 
-	std::vector<SimpleLiftedOperator> lifted_operators_;
+    std::vector<SimpleLiftedOperator> lifted_operators;
 
-	const std::vector<const fs::Formula*> _subgoals;
+    std::vector<gecode::v2::ActionSchemaCSP> schema_csps;
+
+    gecode::v2::SymbolExtensionGenerator extension_generator;
 
 	//! A cache to hold the effects of the last-applied action and avoid memory allocations.
 	mutable std::vector<Atom> _effects_cache;
