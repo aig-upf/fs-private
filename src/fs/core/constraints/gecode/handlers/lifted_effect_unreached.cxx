@@ -4,13 +4,14 @@
 #include <fs/core/actions/grounding.hxx>
 #include <fs/core/constraints/gecode/handlers/lifted_effect_unreached.hxx>
 #include <fs/core/constraints/gecode/handlers/formula_csp.hxx>
+#include <memory>
 #include <fs/core/constraints/gecode/utils/novelty_constraints.hxx>
 #include <fs/core/constraints/gecode/supports.hxx>
 #include <fs/core/utils/printers/actions.hxx>
 #include <lapkt/tools/logging.hxx>
 #include <fs/core/heuristics/relaxed_plan/rpg_index.hxx>
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 
 std::vector<std::unique_ptr<LiftedEffectUnreachedCSP>>
@@ -22,7 +23,7 @@ LiftedEffectUnreachedCSP::create(const std::vector<const PartiallyGroundedAction
 		
 		for (auto eff:extract_non_delete_effects(*schema)) {
 			// When creating an action CSP handler, it doesn't really make much sense to use the effect conditions.
-			auto handler = std::unique_ptr<LiftedEffectUnreachedCSP>(new LiftedEffectUnreachedCSP(*schema, eff, tuple_index, approximate));
+			auto handler = std::make_unique<LiftedEffectUnreachedCSP>(*schema, eff, tuple_index, approximate);
 			
 			if (!handler->init(novelty)) {
 				LPT_DEBUG("grounding", "Action schema \"" << *schema << "\" detected as non-applicable before grounding");
@@ -176,5 +177,5 @@ FSGecodeSpace* LiftedEffectUnreachedCSP::preinstantiate(const RPGIndex& rpg) con
 
 
 
-} } // namespaces
+} // namespaces
 

@@ -2,14 +2,15 @@
 #pragma once
 
 #include <fs/core/constraints/gecode/handlers/lifted_action_csp.hxx>
+
 #include <gecode/int.hh>
 
 namespace fs0 { class AtomIndex; }
 
-namespace fs0 { namespace language { namespace fstrips { class StateVariable; } } }
+namespace fs0::language::fstrips { class StateVariable; }
 namespace fs = fs0::language::fstrips;
 
-namespace fs0 { namespace gecode {
+namespace fs0::gecode {
 
 class RPGIndex;
 
@@ -21,7 +22,7 @@ public:
 	
 	//! The only constructor
 	LiftedEffectUnreachedCSP(const PartiallyGroundedAction& action, const fs::ActionEffect* effect, const AtomIndex& tuple_index, bool approximate);
-	~LiftedEffectUnreachedCSP() = default;
+	~LiftedEffectUnreachedCSP() override = default;
 	LiftedEffectUnreachedCSP(const LiftedEffectUnreachedCSP&) = delete;
 	LiftedEffectUnreachedCSP(LiftedEffectUnreachedCSP&&) = delete;
 	LiftedEffectUnreachedCSP& operator=(const LiftedEffectUnreachedCSP&) = delete;
@@ -68,4 +69,4 @@ public:
 };
 
 
-} } // namespaces
+} // namespaces
