@@ -35,13 +35,13 @@ public:
     //! Return true iff the underlying CSP is locally consistent after that propagation.
     //! This method needs to be called before doing any other operation on the CSP, as performs the mandatory constraint
     //! propagation of the underlying Gecode CSP.
-    bool initialize();
+    bool initialize(const SymbolExtensionGenerator& extension_generator);
 
     //! Clone the underlying CSP and post *on the clone* those constraints that depend on the given state and
     //! set of extensions (which in turn depend on the state, but it's good for performance reasons to compute them
     //! once for all interested CSPs). Return the cloned CSP, or null if it is not locally consistent and hence we
     //! know can't have any solution.
-    FSGecodeSpace* instantiate(const State& state, const SymbolExtensionGenerator& extension_generator) const;
+    FSGecodeSpace* instantiate(const State& state, const std::vector<Gecode::TupleSet>& symbol_extensions) const;
 
     //! Return the action binding that corresponds to the given solution
     std::vector<object_id> build_binding_from_solution(const FSGecodeSpace* solution) const;

@@ -11,13 +11,13 @@ namespace fs0::gecode {
 CSPActionIterator::CSPActionIterator(
         const State& state,
         const std::vector<v2::ActionSchemaCSP>& schema_csps,
-        const v2::SymbolExtensionGenerator& extension_generator,
+        std::vector<Gecode::TupleSet>&& symbol_extensions,
         const std::vector<const PartiallyGroundedAction*>& schemas) :
 
     schema_csps(schema_csps),
     schemas(schemas),
     _state(state),
-    extension_generator(extension_generator)
+    symbol_extensions(std::move(symbol_extensions))
 {
 }
 
@@ -25,7 +25,7 @@ CSPActionIterator::Iterator::Iterator(
         const State& state,
         const std::vector<v2::ActionSchemaCSP>& schema_csps,
         const std::vector<const PartiallyGroundedAction*>& schemas,
-        const v2::SymbolExtensionGenerator& extension_generator,
+        const std::vector<Gecode::TupleSet>& symbol_extensions,
         unsigned currentIdx) :
 
     schema_csps(schema_csps),
@@ -36,7 +36,7 @@ CSPActionIterator::Iterator::Iterator(
     _engine(nullptr),
     _csp(nullptr),
     _action(nullptr),
-    extension_generator(extension_generator)
+    symbol_extensions(symbol_extensions)
 {
     assert(schemas.size() == num_schema_csps);
     advance();
@@ -62,7 +62,7 @@ bool CSPActionIterator::Iterator::next_solution() {
         // std::cout << std::endl << "applicability CSP: " << handler << std::endl;
 
         if (!_csp) {
-            _csp = schema_csp.instantiate(_state, extension_generator);
+            _csp = schema_csp.instantiate(_state, symbol_extensions);
 
             // std::cout << std::endl << "After instantiation: "; handler.print(std::cout, *_csp); std::cout << std::endl;
 

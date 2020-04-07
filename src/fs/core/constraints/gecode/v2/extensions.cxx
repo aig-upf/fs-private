@@ -5,8 +5,15 @@
 #include <fs/core/state.hxx>
 #include <fs/core/utils/binding_iterator.hxx>
 
+#include <lapkt/tools/logging.hxx>
+
 
 namespace fs0::gecode::v2 {
+
+IndividualSymbolExtensionGenerator::IndividualSymbolExtensionGenerator() :
+        symbol_id(std::numeric_limits<unsigned>::max()), arity(std::numeric_limits<unsigned>::max())
+{
+}
 
 IndividualSymbolExtensionGenerator::IndividualSymbolExtensionGenerator(unsigned symbol_id, const ProblemInfo& info, const AtomIndex& tuple_index) :
         symbol_id(symbol_id),
@@ -21,7 +28,6 @@ IndividualSymbolExtensionGenerator::IndividualSymbolExtensionGenerator(unsigned 
         const std::vector<object_id>& point = binding.get_full_binding();
         std::vector<int> values = fs0::values<int>(point, ObjectTable::EMPTY_TABLE);
 
-
         if (info.is_fluent(symbol_id, point)) { // We have a fluent atom
             VariableIdx var = info.resolveStateVariable(symbol_id, point);
             for (const object_id& value:info.getVariableObjects(var)) {
@@ -35,8 +41,7 @@ IndividualSymbolExtensionGenerator::IndividualSymbolExtensionGenerator(unsigned 
             }
 
         } else { // We have a static atom
-            Function f = symbol_data.getFunction();
-            object_id value = f(point);
+            object_id value = symbol_data.getFunction()(point);
 
             if (is_predicate) {
                 if (value == object_id::TRUE) {
@@ -49,6 +54,10 @@ IndividualSymbolExtensionGenerator::IndividualSymbolExtensionGenerator(unsigned 
             }
         }
     }
+
+    // Some debugging
+    LPT_INFO("cout", "Creating IndividualSymbolExtensionGenerator(symbol=" << info.getSymbolName(symbol_id) << ", arity=" << arity << ")");
+    LPT_INFO("cout", "Iterator has " << static_tuples.size() << " static entries and " << fluent_tuples.size() << " fluent entries")
 }
 
 
@@ -69,9 +78,16 @@ Gecode::TupleSet IndividualSymbolExtensionGenerator::instantiate(const State& st
     return ts;
 }
 
-IndividualSymbolExtensionGenerator::IndividualSymbolExtensionGenerator() :
-    symbol_id(std::numeric_limits<unsigned>::max()), arity(std::numeric_limits<unsigned>::max())
-{
+Gecode::TupleSet IndividualSymbolExtensionGenerator::retrieve_static_tupleset() const {
+    assert(fluent_tuples.empty());
+    Gecode::TupleSet ts((int) arity);
+
+    for (const auto& tuple:static_tuples) {
+        ts.add(tuple);
+    }
+
+    ts.finalize();
+    return ts;
 }
 
 
@@ -92,16 +108,28 @@ SymbolExtensionGenerator::SymbolExtensionGenerator(
 }
 
 std::vector<Gecode::TupleSet> SymbolExtensionGenerator::instantiate(const State& state) const {
-    std::vector<Gecode::TupleSet> result(managed.size());
+    std::vector<Gecode::TupleSet> result;
+    result.reserve(managed.size());
 
     auto sz = managed.size();
     for (unsigned s=0; s < sz; ++s) {
-        if ((bool) managed[s]) {
-            result[s] = individuals[s].instantiate(state);
+        if (managed[s] && !is_fully_static(s)) {
+            result.emplace_back(individuals[s].instantiate(state));
+        } else {
+            result.emplace_back();
         }
     }
 
     return result;
+}
+
+bool SymbolExtensionGenerator::is_fully_static(unsigned symbol_id) const {
+    assert(managed.at(symbol_id));
+    return individuals.at(symbol_id).fluent_tuples.empty();
+}
+
+Gecode::TupleSet SymbolExtensionGenerator::retrieve_static_tupleset(unsigned symbol_id) const {
+    return individuals.at(symbol_id).retrieve_static_tupleset();
 }
 
 } // namespaces

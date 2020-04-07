@@ -40,6 +40,11 @@ public:
 
     std::vector<Gecode::TupleSet> instantiate(const State& state) const;
 
+    Gecode::TupleSet retrieve_static_tupleset(unsigned symbol_id) const;
+
+    //! Return whether the given symbol has no fluent tuples, meaning it can be evaluated statically
+    bool is_fully_static(unsigned symbol_id) const;
+
 protected:
     std::vector<unsigned> managed;
 
@@ -58,6 +63,8 @@ public:
     IndividualSymbolExtensionGenerator& operator=(IndividualSymbolExtensionGenerator&&) = delete;
 
     Gecode::TupleSet instantiate(const State& state) const;
+
+    Gecode::TupleSet retrieve_static_tupleset() const;
 
 protected:
     friend class SymbolExtensionGenerator;

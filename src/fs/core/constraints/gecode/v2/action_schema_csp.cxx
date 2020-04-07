@@ -179,16 +179,18 @@ ActionSchemaCSP ActionSchemaCSP::load(std::ifstream& in, const ProblemInfo& info
         std::getline(in, line);
         std::getline(in, line2);
         if (line == "table-constraint") {
+            // We add all table constraints to `table_constraints`, but will later remove those that are fully static
+            // and hence need to be posted just once. We'll do that once all `symbols_in_extensions` have been collected
             csp.table_constraints.emplace_back(parse_table_constraint(line2, varidx, info));
             symbols_in_extensions.at(csp.table_constraints.back().symbol_idx()) = 1;
         }
         else if (line == "statevar=const") {
             csp.statevar_constraints.emplace_back(parse_statevar_constraint(line2, varidx, info));
-        }
-        else if (line == "relational") {
+
+        } else if (line == "relational") {
             csp.relational_constraints.emplace_back(parse_relational_constraint(line2, varidx, info));
-        }
-        else {
+
+        } else {
             std::cerr << "ActionSchemaCSP: Unknown constraint type '" << line << "'" << std::endl;
             exit_with(ExitCode::SEARCH_INPUT_ERROR);
         }
@@ -201,7 +203,7 @@ ActionSchemaCSP::ActionSchemaCSP() :
     space(new FSGecodeSpace())
 {}
 
-bool ActionSchemaCSP::initialize() {
+bool ActionSchemaCSP::initialize(const SymbolExtensionGenerator& extension_generator) {
     // Beware that the order in which the branching strategies are posted matters.
     // TODO We might want to explore more sophisticated strategies.
     Gecode::branch(*space, space->intvars, Gecode::INT_VAR_SIZE_MIN(), Gecode::INT_VAL_MIN());
@@ -212,11 +214,24 @@ bool ActionSchemaCSP::initialize() {
     for (const auto& c:relational_constraints) {
         if (!c.post(*space)) return false;
     }
+
+    // Iterate over all table constraints; for those that are fully static, post them NOW, and remove them from the
+    // list so that we do not consider them again.
+    for (auto it = table_constraints.begin(); it != table_constraints.end();) {
+        auto symbol_id = it->symbol_idx();
+        if (extension_generator.is_fully_static(symbol_id)) {
+            it->post(*space, extension_generator.retrieve_static_tupleset(symbol_id));
+            it = table_constraints.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
     return space->propagate();
 }
 
 
-FSGecodeSpace* ActionSchemaCSP::instantiate(const State& state, const SymbolExtensionGenerator& extension_generator) const {
+FSGecodeSpace* ActionSchemaCSP::instantiate(const State& state, const std::vector<Gecode::TupleSet>& symbol_extensions) const {
     // Note that for state-variable constraints we don't even need to have cloned the CSP
     for (const auto& c:statevar_constraints) {
         if (!c.post(state)) return nullptr;
@@ -225,10 +240,8 @@ FSGecodeSpace* ActionSchemaCSP::instantiate(const State& state, const SymbolExte
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-static-cast-downcast)
     auto* clone = static_cast<FSGecodeSpace*>(space->clone());
 
-    auto extensions = extension_generator.instantiate(state);
-
     for (const auto& c:table_constraints) {
-        if (!c.post(*clone, extensions.at(c.symbol_idx()))) {
+        if (!c.post(*clone, symbol_extensions.at(c.symbol_idx()))) {
             // We detected (by non-Gecode means) that the extensional constraint is not consistent,
             // hence we can early-abort the processing
             delete clone;
