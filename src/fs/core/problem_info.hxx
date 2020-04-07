@@ -155,7 +155,6 @@ public:
 
 
 	void set_extension(unsigned symbol_id, std::unique_ptr<StaticExtension>&& extension);
-	const StaticExtension& get_extension(unsigned symbol_id) const;
 
 	void set_external(std::unique_ptr<ExternalI> external) { _external = std::move(external); }
 	const ExternalI& get_external() const {
@@ -166,23 +165,11 @@ public:
 		return _external.release();
 	}
 
-	//! A convenient helper
-	template <typename ExtensionT>
-	const ExtensionT& get_extension(const std::string& symbol) const {
-		unsigned id = getSymbolId(symbol);
-		assert(_extensions.at(id) != nullptr);
-		const ExtensionT* extension = dynamic_cast<const ExtensionT*>(_extensions.at(id).get());
-		assert(extension);
-		return *extension;
-	}
-
 
 	//! Returns all the objects of the type of the given variable
 	inline const std::vector<object_id>& getVariableObjects(const VariableIdx variable) const {
 		return getTypeObjects(getVariableType(variable));
 	}
-
-	bool canExtensionalizeVarDomains() const { return _can_extensionalize_var_domains; }
 
 
 	//! Returns all the objects of the given type _or of a descendant type_
@@ -248,10 +235,6 @@ protected:
 
 	//! The filesystem directory where the problem serialized data is found
 	const std::string _data_dir;
-
-	//! This flag is true whenever every variable domain can be extensionalized
-	//! (i.e. valuations can be indexed statically and efficiently)
-	bool _can_extensionalize_var_domains;
 };
 
 } // namespaces

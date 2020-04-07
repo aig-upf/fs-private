@@ -148,7 +148,7 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 void
 Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
 
-	// First load the extensions of the static symbols
+    // First load the function extensions for all symbols. Note that we need to store the extension somewhere.
 	for (const auto& name:info.getSymbolNames()) {
 		unsigned id = info.getSymbolId(name);
 		info.set_extension(id, StaticExtension::load_static_extension(name, info));

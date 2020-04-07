@@ -16,7 +16,7 @@ namespace fs0 {
 std::unique_ptr<ProblemInfo> ProblemInfo::_instance = nullptr;
 
 ProblemInfo::ProblemInfo(const rapidjson::Document& data, std::string data_dir) :
-	_data_dir(std::move(data_dir)), _can_extensionalize_var_domains(true)
+	_data_dir(std::move(data_dir))
 {
 	LPT_INFO("main", "Loading Symbol index...");
 	loadSymbolIndex(data["symbols"]);
@@ -67,11 +67,6 @@ void ProblemInfo::loadVariableIndex(const rapidjson::Value& data) {
 		} catch( std::out_of_range& ex ) {
 			throw std::runtime_error("Unknown FS-type " + type);
 		}
-
-		if (t == type_id::int_t) {
-			_can_extensionalize_var_domains = false;
-		}
-
 
 		// Load the info necessary to resolve state variables dynamically
 		unsigned symbol_id = var_data["symbol_id"].GetInt();
@@ -144,12 +139,6 @@ ProblemInfo::set_extension(unsigned symbol_id, std::unique_ptr<StaticExtension>&
 	_extensions.at(symbol_id) = std::move(extension);
 }
 
-
-const StaticExtension&
-ProblemInfo::get_extension(unsigned symbol_id) const {
-	assert(_extensions.at(symbol_id) != nullptr);
-	return *_extensions.at(symbol_id);
-}
 
 bool ProblemInfo::isBoundedType(TypeIdx type) const {
 	return fstrips::LanguageInfo::instance().typeinfo(type).bounded();
