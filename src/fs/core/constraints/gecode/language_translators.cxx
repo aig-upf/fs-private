@@ -129,8 +129,7 @@ void StaticNestedTermTranslator::registerConstraints(const fs::Term* term, CSPTr
 	variables << translator.resolveVariable(static_term, csp);
 
 	// Now compile the tupleset
-	const auto& extension = Helper::instance().extensionalize(static_term);
-//    const auto& extension = Helper::instance().compute_symbol_extension(static_term->getSymbolId());
+	const auto& extension = Helper::extensionalize(static_term);
 
 	// And finally post the constraint
 	Gecode::extensional(csp, variables, extension, Gecode::IPL_DOM);

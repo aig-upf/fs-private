@@ -148,10 +148,10 @@ Problem* Loader::loadProblem(const rapidjson::Document& data) {
 void
 Loader::loadFunctions(const BaseComponentFactory& factory, ProblemInfo& info) {
 
-	// First load the extensions of the static symbols
+	// First load the function extensions for all symbols
 	for (const auto& name:info.getSymbolNames()) {
 		unsigned id = info.getSymbolId(name);
-		info.set_extension(id, StaticExtension::load_static_extension(name, info));
+        info.setFunction(id, StaticExtension::load_static_extension(name, info)->get_function());
 	}
 
 	// Load the function objects for externally-defined symbols
