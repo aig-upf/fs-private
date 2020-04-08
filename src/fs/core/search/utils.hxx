@@ -1,21 +1,24 @@
 
 #pragma once
 
-#include <string>
-#include <boost/lexical_cast.hpp>
-
-#include <lapkt/tools/resources_control.hxx>
-#include <lapkt/tools/logging.hxx>
-
+#include <fs/core/actions/checker.hxx>
 #include <fs/core/fs_types.hxx>
 #include <fs/core/languages/fstrips/language.hxx>
 #include <fs/core/problem.hxx>
 #include <fs/core/state.hxx>
 #include <fs/core/search/stats.hxx>
 #include <fs/core/search/options.hxx>
-#include <fs/core/actions/checker.hxx>
 #include <fs/core/utils/printers/printers.hxx>
 #include <fs/core/utils/system.hxx>
+
+#include <lapkt/tools/logging.hxx>
+#include <lapkt/tools/resources_control.hxx>
+
+#include <gecode/support.hh>
+
+#include <boost/lexical_cast.hpp>
+
+#include <string>
 
 namespace fs0::drivers {
 

@@ -1,21 +1,16 @@
 
 #pragma once
 
-#include <iomanip>
-
-#include <lapkt/tools/resources_control.hxx>
-
-#include <fs/core/utils/printers/vector.hxx>
-#include <fs/core/search/nodes/heuristic_search_node.hxx>
 #include <fs/core/utils/config.hxx>
+#include <fs/core/utils/system.hxx>
 
 #include <lapkt/tools/events.hxx>
-#include <fs/core/utils/system.hxx>
-#include <fs/core/heuristics/relaxed_plan/smart_rpg.hxx>
+#include <lapkt/tools/logging.hxx>
+#include <lapkt/tools/resources_control.hxx>
+
+#include <iomanip>
 
 
-namespace fs0 { namespace language { namespace fstrips { class Formula; } }}
-namespace fs = fs0::language::fstrips;
 
 namespace fs0 {
 
@@ -128,7 +123,7 @@ protected:
 			return true;
 		}
 
-		LPT_EDEBUG("heuristic", "Analysing node helpfulness of " << *parent << std::endl << "Relevant atoms:  " << print::container(parent->get_relevant()));
+//		LPT_EDEBUG("heuristic", "Analysing node helpfulness of " << *parent << std::endl << "Relevant atoms:  " << print::container(parent->get_relevant()));
 		for (const Atom& atom:parent->get_relevant()) {
 			if (state.contains(atom)) {
 				node.mark_as_helpful();
