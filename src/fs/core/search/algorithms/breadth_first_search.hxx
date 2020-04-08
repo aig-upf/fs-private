@@ -16,29 +16,23 @@ namespace lapkt {
 //! a standard unsorted closed list. Type of node and state model are still generic.
 template <typename NodeT,
           typename StateModel,
-          typename StatsT,
-        typename OpenListT = lapkt::SearchableQueue<NodeT>,
-          typename ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>
+          typename StatsT
 >
-class StlBreadthFirstSearch : public GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>
-{
+class StlBreadthFirstSearch {
 public:
-	using BaseClass = GenericSearch<NodeT, OpenListT, ClosedListT, StateModel>;
-	using StateT = typename BaseClass::StateT;
-	using PlanT = typename BaseClass::PlanT;
-	using NodePT = typename BaseClass::NodePT;
-	
+    using OpenListT = lapkt::SimpleQueue<NodeT>;
+    using ClosedListT = aptk::StlUnorderedMapClosedList<NodeT>;
+    using StateT = typename StateModel::StateT;
+    using ActionIdT = typename StateModel::ActionType::IdType;
+    using PlanT =  std::vector<ActionIdT>;
+    using NodePT = std::shared_ptr<NodeT>;
+
 
 	//! The constructor requires the user of the algorithm to inject both
 	//! (1) the state model to be used in the search
 	//! (2) the particular open and closed list objects
-	StlBreadthFirstSearch(const StateModel& model, OpenListT&& open, StatsT& stats, bool verbose) :
-		BaseClass(model, std::move(open), ClosedListT()), _stats(stats), _verbose(verbose)
-	{}
-	
-	//! For convenience, a constructor where the open list is default-constructed
 	StlBreadthFirstSearch(const StateModel& model, StatsT& stats, bool verbose) :
-		StlBreadthFirstSearch(model, OpenListT(), stats, verbose)
+            _model(model), _open(), _closed(), _generated(0), _stats(stats), _verbose(verbose)
 	{}
 	
 	virtual ~StlBreadthFirstSearch() = default;
@@ -64,14 +58,13 @@ public:
             }
         }
 	}
-	
-	
+
 	//! We redefine where the whole search schema following Russell&Norvig.
 	//! The only modification is that the check for whether a state is a goal
 	//! or not is done right after the creation of the state, instead of upon expansion.
 	//! On a problem that has a solution at depth 'd', this avoids the worst-case expansion
 	//! of all the $b^d$ nodes of the last (deepest) layer (where b is the branching factor).
-	bool search(const StateT& s, PlanT& solution) override {
+	bool search(const StateT& s, PlanT& solution) {
 		NodePT n = std::make_shared<NodeT>(s, this->_generated++);
 
         LPT_INFO("cout", *n);
@@ -83,28 +76,62 @@ public:
 		while (!this->_open.empty()) {
 			NodePT current = this->_open.next( );
 
-			// close the node before the actual expansion so that children which are identical
-			// to 'current' get properly discarded
-			this->_closed.put(current);
-			
-			for ( const auto& a : this->_model.applicable_actions( current->state ) ) {
-				StateT s_a = this->_model.next( current->state, a );
-				NodePT successor = std::make_shared<NodeT>(std::move(s_a), a, current, this->_generated++);
+			for (const auto& a:this->_model.applicable_actions(current->state)) {
+				NodePT successor = std::make_shared<NodeT>(
+				        this->_model.next(current->state, a), a, current, this->_generated++);
 
 				on_generation(*successor);
 
-				if (this->_closed.check(successor)) continue; // The node has already been closed
-				if (this->_open.contains(successor)) continue; // The node is already in the open list (and surely won't have a worse g-value, this being BrFS)
+                // The node has already been closed, either because it has been expanded, or because it is already
+                // in the open list waiting to be expanded
+				if (this->_closed.check(successor)) continue;
 
 				if (this->check_goal(successor, solution)) return true;
 				
-				this->_open.insert( successor );
+				this->_open.insert(successor);
+                this->_closed.put(successor);
 			}
 		}
 		return false;
 	}
 
+    //! Backward chaining procedure to recover a plan from a given node
+    virtual void retrieve_solution(NodePT node, PlanT& solution) {
+        while (node->has_parent()) {
+            solution.push_back(node->action);
+            node = node->parent;
+        }
+        std::reverse( solution.begin(), solution.end() );
+    }
+
+    //! Convenience method
+    bool solve_model(PlanT& solution) { return search( _model.init(), solution ); }
+
 protected:
+
+    virtual bool check_goal(const NodePT& node, PlanT& solution) {
+        if (_model.goal(node->state)) { // Solution found, we're done
+            if (_verbose) {
+                LPT_INFO("search", "Goal found");
+            }
+            retrieve_solution(node, solution);
+            return true;
+        }
+        return false;
+    }
+
+    //! The search model
+    const StateModel& _model;
+
+    //! The open list
+    OpenListT _open;
+
+    //! The closed list
+    ClosedListT _closed;
+
+    //! The number of generated nodes so far
+    unsigned long _generated;
+
     StatsT& _stats;
     bool _verbose;
 }; 
