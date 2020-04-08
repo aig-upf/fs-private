@@ -1,9 +1,9 @@
 
 #include <fs/core/search/drivers/breadth_first_search.hxx>
+
 #include <fs/core/state.hxx>
 #include <fs/core/search/nodes/blind_node.hxx>
-#include <lapkt/algorithms/breadth_first_search.hxx>
-#include <fs/core/search/events.hxx>
+#include <fs/core/search/algorithms/breadth_first_search.hxx>
 #include <fs/core/search/utils.hxx>
 #include <fs/core/search/drivers/setups.hxx>
 
@@ -34,14 +34,10 @@ BreadthFirstSearchDriver<StateModelT>::search(Problem& problem, const Config& co
 	//! The Breadth-First Search engine uses a simple blind-search node
 	using ActionT = typename StateModelT::ActionType;
 	using NodeT = lapkt::BlindSearchNode<State, ActionT>;
-	using EngineT = lapkt::StlBreadthFirstSearch<NodeT, StateModelT>;
+	using EngineT = lapkt::StlBreadthFirstSearch<NodeT, StateModelT, SearchStats>;
 
-	auto model = setup(problem);
-
-    EventUtils::setup_stats_observer<NodeT>(_stats, _handlers, config.getOption<bool>("verbose_stats", false));
-	auto engine = std::make_unique<EngineT>(model);
-	lapkt::events::subscribe(*engine, _handlers);
-	
+    auto model = setup(problem);
+	auto engine = std::make_unique<EngineT>(model, _stats, config.getOption<bool>("verbose_stats", false));
 	return Utils::SearchExecution<StateModelT>(model).do_search(*engine, options, start_time, _stats);
 }
 
