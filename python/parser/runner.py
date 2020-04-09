@@ -22,6 +22,7 @@ from tarski.fstrips.representation import compile_negated_preconditions_away
 from tarski.io import FstripsReader, find_domain_filename
 from tarski.utils import resources
 from tarski.grounding import LPGroundingStrategy, NaiveGroundingStrategy
+import tarski.errors as terr
 
 
 def parse_arguments(args):
@@ -464,4 +465,12 @@ def main(args):
     args = parse_arguments(args)
     import logging
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG if args.debug else logging.INFO)
-    return run(args)
+
+    try:
+        return run(args)
+    except terr.OutOfMemoryError:
+        explain_output(22)
+        return 22
+    except terr.OutOfTimeError:
+        explain_output(23)
+        return 23
