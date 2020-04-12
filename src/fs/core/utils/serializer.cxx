@@ -54,7 +54,7 @@ void Serializer::deserialize(const std::string& filename, DataInserter& inserter
 
 object_id Serializer::deserialize0AryElement(const std::string& filename, const std::vector<type_id>& sym_signature_types) {
 	object_id data;
-	DataInserter inserter = [&data](const std::vector<object_id>& elems) { assert(elems.size() == 1); data = elems[0]; };
+	DataInserter inserter = [&data](std::vector<object_id>&& elems) { assert(elems.size() == 1); data = elems[0]; };
 	deserialize(filename, inserter, sym_signature_types);
 	return data;
 }
@@ -68,55 +68,59 @@ std::ostream& Serializer::serialize(std::ostream& os, const Serializer::UnaryMap
 
 Serializer::BoostUnaryMap Serializer::deserializeUnaryMap(const std::string& filename, const std::vector<type_id>& sym_signature_types) {
 	BoostUnaryMap data;
-	DataInserter inserter = [&data](const std::vector<object_id>& elems) { assert(elems.size() == 2); data.insert(std::make_pair(elems[0], elems[1])); };
+	DataInserter inserter = [&data](std::vector<object_id>&& elems) { assert(elems.size() == 2); data.insert(std::make_pair(elems[0], elems[1])); };
 	deserialize(filename, inserter, sym_signature_types);
 	return data;
 }
 
 Serializer::BoostBinaryMap Serializer::deserializeBinaryMap(const std::string& filename, const std::vector<type_id>& sym_signature_types) {
 	BoostBinaryMap data;
-	DataInserter inserter = [&data](const std::vector<object_id>& elems) { assert(elems.size() == 3); data.insert(std::make_pair(std::make_pair(elems[0], elems[1]), elems[2]));};
+	DataInserter inserter = [&data](std::vector<object_id>&& elems) { assert(elems.size() == 3); data.insert(std::make_pair(std::make_pair(elems[0], elems[1]), elems[2]));};
 	deserialize(filename, inserter, sym_signature_types);
 	return data;
 }
 
 Serializer::BoostArity3Map Serializer::deserializeArity3Map(const std::string& filename, const std::vector<type_id>& sym_signature_types) {
 	BoostArity3Map data;
-	DataInserter inserter = [&data](const std::vector<object_id>& elems) { assert(elems.size() == 4); data.insert(std::make_pair(std::make_tuple(elems[0], elems[1], elems[2]), elems[3]));};
+	DataInserter inserter = [&data](std::vector<object_id>&& elems) { assert(elems.size() == 4); data.insert(std::make_pair(std::make_tuple(elems[0], elems[1], elems[2]), elems[3]));};
 	deserialize(filename, inserter, sym_signature_types);
 	return data;
 }
-Serializer::BoostArity4Map Serializer::deserializeArity4Map(const std::string& filename, const std::vector<type_id>& sym_signature_types) {
-	BoostArity4Map data;
-	DataInserter inserter = [&data](const std::vector<object_id>& elems) { assert(elems.size() == 5); data.insert(std::make_pair(std::make_tuple(elems[0], elems[1], elems[2], elems[3]), elems[4]));};
+Serializer::function_t Serializer::deserializeMap(const std::string& filename, const std::vector<type_id>& sym_signature_types) {
+    function_t data;
+	DataInserter inserter = [&data](std::vector<object_id>&& elems) {
+        object_id last = elems.back();
+        elems.pop_back();
+	    data.insert(std::make_pair(std::move(elems), last));
+	};
 	deserialize(filename, inserter, sym_signature_types);
 	return data;
 }
 
 Serializer::BoostUnarySet Serializer::deserializeUnarySet(const std::string& filename, const std::vector<type_id>& sym_signature_types) {
 	BoostUnarySet data;
-	DataInserter inserter = [&data](const std::vector<object_id>& elems) { assert(elems.size() == 1); data.insert(elems[0]);};
+	DataInserter inserter = [&data](std::vector<object_id>&& elems) { assert(elems.size() == 1); data.insert(elems[0]);};
 	deserialize(filename, inserter, sym_signature_types);
 	return data;
 }
 
 Serializer::BoostBinarySet Serializer::deserializeBinarySet(const std::string& filename, const std::vector<type_id>& sym_signature_types) {
 	BoostBinarySet data;
-	DataInserter inserter = [&data](const std::vector<object_id>& elems) { assert(elems.size() == 2); data.insert(std::make_pair(elems[0], elems[1])); };
+	DataInserter inserter = [&data](std::vector<object_id>&& elems) { assert(elems.size() == 2); data.insert(std::make_pair(elems[0], elems[1])); };
 	deserialize(filename, inserter, sym_signature_types);
 	return data;
 }
 
 Serializer::BoostArity3Set Serializer::deserializeArity3Set(const std::string& filename, const std::vector<type_id>& sym_signature_types) {
 	BoostArity3Set data;
-	DataInserter inserter = [&data](const std::vector<object_id>& elems) { assert(elems.size() == 3); data.insert(std::make_tuple(elems[0], elems[1], elems[2])); };
+	DataInserter inserter = [&data](std::vector<object_id>&& elems) { assert(elems.size() == 3); data.insert(std::make_tuple(elems[0], elems[1], elems[2])); };
 	deserialize(filename, inserter, sym_signature_types);
 	return data;
 }
 
-Serializer::BoostArity4Set Serializer::deserializeArity4Set(const std::string& filename, const std::vector<type_id>& sym_signature_types) {
-	BoostArity4Set data;
-	DataInserter inserter = [&data](const std::vector<object_id>& elems) { assert(elems.size() == 4); data.insert(std::make_tuple(elems[0], elems[1], elems[2], elems[3])); };
+Serializer::predicate_t Serializer::deserializeSet(const std::string& filename, const std::vector<type_id>& sym_signature_types) {
+    predicate_t data;
+	DataInserter inserter = [&data](std::vector<object_id>&& elems) { data.insert(elems); };
 	deserialize(filename, inserter, sym_signature_types);
 	return data;
 }

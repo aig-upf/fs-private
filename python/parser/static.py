@@ -6,17 +6,15 @@ from .. import utils
 
 
 def instantiate_function(name, arity):
-    classes = {0: Arity0Element, 1: UnaryMap, 2: BinaryMap, 3: Arity3Map, 4: Arity4Map}
-    if arity not in classes:
-        raise RuntimeError("Currently only up to arity-4 functions are supported")
-    return (classes[arity])(name)
+    if arity == 0:
+        return NullaryFunction(name)
+    return Map(name, arity)
 
 
 def instantiate_predicate(name, arity):
-    classes = {0: ZeroarySet, 1: UnarySet, 2: BinarySet, 3: Arity3Set, 4: Arity4Set}
-    if arity not in classes:
-        raise RuntimeError("Currently only up to arity-4 predicates are supported")
-    return (classes[arity])(name)
+    if arity == 0:
+        return NullarySet(name)
+    return Set(name, arity)
 
 
 def serialize_symbol(symbol, table):
@@ -38,8 +36,9 @@ def serialize_tuple(t, symbols):
 
 
 class DataElement:
-    def __init__(self, name):
+    def __init__(self, name, arity=0):
         self.name = name
+        self.arity = arity
 
     def serialize_data(self, symbols):
         raise RuntimeError("Method must be subclassed")
@@ -51,84 +50,9 @@ class DataElement:
         return True
 
 
-class StaticProcedure(object):
+class NullarySet(DataElement):
     def __init__(self, name):
-        self.name = name
-
-
-class Arity0Element(DataElement):
-    def __init__(self, name):
-        super().__init__(name)
-        self.elems = {}
-
-    def add(self, elem, value):
-        if len(elem) > 0:
-            raise RuntimeError("Error: Arity 0 element '{}' has {} arguments: {}".format(self.name, len(elem), elem))
-        assert len(elem) == 0
-        self.elems[elem] = value
-
-    def serialize_data(self, symbols):
-        return [serialize_symbol(self.elems[()], symbols)]  # We simply print the only element
-
-
-class UnaryMap(DataElement):
-    ARITY = 1
-
-    def __init__(self, name):
-        super().__init__(name)
-        self.elems = {}
-
-    def add(self, elem, value):
-        self.validate(elem, value)
-        self.elems[elem] = value
-
-    def serialize_data(self, symbols):
-        return [serialize_tuple(k + (v,), symbols) for k, v in self.elems.items()]
-
-    def validate(self, elem, value):
-        if len(elem) != self.ARITY:
-            raise RuntimeError("Wrong type or number of arguments for data element {}: {}({}) = {}".format(
-                self.name, self.name, elem, value))
-
-
-class BinaryMap(UnaryMap):
-    ARITY = 2
-
-
-class Arity3Map(BinaryMap):
-    ARITY = 3
-
-
-class Arity4Map(BinaryMap):
-    ARITY = 4
-
-
-class UnarySet(DataElement):
-    ARITY = 1
-
-    def __init__(self, name):
-        super().__init__(name)
-        self.elems = set()
-
-    def add(self, elem, value=None):
-        assert value is None
-        self.validate(elem)
-        self.elems.add(elem)
-
-    def serialize_data(self, symbols):
-        return [serialize_tuple(elem, symbols) for elem in self.elems]
-
-    def validate(self, elem):
-        if len(elem) != self.ARITY:
-            raise RuntimeError("Wrong type or number of arguments for data element {}: {}({})".format(
-                self.name, self.name, elem))
-
-
-class ZeroarySet(UnarySet):
-    ARITY = 0
-
-    def __init__(self, name):
-        super().__init__(name)
+        super().__init__(name, 0)
         self.elems = {}
 
     def add(self, args, value=None):
@@ -146,13 +70,48 @@ class ZeroarySet(UnarySet):
         return () in self.elems
 
 
-class BinarySet(UnarySet):
-    ARITY = 2
+class NullaryFunction(DataElement):
+    def __init__(self, name):
+        super().__init__(name)
+        self.elems = {}
+
+    def add(self, elem, value):
+        if len(elem) > 0:
+            raise RuntimeError(f"Error: Arity 0 element '{self.name}' has {len(elem)} arguments: {elem}")
+        assert len(elem) == 0
+        self.elems[elem] = value
+
+    def serialize_data(self, symbols):
+        return [serialize_symbol(self.elems[()], symbols)]  # We simply print the only element
 
 
-class Arity3Set(BinarySet):
-    ARITY = 3
+class Map(DataElement):
+    def __init__(self, name, arity):
+        super().__init__(name, arity)
+        self.elems = {}
+
+    def add(self, elem, value):
+        if len(elem) != self.arity:
+            raise RuntimeError("Wrong type or number of arguments for data element {}: {}({}) = {}".format(
+                self.name, self.name, elem, value))
+        self.elems[elem] = value
+
+    def serialize_data(self, symbols):
+        return [serialize_tuple(k + (v,), symbols) for k, v in self.elems.items()]
 
 
-class Arity4Set(BinarySet):
-    ARITY = 4
+class Set(DataElement):
+    def __init__(self, name, arity):
+        super().__init__(name, arity)
+        self.elems = set()
+
+    def add(self, elem, value=None):
+        assert value is None
+        if len(elem) != self.arity:
+            raise RuntimeError("Wrong type or number of arguments for data element {}: {}({})".format(
+                self.name, self.name, elem))
+        self.elems.add(elem)
+
+    def serialize_data(self, symbols):
+        return [serialize_tuple(elem, symbols) for elem in self.elems]
+

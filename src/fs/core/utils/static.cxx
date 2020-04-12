@@ -52,16 +52,13 @@ StaticExtension::load_static_extension(const std::string& name, const ProblemInf
 		if (type == SymbolData::Type::PREDICATE) extension = new Arity3Predicate(Serializer::deserializeArity3Set(filename, sym_signature_types));
 		else extension = new Arity3Function(Serializer::deserializeArity3Map(filename, sym_signature_types));
 
-	} else if (arity == 4) {
-		if (type == SymbolData::Type::PREDICATE) extension = new Arity4Predicate(Serializer::deserializeArity4Set(filename, sym_signature_types));
-		else extension = new Arity4Function(Serializer::deserializeArity4Map(filename, sym_signature_types));
+	} else {
+        if (type == SymbolData::Type::PREDICATE) extension = new ArbitraryArityPredicate(Serializer::deserializeSet(filename, sym_signature_types));
+        else extension = new ArbitraryArityFunction(Serializer::deserializeMap(filename, sym_signature_types));
+	}
 
-
-	} else WORK_IN_PROGRESS("Such high symbol arities have not yet been implemented");
-
-	LPT_DEBUG("loader", "Loaded extension for symbol '" << name << "'");
-	LPT_DEBUG("loader", "\t data: ");
-	extension->print( lapkt::tools::Logger::instance().log("DEBUG", "loader"), info ) << std::endl;
+	LPT_DEBUG("loader", "Loaded extension for symbol '" << name << "'\n\t data: ");
+	extension->print(lapkt::tools::Logger::instance().log("DEBUG", "loader"), info) << std::endl;
 
 	return std::unique_ptr<StaticExtension>(extension);
 }
@@ -78,7 +75,7 @@ ZeroaryFunction::print( std::ostream& os, const ProblemInfo& info ) const {
 std::ostream&
 UnaryFunction::print( std::ostream& os, const ProblemInfo& info ) const {
 	os << "[";
-	for ( auto entry : _data ) {
+	for (const auto& entry : _data ) {
 		os << "( " << info.object_name(entry.first) << ", " << info.object_name(entry.second) << " ), ";
 	}
 	os << "]";
@@ -89,7 +86,7 @@ UnaryFunction::print( std::ostream& os, const ProblemInfo& info ) const {
 std::ostream&
 UnaryPredicate::print( std::ostream& os, const ProblemInfo& info ) const {
 	os << "[";
-	for ( auto entry : _data ) {
+	for (const auto& entry : _data ) {
 		os << "( " << info.object_name(entry) << " ), ";
 	}
 	os << "]";
@@ -99,7 +96,7 @@ UnaryPredicate::print( std::ostream& os, const ProblemInfo& info ) const {
 std::ostream&
 BinaryFunction::print( std::ostream& os, const ProblemInfo& info ) const {
 	os << "[";
-	for ( auto entry : _data ) {
+	for (const auto& entry : _data ) {
 		os << "( ";
 		os << info.object_name(entry.first.first) << ", ";
 		os << info.object_name(entry.first.second) << ", ";
@@ -112,7 +109,7 @@ BinaryFunction::print( std::ostream& os, const ProblemInfo& info ) const {
 std::ostream&
 BinaryPredicate::print( std::ostream& os, const ProblemInfo& info ) const {
 	os << "[";
-	for ( auto entry : _data ) {
+	for (const auto& entry : _data ) {
 		os << "( ";
 		os << info.object_name(entry.first) << ", ";
 		os << info.object_name(entry.second);
@@ -126,7 +123,7 @@ BinaryPredicate::print( std::ostream& os, const ProblemInfo& info ) const {
 std::ostream&
 Arity3Function::print( std::ostream& os, const ProblemInfo& info ) const {
 	os << "[";
-	for ( auto entry : _data ) {
+	for (const auto& entry : _data ) {
 		os << "( ";
 		object_id x, y, z;
 		std::tie(x,y,z) = entry.first;
@@ -143,7 +140,7 @@ Arity3Function::print( std::ostream& os, const ProblemInfo& info ) const {
 std::ostream&
 Arity3Predicate::print( std::ostream& os, const ProblemInfo& info ) const {
 	os << "[";
-	for ( auto entry : _data ) {
+	for (const auto& entry : _data ) {
 		os << "( ";
 		object_id x, y, z;
 		std::tie(x,y,z) = entry;
@@ -158,35 +155,31 @@ Arity3Predicate::print( std::ostream& os, const ProblemInfo& info ) const {
 }
 
 std::ostream&
-Arity4Function::print( std::ostream& os, const ProblemInfo& info ) const {
+ArbitraryArityFunction::print( std::ostream& os, const ProblemInfo& info ) const {
 	os << "[";
-	for ( auto entry : _data ) {
+	for (const auto& e:_data) {
 		os << "( ";
-		object_id x, y, z, w;
-		std::tie(x,y,z,w) = entry.first;
-		os << info.object_name(x) << ", ";
-		os << info.object_name(y) << ", ";
-		os << info.object_name(z) << ", ";
-		os << info.object_name(w) << ", ";
-
-		os << info.object_name(entry.second) << " ), ";
+		auto sz = e.first.size();
+		for (unsigned i = 0; i < sz; ++i) {
+            os << info.object_name(e.first[i]);
+            if (i < sz-1) os << ", ";
+		}
+		os << info.object_name(e.second) << " ), ";
 	}
 	os << "]";
 	return os;
 }
 
 std::ostream&
-Arity4Predicate::print( std::ostream& os, const ProblemInfo& info ) const {
+ArbitraryArityPredicate::print( std::ostream& os, const ProblemInfo& info ) const {
 	os << "[";
-	for ( auto entry : _data ) {
+	for (const auto& e:_data) {
 		os << "( ";
-		object_id x, y, z, w;
-		std::tie(x,y,z,w) = entry;
-		os << info.object_name(x) << ", ";
-		os << info.object_name(y) << ", ";
-		os << info.object_name(z) << ", ";
-		os << info.object_name(w);
-
+        auto sz = e.size();
+        for (unsigned i = 0; i < sz; ++i) {
+            os << info.object_name(e[i]);
+            if (i < sz-1) os << ", ";
+        }
 		os << " ), ";
 	}
 	os << "]";

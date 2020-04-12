@@ -39,6 +39,9 @@ public:
 	typedef std::set<std::tuple<object_id, object_id, object_id, object_id>> Arity4Set;
 	typedef boost::container::flat_set<std::tuple<object_id, object_id, object_id, object_id>> BoostArity4Set;
 
+	using predicate_t = boost::container::flat_set<std::vector<object_id>>;
+	using function_t = boost::container::flat_map<std::vector<object_id>, object_id>;
+
 
 	//! For the sake of completeness
 	static object_id deserialize0AryElement(const std::string& filename, const std::vector<type_id>& sym_signature_types);
@@ -50,7 +53,7 @@ public:
 	static BoostUnaryMap deserializeUnaryMap(const std::string& filename, const std::vector<type_id>& sym_signature_types );
 	static BoostBinaryMap deserializeBinaryMap(const std::string& filename, const std::vector<type_id>& sym_signature_types);
 	static BoostArity3Map deserializeArity3Map(const std::string& filename, const std::vector<type_id>& sym_signature_types);
-	static BoostArity4Map deserializeArity4Map(const std::string& filename, const std::vector<type_id>& sym_signature_types);
+	static function_t deserializeMap(const std::string& filename, const std::vector<type_id>& sym_signature_types);
 
 
 	//! Set (de)serialization
@@ -59,10 +62,10 @@ public:
 	static BoostUnarySet deserializeUnarySet(const std::string& filename, const std::vector<type_id>& sym_signature_types);
 	static BoostBinarySet deserializeBinarySet(const std::string& filename, const std::vector<type_id>& sym_signature_types);
 	static BoostArity3Set deserializeArity3Set(const std::string& filename, const std::vector<type_id>& sym_signature_types);
-	static BoostArity4Set deserializeArity4Set(const std::string& filename, const std::vector<type_id>& sym_signature_types);
+	static predicate_t deserializeSet(const std::string& filename, const std::vector<type_id>& sym_signature_types);
 
 
-	typedef std::function<void (const std::vector<object_id>&)> DataInserter;
+	typedef std::function<void (std::vector<object_id>&&)> DataInserter;
 	static void deserialize(const std::string& filename, DataInserter& inserter, const std::vector<type_id>& sym_signature_types);
 
 	//! Boost (de)serialization
