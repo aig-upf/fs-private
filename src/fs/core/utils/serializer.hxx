@@ -15,29 +15,29 @@ namespace fs0 {
 
 class Serializer {
 public:
-	typedef std::map<object_id, object_id> UnaryMap;
-	typedef boost::container::flat_map<object_id, object_id> BoostUnaryMap;
+	using UnaryMap = std::map<object_id, object_id>;
+    using BoostUnaryMap = boost::container::flat_map<object_id, object_id>;
 
-	typedef std::map<std::pair<object_id, object_id>, object_id> BinaryMap;
-	typedef boost::container::flat_map<std::pair<object_id, object_id>, object_id> BoostBinaryMap;
+    using BinaryMap = std::map<std::pair<object_id, object_id>, object_id>;
+    using BoostBinaryMap = boost::container::flat_map<std::pair<object_id, object_id>, object_id> ;
 
-	typedef std::map<std::tuple<object_id, object_id, object_id>, object_id> Arity3Map;
-	typedef boost::container::flat_map<std::tuple<object_id, object_id, object_id>, object_id> BoostArity3Map;
+    using Arity3Map = std::map<std::tuple<object_id, object_id, object_id>, object_id>;
+    using BoostArity3Map = boost::container::flat_map<std::tuple<object_id, object_id, object_id>, object_id>;
 
-	typedef std::map<std::tuple<object_id, object_id, object_id, object_id>, object_id> Arity4Map;
-	typedef boost::container::flat_map<std::tuple<object_id, object_id, object_id, object_id>, object_id> BoostArity4Map;
+    using Arity4Map = std::map<std::tuple<object_id, object_id, object_id, object_id>, object_id>;
+    using BoostArity4Map = boost::container::flat_map<std::tuple<object_id, object_id, object_id, object_id>, object_id>;
 
-	typedef std::set<object_id> UnarySet;
-	typedef boost::container::flat_set<object_id> BoostUnarySet;
+    using UnarySet = std::set<object_id>;
+    using BoostUnarySet = boost::container::flat_set<object_id>;
 
-	typedef std::set<std::pair<object_id, object_id>> BinarySet;
-	typedef boost::container::flat_set<std::pair<object_id, object_id>> BoostBinarySet;
+    using BinarySet = std::set<std::pair<object_id, object_id>>;
+    using BoostBinarySet = boost::container::flat_set<std::pair<object_id, object_id>>;
 
-	typedef std::set<std::tuple<object_id, object_id, object_id>> Arity3Set;
-	typedef boost::container::flat_set<std::tuple<object_id, object_id, object_id>> BoostArity3Set;
+    using Arity3Set = std::set<std::tuple<object_id, object_id, object_id>>;
+    using BoostArity3Set = boost::container::flat_set<std::tuple<object_id, object_id, object_id>>;
 
-	typedef std::set<std::tuple<object_id, object_id, object_id, object_id>> Arity4Set;
-	typedef boost::container::flat_set<std::tuple<object_id, object_id, object_id, object_id>> BoostArity4Set;
+    using Arity4Set = std::set<std::tuple<object_id, object_id, object_id, object_id>>;
+    using BoostArity4Set = boost::container::flat_set<std::tuple<object_id, object_id, object_id, object_id>>;
 
 	using predicate_t = boost::container::flat_set<std::vector<object_id>>;
 	using function_t = boost::container::flat_map<std::vector<object_id>, object_id>;
@@ -65,7 +65,7 @@ public:
 	static predicate_t deserializeSet(const std::string& filename, const std::vector<type_id>& sym_signature_types);
 
 
-	typedef std::function<void (std::vector<object_id>&&)> DataInserter;
+	using DataInserter = std::function<void (std::vector<object_id>&&)>;
 	static void deserialize(const std::string& filename, DataInserter& inserter, const std::vector<type_id>& sym_signature_types);
 
 	//! Boost (de)serialization
