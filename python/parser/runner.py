@@ -399,7 +399,11 @@ def generate_csps(args, ground_variables, problem, sort_bounds, object_ids, work
     utils.mkdirp(workdir)
 
     comp = CSPCompiler(problem, ground_variables, sort_bounds, object_ids)
-    comp.process_problem(serialization_directory=workdir)
+    inapplicable = comp.process_problem(serialization_directory=workdir)
+    if inapplicable:
+        # Prune those actions deemed as not applicable
+        logging.info(f"The following action schemas were statically deemed non-applicable: {inapplicable}")
+        problem.actions = {aname: action for aname, action in problem.actions.items() if aname not in inapplicable}
 
 
 def ground_problem(args, problem):
