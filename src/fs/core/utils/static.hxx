@@ -41,10 +41,10 @@ public:
 
 class UnaryFunction : public StaticExtension {
 protected:
-	Serializer::BoostUnaryMap _data;
+	Serializer::UnaryMap _data;
 
 public:
-	explicit UnaryFunction(Serializer::BoostUnaryMap&& data) : _data(std::move(data)) {}
+	explicit UnaryFunction(Serializer::UnaryMap&& data) : _data(std::move(data)) {}
 
 	object_id value(const object_id& x) const { return _data.at(x); }
 
@@ -61,10 +61,10 @@ public:
 
 class UnaryPredicate : public StaticExtension {
 protected:
-	Serializer::BoostUnarySet _data;
+	Serializer::UnarySet _data;
 
 public:
-	explicit UnaryPredicate(Serializer::BoostUnarySet&& data) : _data(std::move(data)) {}
+	explicit UnaryPredicate(Serializer::UnarySet&& data) : _data(std::move(data)) {}
 
 	Function get_function() const override {
 		auto& data = _data;
@@ -80,10 +80,10 @@ public:
 
 class BinaryFunction : public StaticExtension {
 protected:
-	Serializer::BoostBinaryMap _data;
+	Serializer::BinaryMap _data;
 
 public:
-	explicit BinaryFunction(Serializer::BoostBinaryMap&& data) : _data(std::move(data)) {}
+	explicit BinaryFunction(Serializer::BinaryMap&& data) : _data(std::move(data)) {}
 
 	Function get_function() const override {
 		auto& data = _data;
@@ -98,10 +98,10 @@ public:
 
 class BinaryPredicate : public StaticExtension {
 protected:
-	Serializer::BoostBinarySet _data;
+	Serializer::BinarySet _data;
 
 public:
-	explicit BinaryPredicate(Serializer::BoostBinarySet&& data) : _data(std::move(data)) {}
+	explicit BinaryPredicate(Serializer::BinarySet&& data) : _data(std::move(data)) {}
 
 	Function get_function() const override {
 		auto& data = _data;
@@ -116,10 +116,10 @@ public:
 
 class Arity3Function : public StaticExtension {
 protected:
-	Serializer::BoostArity3Map _data;
+	Serializer::Arity3Map _data;
 
 public:
-	explicit Arity3Function(Serializer::BoostArity3Map&& data) : _data(std::move(data)) {}
+	explicit Arity3Function(Serializer::Arity3Map&& data) : _data(std::move(data)) {}
 
 	Function get_function() const override {
 		auto& data = _data;
@@ -134,10 +134,10 @@ public:
 
 class Arity3Predicate : public StaticExtension {
 protected:
-	Serializer::BoostArity3Set _data;
+	Serializer::Arity3Set _data;
 
 public:
-	explicit Arity3Predicate(Serializer::BoostArity3Set&& data) : _data(std::move(data)) {}
+	explicit Arity3Predicate(Serializer::Arity3Set&& data) : _data(std::move(data)) {}
 
 	Function get_function() const override {
 		auto& data = _data;
