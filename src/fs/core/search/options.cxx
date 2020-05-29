@@ -10,12 +10,10 @@
 #include <boost/algorithm/string/split.hpp>
 
 #include <fs/core/search/options.hxx>
-#include <fs/core/utils/config.hxx>
-#include <lapkt/tools/logging.hxx>
 
 namespace po = boost::program_options;
 
-namespace fs0 { namespace drivers {
+namespace fs0::drivers {
 
 EngineOptions::EngineOptions(int argc, char** argv) {
 	po::options_description description("Allowed options");
@@ -54,7 +52,7 @@ EngineOptions::EngineOptions(int argc, char** argv) {
 	
 	// Populate the map of additional options
 	std::string options = vm["options"].as<std::string>();
-	if (options != "") {
+	if (!options.empty()) {
 		std::vector<std::string> config_options;
 		boost::split(config_options, options, boost::is_any_of(","));
 		for (auto& option:config_options) {
@@ -68,4 +66,4 @@ EngineOptions::EngineOptions(int argc, char** argv) {
 	}
 }
 
-} } // namespaces
+} // namespaces
