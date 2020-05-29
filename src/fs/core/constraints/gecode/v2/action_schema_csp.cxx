@@ -111,7 +111,7 @@ ActionSchemaCSP ActionSchemaCSP::load(std::ifstream& in, const ProblemInfo& info
     ActionSchemaCSP csp;
     std::string line, line2;
     std::vector<std::string> components;
-    unsigned nvariables, nparameters, nconstraints;
+    unsigned nvariables = 0, nparameters = 0, nconstraints = 0, neffrelevant = 0;
 
     std::unordered_map<std::string, FSGecodeSpace::var_id> varidx;
 
@@ -152,6 +152,14 @@ ActionSchemaCSP ActionSchemaCSP::load(std::ifstream& in, const ProblemInfo& info
     csp.space->intvars = Gecode::IntVarArray(*csp.space, intvars);
     csp.space->boolvars = Gecode::BoolVarArray(*csp.space, boolvars);
 
+    //
+    check_magic(in, "effect-relevant-variables");
+    in >> neffrelevant >> std::ws;
+    for (unsigned i = 0; i < nparameters; ++i) {
+        std::getline(in, line);
+        // ATM We simply ignore these lines
+    }
+    check_magic(in, "end-effect-relevant-variables");
 
     // Let's now index the action parameters
     check_magic(in, "parameter-index");

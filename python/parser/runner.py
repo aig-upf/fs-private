@@ -16,9 +16,8 @@ from pathlib import Path
 from .. import utils, FS_PATH, FS_WORKSPACE, FS_BUILD
 from .templates import tplManager
 from .tarski_serialization import generate_tarski_problem, serialize_representation, Serializer, print_groundings
-from tarski.syntax.transform import compile_universal_effects_away
 from tarski.syntax.ops import compute_sort_id_assignment
-from tarski.fstrips.representation import compile_negated_preconditions_away
+from tarski.fstrips.representation import compile_universal_effects_away
 from tarski.io import FstripsReader, find_domain_filename
 from tarski.utils import resources
 from tarski.grounding import LPGroundingStrategy, NaiveGroundingStrategy
