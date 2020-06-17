@@ -134,7 +134,7 @@ class ZeroarySet(UnarySet):
 
     def add(self, args, value):
         #assert _ is None
-        assert args is ()
+        assert args == ()
         self.elems[args] = value
 
     def serialize_data(self, symbols):
