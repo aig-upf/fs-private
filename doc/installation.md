@@ -40,7 +40,6 @@ curl -SL https://github.com/Gecode/gecode/archive/release-6.2.0.tar.gz | tar xz 
     	--disable-mpfr \
     	--disable-doc-tagfile \
     	--disable-doc-dot \
-    	--disable-thread \
     	&& make -j8 && make install
 ```
 
