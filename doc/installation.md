@@ -20,16 +20,16 @@ sudo apt-get install --no-install-recommends \
 ## 2. Install Gecode
 
 At the moment, the planner requires a working installation of the [Gecode CSP Solver](http://www.gecode.org/).
-The source code is ensured to work with `Gecode 5.1.0`; older versions might work as well, but we have not tested
-them. Some Linux distributions provide precompiled binaries, but some of them package older Gecode versions only.
-Installing Gecode [from source](http://www.gecode.org/download/gecode-5.1.0.tar.gz) is however not too difficult;
-detailed instructions can be found on the excellent [documentation of the toolkit](http://www.gecode.org/doc-latest/MPG.pdf).
+The source code has been tested to work with `Gecode 6.2.0`; older versions might work as well, but there is no
+guarantee about that. Some Linux distributions provide precompiled binaries, but some of them package older Gecode versions only.
+Installing Gecode [from source](https://github.com/Gecode/gecode/archive/release-6.2.0.tar.gz) is not difficult;
+detailed instructions can be found on the [framework documentation](http://www.gecode.org/doc-latest/MPG.pdf).
 The following command will for instance perform an installation of the Gecode modules that are necessary for the planner
 on `~/local`, for which no root permissions are necessary:
 
 ```
-curl -SL http://www.gecode.org/download/gecode-5.1.0.tar.gz | tar xz \
-        && cd gecode-5.1.0 \
+curl -SL https://github.com/Gecode/gecode/archive/release-6.2.0.tar.gz | tar xz \
+        && cd gecode-release-6.2.0 \
         && ./configure --prefix=$HOME/local \
         --disable-minimodel \
         --disable-examples \
