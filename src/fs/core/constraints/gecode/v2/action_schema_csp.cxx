@@ -204,7 +204,7 @@ ActionSchemaCSP ActionSchemaCSP::load(std::ifstream& in, const ProblemInfo& info
         }
     }
     check_magic(in, "end-constraints");
-    return std::move(csp);
+    return csp;
 }
 
 ActionSchemaCSP::ActionSchemaCSP() :
