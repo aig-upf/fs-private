@@ -110,7 +110,7 @@ public:
                 else atom += info.object_name(o);
             }
 
-            if (atom != "") {
+            if (!atom.empty()) {
                 if (something_already_printed) std::cout << " ";
                 std::cout << atom;
                 something_already_printed = true;
