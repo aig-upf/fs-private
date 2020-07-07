@@ -18,6 +18,7 @@
 #include <fs/core/languages/fstrips/formulae.hxx>
 #include <fs/core/languages/fstrips/operations.hxx>
 #include <fs/core/validator.hxx>
+#include <fs/core/languages/fstrips/effects.hxx>
 
 
 namespace fs = fs0::language::fstrips;
@@ -234,6 +235,16 @@ Loader::loadAxioms(const rapidjson::Value& data, const ProblemInfo& info) {
 	return axioms;
 }
 
+struct {
+    bool operator()(const fs::ActionEffect* a, const fs::ActionEffect* b) const {
+        // sort add-effects always at the end
+        if (a->is_add() && !b->is_add()) return false;
+        if (b->is_add() && !a->is_add()) return true;
+        return a < b; // otherwise we don't care, just sort by pointer address, which will induce a weak ordering
+    }
+} AddAfterDeleteEffectSort;
+
+
 const ActionData*
 Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemInfo& info, bool load_effects) {
 	const std::string& name = node["name"].GetString();
@@ -262,6 +273,8 @@ Loader::loadActionData(const rapidjson::Value& node, unsigned id, const ProblemI
 
 	if (load_effects) {
 		effects = fs::Loader::parseEffectList(node["effects"], info);
+        // Sort add effects at the end to achieve add-after-delete semantics
+        std::sort(effects.begin(), effects.end(), AddAfterDeleteEffectSort);
 	}
 
 	ActionData adata(id, name, signature, parameters, unit, precondition, effects, action_type);
